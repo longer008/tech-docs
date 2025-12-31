@@ -23,6 +23,8 @@ export default withMermaid(
 
     // Head 配置
     head: [
+      ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      ['link', { rel: 'icon', type: 'image/png', href: '/favicon.png' }],
       ['meta', { name: 'theme-color', content: '#3eaf7c' }],
       ['meta', { name: 'og:type', content: 'website' }],
       ['meta', { name: 'og:locale', content: 'zh-CN' }],
@@ -37,6 +39,13 @@ export default withMermaid(
       plugins: [
         UnoCSS(),
       ],
+      optimizeDeps: {
+        exclude: ['@ai-sdk/provider-utils'],
+        include: []
+      },
+      ssr: {
+        noExternal: ['mermaid']
+      }
     },
 
     // Markdown 配置
@@ -111,6 +120,7 @@ export default withMermaid(
           ]
         },
         { text: 'DevOps', link: '/devops/git-workflow' },
+        { text: 'AI 面试', link: '/ai-interview/' },
         { text: '架构图', link: '/diagrams/' },
         { text: '插件文档', link: '/vitepress-plugins' },
       ],
@@ -395,6 +405,20 @@ export default withMermaid(
             text: '架构图',
             items: [
               { text: '概述', link: '/diagrams/' },
+            ]
+          }
+        ],
+
+        // AI 面试
+        '/ai-interview/': [
+          {
+            text: 'AI 与程序员面试指南',
+            items: [
+              { text: '概述', link: '/ai-interview/' },
+              { text: 'AI 工具使用', link: '/ai-interview/ai-tools-interview' },
+              { text: 'Prompt 工程', link: '/ai-interview/prompt-engineering-interview' },
+              { text: 'AI 辅助开发', link: '/ai-interview/ai-assisted-development' },
+              { text: 'AI 伦理与风险', link: '/ai-interview/ai-ethics-risks' },
             ]
           }
         ],

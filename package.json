@@ -11,6 +11,7 @@
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.15",
     "@mdit/plugin-katex": "^0.13.1",
+    "@mermaid-js/mermaid-mindmap": "^9.3.0",
     "@unocss/reset": "^65.4.3",
     "busuanzi.pure.js": "^1.0.3",
     "katex": "^0.16.11",
@@ -21,7 +22,7 @@
     "markdown-it-sup": "^2.0.0",
     "markdown-it-task-lists": "^2.1.1",
     "medium-zoom": "^1.1.0",
-    "mermaid": "^11.4.0",
+    "mermaid": "^8.14.0",
     "unocss": "^65.4.3",
     "vitepress": "^1.5.0",
     "vitepress-plugin-back-to-top": "^1.0.1",
