@@ -1,0 +1,9 @@
+﻿flowchart LR
+  Client[客户端] --> Mongos[mongos 路由]
+  Mongos --> Shard1[Shard 副本集]
+  Mongos --> Shard2[Shard 副本集]
+  Shard1 --> Primary1[Primary]
+  Shard1 --> Secondary1[Secondary]
+  Shard2 --> Primary2[Primary]
+  Shard2 --> Secondary2[Secondary]
+  Mongos --> Config[Config Server]

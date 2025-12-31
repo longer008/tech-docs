@@ -1,0 +1,8 @@
+﻿flowchart LR
+  Client[客户端] --> Controller[Controller]
+  Controller --> Service[Service]
+  Service --> Repository[Repository/DAO]
+  Repository --> DB[(数据库)]
+  Controller --> DTO[DTO/Validation]
+  Service --> Cache[缓存/消息队列]
+  Controller --> Actuator[Actuator/监控]

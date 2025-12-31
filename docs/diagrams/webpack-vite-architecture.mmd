@@ -1,0 +1,7 @@
+﻿flowchart LR
+  Source[源码] --> Dev[Vite Dev Server]
+  Dev --> HMR[HMR]
+  Source --> Build[Webpack/Vite Build]
+  Build --> Output[输出资源]
+  Plugins[插件] --> Dev
+  Plugins --> Build

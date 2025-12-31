@@ -1,0 +1,9 @@
+﻿flowchart LR
+  Client[客户端] --> Parser[SQL 解析]
+  Parser --> Optimizer[优化器]
+  Optimizer --> Executor[执行器]
+  Executor --> Engine[存储引擎 InnoDB]
+  Engine --> Buffer[Buffer Pool]
+  Engine --> Redo[Redo Log]
+  Engine --> Binlog[Binlog]
+  Engine --> Disk[(磁盘数据文件)]

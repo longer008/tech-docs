@@ -1,0 +1,7 @@
+﻿flowchart LR
+  UI[UI/组件层] --> Router[路由层]
+  UI --> Store[状态管理]
+  Router --> View[页面视图]
+  Store --> View
+  View --> API[接口层]
+  API --> Service[服务层]

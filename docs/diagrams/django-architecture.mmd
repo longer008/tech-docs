@@ -1,0 +1,7 @@
+﻿flowchart LR
+  Client[客户端] --> URL[URLConf]
+  URL --> View[View]
+  View --> Template[Template]
+  View --> ORM[ORM]
+  ORM --> DB[(数据库)]
+  View --> Response[响应]

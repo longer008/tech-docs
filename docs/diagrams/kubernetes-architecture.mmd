@@ -1,0 +1,9 @@
+﻿flowchart LR
+  User[用户] --> API[API Server]
+  API --> ETCD[etcd]
+  API --> Scheduler[调度器]
+  API --> Controller[控制器]
+  Node[Node] --> Kubelet[Kubelet]
+  Kubelet --> Pod[Pod]
+  Pod --> Container[Container]
+  Service[Service] --> Pod

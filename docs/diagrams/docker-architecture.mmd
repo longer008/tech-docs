@@ -1,0 +1,8 @@
+﻿flowchart LR
+  Dockerfile[Dockerfile] --> Build[Build]
+  Build --> Image[镜像]
+  Image --> Registry[镜像仓库]
+  Registry --> Pull[拉取]
+  Pull --> Container[容器运行]
+  Container --> Volume[Volume]
+  Container --> Network[网络]

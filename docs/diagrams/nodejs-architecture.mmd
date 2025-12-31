@@ -1,0 +1,8 @@
+﻿flowchart LR
+  JS[JS 代码] --> CallStack[调用栈]
+  CallStack --> Libuv[libuv 事件循环]
+  Libuv --> Timers[定时器队列]
+  Libuv --> IO[IO 回调队列]
+  Libuv --> Check[check/Immediate]
+  Libuv --> Workers[Worker Threads]
+  IO --> OS[(操作系统)]

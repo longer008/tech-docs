@@ -1,0 +1,7 @@
+﻿flowchart LR
+  Client[客户端] --> Redis[Redis Server]
+  Redis --> Memory[(内存数据结构)]
+  Redis --> RDB[RDB 快照]
+  Redis --> AOF[AOF 追加日志]
+  Redis --> Replica[主从复制]
+  Redis --> Cluster[Cluster/分片]

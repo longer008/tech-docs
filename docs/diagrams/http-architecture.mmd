@@ -1,0 +1,8 @@
+﻿flowchart LR
+  Client[客户端] --> DNS[DNS 解析]
+  DNS --> TCP[TCP 连接]
+  TCP --> TLS[TLS 握手]
+  TLS --> Request[HTTP 请求]
+  Request --> Server[服务端]
+  Server --> Response[HTTP 响应]
+  Response --> Client

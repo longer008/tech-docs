@@ -1,0 +1,6 @@
+﻿flowchart LR
+  TS[TypeScript 源码] --> Compiler[tsc 编译器]
+  Compiler --> Checker[类型检查]
+  Checker --> Emit[输出 JS + d.ts]
+  Emit --> Bundler[打包工具]
+  Bundler --> App[运行时]

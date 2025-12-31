@@ -1,0 +1,6 @@
+﻿flowchart LR
+  Client[客户端] --> MW[中间件]
+  MW --> Router[路由]
+  Router --> Handler[处理函数]
+  Handler --> Response[响应]
+  Handler --> Error[错误处理中间件]

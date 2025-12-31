@@ -1,0 +1,6 @@
+﻿flowchart LR
+  Design[设计规范/Token] --> Config[tailwind.config]
+  Config --> Build[构建(PostCSS)]
+  HTML[模板] --> Build
+  Build --> CSS[输出 CSS]
+  CSS --> Browser[浏览器渲染]

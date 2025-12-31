@@ -1,0 +1,8 @@
+﻿flowchart LR
+  Client[客户端] --> Controller[Controller]
+  Controller --> Service[Service]
+  Service --> Provider[Provider]
+  Provider --> DB[(数据库)]
+  Module[Module] --> Controller
+  Module --> Provider
+  DI[DI 容器] --> Provider

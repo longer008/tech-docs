@@ -1,0 +1,6 @@
+﻿flowchart LR
+  Client[客户端] --> Router[路由]
+  Router --> Pydantic[数据校验]
+  Pydantic --> Handler[处理函数]
+  Handler --> Response[响应]
+  Router --> OpenAPI[OpenAPI 文档]

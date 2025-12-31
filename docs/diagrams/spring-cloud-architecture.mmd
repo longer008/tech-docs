@@ -1,0 +1,11 @@
+﻿flowchart LR
+  Client[客户端] --> Gateway[API 网关]
+  Gateway --> ServiceA[服务 A]
+  Gateway --> ServiceB[服务 B]
+  ServiceA --> Discovery[注册中心]
+  ServiceB --> Discovery
+  ServiceA --> Config[配置中心]
+  ServiceB --> Config
+  ServiceA --> Trace[链路追踪]
+  ServiceB --> Trace
+  Gateway --> Circuit[限流/熔断]

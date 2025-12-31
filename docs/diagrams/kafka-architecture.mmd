@@ -1,0 +1,8 @@
+﻿flowchart LR
+  Producer[生产者] --> Topic[Topic]
+  Topic --> Partition[分区 Partition]
+  Partition --> Broker[Broker 集群]
+  Consumer[消费者] --> Group[消费者组]
+  Group --> Broker
+  Broker --> Storage[(磁盘日志)]
+  Broker --> Coordinator[协调器]

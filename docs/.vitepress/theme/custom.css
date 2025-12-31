@@ -1,0 +1,73 @@
+/* 自定义样式 */
+
+/* 图片缩放效果 */
+.medium-zoom-overlay {
+  z-index: 20;
+}
+
+.medium-zoom-image {
+  z-index: 21;
+}
+
+/* 不蒜子统计样式 */
+.busuanzi-container {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* KaTeX 数学公式样式 */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1rem 0;
+}
+
+/* 脚注样式 */
+.footnotes {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--vp-c-divider);
+  font-size: 0.875rem;
+}
+
+.footnotes-sep {
+  display: none;
+}
+
+.footnote-ref {
+  font-size: 0.75rem;
+  vertical-align: super;
+}
+
+/* 任务列表样式 */
+.task-list-item {
+  list-style-type: none;
+}
+
+.task-list-item-checkbox {
+  margin-right: 0.5rem;
+}
+
+/* 高亮标记样式 */
+mark {
+  background-color: #fff3a3;
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.2rem;
+}
+
+/* Tabs 样式增强 */
+.vp-tabs {
+  margin: 1rem 0;
+}
+
+/* 代码块增强 */
+div[class*='language-'] {
+  border-radius: 8px;
+}
+
+/* 返回顶部按钮样式 */
+.back-to-top-btn {
+  z-index: 99;
+}

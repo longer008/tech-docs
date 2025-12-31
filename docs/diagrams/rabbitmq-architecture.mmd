@@ -1,0 +1,8 @@
+﻿flowchart LR
+  Producer[生产者] --> Exchange[交换机]
+  Exchange --> Queue[队列]
+  Queue --> Consumer[消费者]
+  Queue --> DLX[死信交换机]
+  DLX --> DLQ[死信队列]
+  Broker[Broker 集群] --> Exchange
+  Broker --> Queue

@@ -1,0 +1,7 @@
+﻿flowchart LR
+  App[应用] --> Mapper[Mapper 接口]
+  Mapper --> SqlSession[SqlSession]
+  SqlSession --> Executor[执行器]
+  Executor --> DB[(数据库)]
+  Mapper --> XML[XML 映射]
+  XML --> Executor

@@ -1,0 +1,6 @@
+﻿flowchart LR
+  Work[工作区] --> Index[暂存区]
+  Index --> Commit[提交]
+  Commit --> Repo[本地仓库]
+  Repo --> Remote[远程仓库]
+  Remote --> Repo
