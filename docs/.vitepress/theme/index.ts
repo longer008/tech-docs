@@ -6,6 +6,11 @@ import mediumZoom from 'medium-zoom'
 import vitepressBackToTop from 'vitepress-plugin-back-to-top'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 
+// 自定义组件导入
+import InterviewCard from '../components/InterviewCard.vue'
+import HighlightBox from '../components/HighlightBox.vue'
+import TechStack from '../components/TechStack.vue'
+
 // 样式导入
 import 'vitepress-plugin-back-to-top/dist/style.css'
 import 'virtual:uno.css'
@@ -22,6 +27,11 @@ export default {
     vitepressBackToTop({
       threshold: 300
     })
+
+    // 注册自定义组件
+    app.component('InterviewCard', InterviewCard)
+    app.component('HighlightBox', HighlightBox)
+    app.component('TechStack', TechStack)
   },
 
   setup() {

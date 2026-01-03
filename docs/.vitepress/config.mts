@@ -8,6 +8,10 @@ import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import taskLists from 'markdown-it-task-lists'
 import UnoCSS from 'unocss/vite'
+import { pagefindPlugin } from 'vitepress-plugin-pagefind'
+import NProgress from 'vitepress-plugin-nprogress'
+import googleAnalytics from 'vitepress-plugin-google-analytics'
+import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-icons'
 
 // https://vitepress.dev/reference/site-config
 export default withMermaid(
@@ -38,6 +42,12 @@ export default withMermaid(
     vite: {
       plugins: [
         UnoCSS(),
+        pagefindPlugin(),
+        NProgress(),
+        groupIconVitePlugin(),
+        googleAnalytics({
+          id: process.env.GOOGLE_ANALYTICS_ID || 'G-PLACEHOLDER'
+        }),
       ],
       optimizeDeps: {
         exclude: ['@ai-sdk/provider-utils'],
@@ -70,6 +80,7 @@ export default withMermaid(
         md.use(sub)
         md.use(sup)
         md.use(taskLists)
+        md.use(groupIconMdPlugin)
       },
     },
 
@@ -94,11 +105,11 @@ export default withMermaid(
         {
           text: '前端',
           items: [
-            { text: '基础', link: '/frontend/fundamentals/javascript-core-interview' },
-            { text: 'Vue', link: '/frontend/vue/vue3-interview' },
+            { text: 'JavaScript 基础', link: '/frontend/fundamentals/javascript-core-interview' },
+            { text: 'Vue.js', link: '/frontend/vue/vue3-interview' },
             { text: 'React', link: '/frontend/react/react-hooks-interview' },
-            { text: 'TypeScript', link: '/frontend/typescript/' },
-            { text: '跨端', link: '/frontend/cross-platform/uniapp-interview' },
+            { text: 'TypeScript', link: '/frontend/fundamentals/typescript-interview' },
+            { text: '跨端开发', link: '/frontend/cross-platform/uniapp-interview' },
           ]
         },
         {
@@ -107,7 +118,6 @@ export default withMermaid(
             { text: 'Java', link: '/backend/java/java-core-interview' },
             { text: 'Node.js', link: '/backend/nodejs/nodejs-runtime-interview' },
             { text: 'Python', link: '/backend/python/python-core-interview' },
-            { text: 'Spring', link: '/backend/spring-boot/' },
           ]
         },
         {
@@ -226,10 +236,10 @@ export default withMermaid(
             text: '跨端开发',
             collapsed: true,
             items: [
-              { text: 'Uniapp', link: '/frontend/cross-platform/uniapp-interview' },
-              { text: '小程序', link: '/frontend/cross-platform/miniprogram-interview' },
+              { text: 'Uniapp 面试题', link: '/frontend/cross-platform/uniapp-interview' },
+              { text: '小程序面试题', link: '/frontend/cross-platform/miniprogram-interview' },
               { text: 'Uniapp 题库', link: '/frontend/uniapp/interview-bank' },
-              { text: '微信小程序 题库', link: '/frontend/wechat-mini-program/interview-bank' },
+              { text: '微信小程序题库', link: '/frontend/wechat-mini-program/interview-bank' },
             ]
           },
         ],
@@ -258,6 +268,9 @@ export default withMermaid(
               { text: 'NestJS', link: '/backend/nodejs/nestjs-interview' },
               { text: 'Node.js 速查表', link: '/backend/nodejs/nodejs-cheatsheet' },
               { text: 'Node.js 题库', link: '/backend/nodejs/interview-bank' },
+              { text: 'Express 概述', link: '/backend/express/' },
+              { text: 'Koa 概述', link: '/backend/koa/' },
+              { text: 'NestJS 概述', link: '/backend/nestjs/' },
             ]
           },
           {
@@ -269,28 +282,19 @@ export default withMermaid(
               { text: 'FastAPI', link: '/backend/python/fastapi-interview' },
               { text: 'Python 速查表', link: '/backend/python/python-cheatsheet' },
               { text: 'Python 题库', link: '/backend/python/interview-bank' },
+              { text: 'Django 概述', link: '/backend/django/' },
+              { text: 'FastAPI 概述', link: '/backend/fastapi/' },
             ]
           },
           {
             text: 'Spring 生态',
             collapsed: true,
             items: [
-              { text: 'Spring Boot', link: '/backend/spring-boot/' },
+              { text: 'Spring Boot 概述', link: '/backend/spring-boot/' },
               { text: 'Spring Boot 题库', link: '/backend/spring-boot/interview-bank' },
-              { text: 'Spring Cloud', link: '/backend/spring-cloud/' },
+              { text: 'Spring Cloud 概述', link: '/backend/spring-cloud/' },
               { text: 'Spring Cloud 题库', link: '/backend/spring-cloud/interview-bank' },
-            ]
-          },
-          {
-            text: '其他框架',
-            collapsed: true,
-            items: [
-              { text: 'Express', link: '/backend/express/' },
-              { text: 'Koa', link: '/backend/koa/' },
-              { text: 'NestJS', link: '/backend/nestjs/' },
-              { text: 'Django', link: '/backend/django/' },
-              { text: 'FastAPI', link: '/backend/fastapi/' },
-              { text: 'MyBatis', link: '/backend/mybatis/' },
+              { text: 'MyBatis 概述', link: '/backend/mybatis/' },
             ]
           },
         ],
@@ -330,8 +334,8 @@ export default withMermaid(
             text: '消息队列',
             collapsed: true,
             items: [
-              { text: 'Kafka', link: '/database/mq/kafka-interview' },
-              { text: 'RabbitMQ', link: '/database/mq/rabbitmq-interview' },
+              { text: 'Kafka 面试题', link: '/database/mq/kafka-interview' },
+              { text: 'RabbitMQ 面试题', link: '/database/mq/rabbitmq-interview' },
               { text: 'Kafka 题库', link: '/database/kafka/interview-bank' },
               { text: 'RabbitMQ 题库', link: '/database/rabbitmq/interview-bank' },
             ]

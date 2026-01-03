@@ -1,50 +1,36 @@
----
-title: 架构图
----
+﻿# 架构图说明
 
-# 架构图
+本目录用于存放各技术模块的架构/流程图，推荐使用 Mermaid（.mmd）格式，便于版本管理与快速渲染。
 
-使用 Mermaid 绘制的技术架构图，帮助可视化理解系统设计。
+已提供示例：
+- `css-tailwind-architecture.mmd`
+- `django-architecture.mmd`
+- `docker-architecture.mmd`
+- `express-architecture.mmd`
+- `fastapi-architecture.mmd`
+- `git-architecture.mmd`
+- `http-architecture.mmd`
+- `java-architecture.mmd`
+- `kafka-architecture.mmd`
+- `koa-architecture.mmd`
+- `kubernetes-architecture.mmd`
+- `mongodb-architecture.mmd`
+- `mybatis-architecture.mmd`
+- `mysql-architecture.mmd`
+- `nestjs-architecture.mmd`
+- `nodejs-architecture.mmd`
+- `python-architecture.mmd`
+- `rabbitmq-architecture.mmd`
+- `react-architecture.mmd`
+- `redis-architecture.mmd`
+- `spring-boot-architecture.mmd`
+- `spring-cloud-architecture.mmd`
+- `typescript-architecture.mmd`
+- `uniapp-architecture.mmd`
+- `vue-architecture.mmd`
+- `webpack-vite-architecture.mmd`
+- `wechat-mini-program-architecture.mmd`
 
-## 图表列表
-
-### 前端架构
-- [Vue 架构图](./vue-architecture.mmd)
-- [React 架构图](./react-architecture.mmd)
-- [TypeScript 架构图](./typescript-architecture.mmd)
-- [Webpack/Vite 架构图](./webpack-vite-architecture.mmd)
-
-### 后端架构
-- [Java 架构图](./java-architecture.mmd)
-- [Node.js 架构图](./nodejs-architecture.mmd)
-- [Python 架构图](./python-architecture.mmd)
-- [Spring Boot 架构图](./spring-boot-architecture.mmd)
-- [Spring Cloud 架构图](./spring-cloud-architecture.mmd)
-
-### 数据库架构
-- [MySQL 架构图](./mysql-architecture.mmd)
-- [Redis 架构图](./redis-architecture.mmd)
-- [MongoDB 架构图](./mongodb-architecture.mmd)
-- [Kafka 架构图](./kafka-architecture.mmd)
-
-### DevOps 架构
-- [Docker 架构图](./docker-architecture.mmd)
-- [Kubernetes 架构图](./kubernetes-architecture.mmd)
-- [HTTP 架构图](./http-architecture.mmd)
-- [Git 架构图](./git-architecture.mmd)
-
-## 使用说明
-
-本项目使用 `vitepress-plugin-mermaid` 插件支持 Mermaid 图表渲染。
-
-```mermaid
-graph LR
-    A[开始] --> B{是否理解?}
-    B -->|是| C[继续学习]
-    B -->|否| D[查看文档]
-    D --> B
-```
-
-::: tip 提示
-Mermaid 图表支持流程图、时序图、类图、状态图等多种类型。
-:::
+命名建议：
+- `tech-architecture.mmd`
+- `tech-runtime-flow.mmd`
