@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Pages (Wrangler)
 
 on:
   push:
@@ -10,6 +10,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,13 +51,8 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=4096
 
       - name: Deploy to Cloudflare Pages
-        id: cloudflare_pages_deploy
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tech-docs
-          directory: docs/.vitepress/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          wranglerVersion: '3'
+          command: pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=main
