@@ -20,14 +20,14 @@ export default withMermaid(
     lang: 'zh-CN',
 
     // 部署配置
-    base: '/',
+    base: '/tech-docs/',
     cleanUrls: true,
     lastUpdated: true,
 
     // Head 配置
     head: [
-      ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-      ['link', { rel: 'icon', type: 'image/png', href: '/favicon.png' }],
+      ['link', { rel: 'icon', type: 'image/svg+xml', href: '/tech-docs/favicon.svg' }],
+      ['link', { rel: 'icon', type: 'image/png', href: '/tech-docs/favicon.png' }],
       ['meta', { name: 'theme-color', content: '#3eaf7c' }],
       ['meta', { name: 'og:type', content: 'website' }],
       ['meta', { name: 'og:locale', content: 'zh-CN' }],
