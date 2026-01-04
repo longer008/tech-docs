@@ -8,7 +8,6 @@ import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import taskLists from 'markdown-it-task-lists'
 import UnoCSS from 'unocss/vite'
-import { pagefindPlugin } from 'vitepress-plugin-pagefind'
 import NProgress from 'vitepress-plugin-nprogress'
 import googleAnalytics from 'vitepress-plugin-google-analytics'
 import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-icons'
@@ -42,7 +41,6 @@ export default withMermaid(
     vite: {
       plugins: [
         UnoCSS(),
-        pagefindPlugin(),
         NProgress(),
         groupIconVitePlugin(),
         googleAnalytics({
@@ -51,7 +49,18 @@ export default withMermaid(
       ],
       optimizeDeps: {
         exclude: ['@ai-sdk/provider-utils'],
-        include: []
+        include: [
+          '@braintree/sanitize-url',
+          'dayjs',
+          'debug',
+          'cytoscape',
+          'cytoscape-cose-bilkent'
+        ]
+      },
+      resolve: {
+        alias: {
+          dayjs: 'dayjs/'
+        }
       },
       ssr: {
         noExternal: ['mermaid']
@@ -96,6 +105,38 @@ export default withMermaid(
     themeConfig: {
       // 站点标题和 Logo
       siteTitle: '技术面试知识库',
+
+      // 搜索配置 - 使用官方 Local Search
+      search: {
+        provider: 'local',
+        options: {
+          locales: {
+            root: {
+              translations: {
+                button: {
+                  buttonText: '搜索文档',
+                  buttonAriaLabel: '搜索文档'
+                },
+                modal: {
+                  displayDetails: '显示详细列表',
+                  resetButtonTitle: '重置搜索',
+                  backButtonTitle: '关闭搜索',
+                  noResultsText: '没有找到结果',
+                  footer: {
+                    selectText: '选择',
+                    selectKeyAriaLabel: '输入',
+                    navigateText: '导航',
+                    navigateUpKeyAriaLabel: '上箭头',
+                    navigateDownKeyAriaLabel: '下箭头',
+                    closeText: '关闭',
+                    closeKeyAriaLabel: 'esc'
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
 
       // 导航栏
       nav: [
@@ -439,26 +480,7 @@ export default withMermaid(
         copyright: 'Copyright 2025 技术面试知识库'
       },
 
-      // 本地搜索
-      search: {
-        provider: 'local',
-        options: {
-          translations: {
-            button: {
-              buttonText: '搜索文档',
-              buttonAriaLabel: '搜索文档'
-            },
-            modal: {
-              noResultsText: '无法找到相关结果',
-              resetButtonTitle: '清除查询条件',
-              footer: {
-                selectText: '选择',
-                navigateText: '切换'
-              }
-            }
-          }
-        }
-      },
+      // 使用 pagefind 搜索，移除本地搜索配置以避免冲突
 
       // 大纲配置
       outline: {
