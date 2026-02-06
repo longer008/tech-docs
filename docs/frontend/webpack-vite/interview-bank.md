@@ -1,66 +1,416 @@
-# Webpack / Vite 面试题速查
+# Webpack & Vite 面试题库
 
-> 更新日期: 2025-12-31
+> 精选构建工具核心面试题
 
-## 基础
-### Q1:Webpack 与 Vite 的核心差异？
-- 标准答案:Webpack 以打包为中心，开发期需先构建；Vite 基于原生 ES Modules + dev server，按需编译，冷启动快；生产时 Vite 仍用 Rollup 打包。
-- 追问点:何时选择 Vite；生态兼容性；老项目迁移成本。
-- 参考:https://vitejs.dev/guide/why.html
+**更新时间**: 2025-02
 
-### Q2:Tree Shaking 的前提？
-- 标准答案:需要 ESM、无副作用或正确标记 `sideEffects`；编译阶段需保持 import/export；动态 require 会失效；Rollup/Vite 默认支持，Webpack 需配置 mode=production。
-- 追问点:CommonJS 影响；类装饰器副作用；摇不掉的原因。
-- 参考:https://webpack.js.org/guides/tree-shaking/
+## 📋 目录
 
-### Q3:代码分割与按需加载？
-- 标准答案:Webpack 使用 dynamic import / SplitChunks；Vite 生产构建同样基于 Rollup 的动态导入；需要合理的 chunk 拆分与 cache group 设置。
-- 追问点:预加载/预取；多页面应用；包体过大拆分策略。
-- 参考:https://webpack.js.org/plugins/split-chunks-plugin/
+- [基础概念](#基础概念)
+- [Webpack 核心](#webpack-核心)
+- [Vite 核心](#vite-核心)
+- [性能优化](#性能优化)
+- [实战场景](#实战场景)
 
-### Q4:Loader 与 Plugin 的区别？
-- 标准答案:Loader 负责转换资源，单向流式；Plugin 基于 Tapable 钩子扩展编译生命周期；在 Vite 中插件遵循 Rollup 插件体系并支持 dev/serve 钩子。
-- 追问点:编写自定义 loader/plugin；插件执行顺序；常见插件示例。
-- 参考:https://webpack.js.org/concepts/loaders/
+---
 
-### Q5:Source Map 选择？
-- 标准答案:开发用 `cheap-module-source-map` 或 `eval-source-map` 提升速度；生产根据安全/调试需求选择 hidden-source-map 或关闭；Vite 默认在 build 关闭，可通过 `build.sourcemap` 开启。
-- 追问点:安全泄露；错误上报与 sourcemap 上传；性能影响。
-- 参考:https://webpack.js.org/configuration/devtool/
+## 🎯 基础概念
 
-### Q6:环境变量与模式？
-- 标准答案:Webpack 可用 DefinePlugin 注入；Vite 通过 `.env` 文件并以 `VITE_` 前缀暴露；注意构建时替换、不可在客户端暴露敏感信息。
-- 追问点:多环境配置；缓存；与 CI 集成。
-- 参考:https://vitejs.dev/guide/env-and-mode.html
+### 1. Webpack 和 Vite 的核心区别是什么？
 
-### Q7:性能优化要点？
-- 标准答案:开启缓存(webpack 5 持久化缓存)、多线程 thread-loader/esbuild-loader、减少 polyfill、利用 alias/externals、压缩与 splitting；Vite 用 esbuild 转换与 Rollup 优化，合理配置 `optimizeDeps`。
-- 追问点:大型 monorepo；预构建依赖；冷启动瓶颈定位。
-- 参考:https://webpack.js.org/configuration/cache/
+**核心答案**：
 
-### Q8:HMR 工作原理？
-- 标准答案:Webpack HMR 通过 dev server 与 runtime 交换模块更新；Vite 利用 ESM 直接替换受影响模块，避免重打包；状态保持取决于模块热更新处理。
-- 追问点:何时会整页刷新；受控/非受控状态；React/Vue 框架处理差异。
-- 参考:https://vitejs.dev/guide/api-hmr.html
+**Webpack**：
+- 打包器（Bundler）
+- 开发时需要打包所有模块
+- 启动慢，但生态成熟
+- 配置复杂但灵活
 
-## 场景/排查
-### Q1:构建体积过大怎么办？
-- 标准答案:开启分析工具(webpack-bundle-analyzer/rollup-plugin-visualizer)；拆分 vendors；移除未用 polyfill；使用懒加载与动态导入；开启 gzip/brotli。
-- 追问点:图标/图片优化；依赖裁剪；CDN 缓存。
-- 参考:https://webpack.js.org/guides/code-splitting/
+**Vite**：
+- 基于 ESM 的开发服务器
+- 按需编译，启动极快
+- 生产环境使用 Rollup
+- 配置简单，开箱即用
 
-### Q2:HMR 失效或全量刷新？
-- 标准答案:检查是否修改了配置文件/环境变量导致重启；确认框架 HMR 插件加载；状态不可序列化导致热替换失败；排查自定义插件是否处理热更新。
-- 追问点:CSS HMR 特性；SSR 项目热更；WS 连接被代理。
-- 参考:https://vitejs.dev/guide/api-hmr.html
+**代码示例**：
 
-## 反问
-### Q1:团队的构建工具统一吗？迁移计划？
-- 标准答案:了解当前使用 webpack 还是 Vite，是否有统一配置/脚手架。
-- 追问点:兼容 IE/老浏览器需求；包管理器；CI 缓存策略。
-- 参考:团队内部规范
+```javascript
+// Webpack - 需要打包
+// 启动时间：10-30秒（大型项目）
+npm run dev // 等待打包完成
 
-### Q2:性能指标与监控？
-- 标准答案:是否监控构建时长、包体、首屏/TTI；是否有自动报警或基线。
-- 追问点:SourceMap 上传流程；错误监控工具；性能 budgets。
-- 参考:团队内部规范
+// Vite - 按需编译
+// 启动时间：<1秒
+npm run dev // 立即启动
+```
+
+**追问点**：
+- 什么场景选择 Webpack？
+- Vite 如何处理 CommonJS 模块？
+- 为什么 Vite 生产环境用 Rollup？
+
+---
+
+### 2. 什么是 Tree Shaking？如何实现？
+
+**核心答案**：
+
+Tree Shaking 是移除未使用代码的优化技术。
+
+**实现条件**：
+1. 使用 ES6 模块（import/export）
+2. 生产模式（mode: 'production'）
+3. 正确配置 sideEffects
+
+**代码示例**：
+
+```javascript
+// math.js
+export const add = (a, b) => a + b
+export const subtract = (a, b) => a - b
+export const multiply = (a, b) => a * b
+
+// main.js
+import { add } from './math' // 只打包 add 函数
+
+// package.json
+{
+  "sideEffects": false // 所有文件都可以 Tree Shaking
+}
+
+// webpack.config.js
+module.exports = {
+  mode: 'production',
+  optimization: {
+    usedEx
+{
+      template: './index.html'
+    })
+  ]
+}
+```
+
+**追问点**：
+- 如何编写自定义 Loader？
+- 如何编写自定义 Plugin？
+- Loader 的执行顺序？
+
+---
+
+### 4. 代码分割有哪些方式？
+
+**核心答案**：
+
+1. **入口分割**：多个 entry
+2. **动态导入**：import()
+3. **SplitChunks**：提取公共代码
+
+**代码示例**：
+
+```javascript
+// 1. 入口分割
+module.exports = {
+  entry: {
+    app: './src/app.js',
+    admin: './src/admin.js'
+  }
+}
+
+// 2. 动态导入
+const Home = () => import('./pages/Home')
+
+// 3. SplitChunks
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors'
+        }
+      }
+    }
+  }
+}
+```
+
+**追问点**：
+- 如何控制 chunk 大小？
+- prefetch 和 preload 的区别？
+- 如何分析打包结果？
+
+---
+
+## ⚡ Vite 核心
+
+### 5. Vite 的依赖预构建是什么？
+
+**核心答案**：
+
+Vite 会预构建 node_modules 中的依赖，将 CommonJS/UMD 转换为 ESM。
+
+**原因**：
+1. 兼容性：转换 CommonJS 为 ESM
+2. 性能：减少模块请求数量
+3. 缓存：提高二次启动速度
+
+**代码示例**：
+
+```javascript
+// vite.config.js
+export default {
+  optimizeDeps: {
+    include: ['lodash-es'], // 强制预构建
+    exclude: ['your-package'], // 排除预构建
+    esbuildOptions: {
+      target: 'es2020'
+    }
+  }
+}
+
+// 清除缓存
+// rm -rf node_modules/.vite
+// vite --force
+```
+
+**追问点**：
+- 什么时候需要手动配置？
+- 如何调试预构建问题？
+- esbuild 的作用？
+
+---
+
+### 6. Vite 的 HMR 如何工作？
+
+**核心答案**：
+
+Vite 利用 ESM 的特性，直接替换更新的模块。
+
+**工作流程**：
+1. 文件变化
+2. 通过 WebSocket 通知客户端
+3. 客户端重新请求更新的模块
+4. 执行 HMR 回调
+
+**代码示例**：
+
+```javascript
+// 自动 HMR（框架已处理）
+// React/Vue 组件自动支持
+
+// 手动 HMR
+if (import.meta.hot) {
+  import.meta.hot.accept((newModule) => {
+    console.log('模块已更新')
+  })
+
+  import.meta.hot.dispose((data) => {
+    // 清理副作用
+    data.state = currentState
+  })
+}
+```
+
+**追问点**：
+- 为什么 Vite HMR 更快？
+- 什么情况会全量刷新？
+- 如何处理状态保持？
+
+---
+
+## 🚀 性能优化
+
+### 7. Webpack 构建速度如何优化？
+
+**核心答案**：
+
+1. **缓存**：持久化缓存
+2. **多线程**：thread-loader
+3. **缩小范围**：include/exclude
+4. **DLL**：预编译依赖（已过时）
+5. **升级**：Webpack 5
+
+**代码示例**：
+
+```javascript
+module.exports = {
+  // 1. 持久化缓存
+  cache: {
+    type: 'filesystem'
+  },
+
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        include: path.resolve('src'),
+        use: [
+          // 2. 多线程
+          'thread-loader',
+          {
+            loader: 'babel-loader',
+            options: {
+              cacheDirectory: true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**追问点**：
+- 如何分析构建性能？
+- externals 的作用？
+- 如何优化大型项目？
+
+---
+
+### 8. 如何减小打包体积？
+
+**核心答案**：
+
+1. **Tree Shaking**：移除未使用代码
+2. **代码分割**：按需加载
+3. **压缩**：Terser/esbuild
+4. **分析**：webpack-bundle-analyzer
+5. **优化依赖**：替换大型库
+
+**代码示例**：
+
+```javascript
+// 1. Tree Shaking
+import { debounce } from 'lodash-es' // ✅ 只打包 debounce
+// import _ from 'lodash' // ❌ 打包整个 lodash
+
+// 2. 代码分割
+const Chart = lazy(() => import('./Chart'))
+
+// 3. 压缩配置
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true
+          }
+        }
+      })
+    ]
+  }
+}
+```
+
+**追问点**：
+- gzip 和 brotli 的区别？
+- 如何优化图片资源？
+- CDN 的使用策略？
+
+---
+
+## 💼 实战场景
+
+### 9. 如何配置多环境？
+
+**核心答案**：
+
+使用环境变量和不同的配置文件。
+
+**代码示例**：
+
+```javascript
+// Webpack
+// webpack.dev.js
+module.exports = merge(common, {
+  mode: 'development',
+  devtool: 'eval-cheap-module-source-map'
+})
+
+// webpack.prod.js
+module.exports = merge(common, {
+  mode: 'production',
+  devtool: 'hidden-source-map'
+})
+
+// Vite
+// .env.development
+VITE_API_URL=http://localhost:8080
+
+// .env.production
+VITE_API_URL=https://api.production.com
+
+// 使用
+const apiUrl = import.meta.env.VITE_API_URL
+```
+
+**追问点**：
+- 如何管理敏感信息？
+- 如何实现灰度发布？
+- CI/CD 如何集成？
+
+---
+
+### 10. 如何处理兼容性问题？
+
+**核心答案**：
+
+使用 Babel 转译和 Polyfill。
+
+**代码示例**：
+
+```javascript
+// Webpack + Babel
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {
+                targets: '> 0.25%, not dead',
+                useBuiltIns: 'usage',
+                corejs: 3
+              }]
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
+
+// Vite + Legacy
+import legacy from '@vitejs/plugin-legacy'
+
+export default {
+  plugins: [
+    legacy({
+      targets: ['defaults', 'not IE 11']
+    })
+  ]
+}
+```
+
+**追问点**：
+- browserslist 如何配置？
+- Polyfill 的按需加载？
+- 如何测试兼容性？
+
+---
+
+## 📚 参考资源
+
+- [Webpack 官方文档](https://webpack.js.org/)
+- [Vite 官方文档](https://vitejs.dev/)
+- [Rollup 官方文档](https://rollupjs.org/)
+
+---
+
+**最后更新**: 2025-02

@@ -2,6 +2,19 @@
 
 > 第三天重点：HTTP/HTTPS、TCP/UDP、DNS 解析流程
 
+**更新时间**: 2025-01
+
+## 📋 目录
+
+- [今日目标](#今日目标)
+- [Part A: HTTP 协议](#part-a-http-协议)
+- [Part B: TCP/UDP](#part-b-tcpudp)
+- [Part C: HTTPS](#part-c-https)
+- [Part D: DNS](#part-d-dns)
+- [Part E: 跨域与安全](#part-e-跨域与安全)
+- [Part F: 综合场景](#part-f-综合场景)
+- [复习检查清单](#复习检查清单)
+
 ## 今日目标
 
 - [ ] 掌握 HTTP 方法、状态码、缓存机制

@@ -1,58 +1,148 @@
-﻿# CSS3/Tailwind
+# CSS3 & Tailwind CSS
 
-## 元信息
-- 定位与场景：CSS 负责样式与布局，Tailwind 提供原子化工具类。
-- 版本范围：以官方稳定版本为准。
-- 相关生态：PostCSS、Autoprefixer。
+> 现代 CSS 与原子化工具类完全指南
 
-## 研究记录（Exa）
-- 查询 1："CSS3 interview questions 2024 2025"
-- 查询 2："Tailwind CSS best practices documentation"
-- 查询 3："MDN CSS documentation"
-- 来源摘要：以 MDN 与 Tailwind 官方文档为主。
+**更新时间**: 2025-02
 
-## A. 面试宝典（Interview Guide）
+## 📋 目录
 
-> 题库详见：`interview-bank.md`
+- [CSS3 核心](#css3-核心)
+- [Tailwind CSS](#tailwind-css)
+- [布局技术](#布局技术)
+- [响应式设计](#响应式设计)
+- [最佳实践](#最佳实践)
 
-### 基础题
-- Q1：盒模型与 `box-sizing` 差异？
-  - A：影响元素宽高计算方式。
-- Q2：BFC 的概念与用途？
-  - A：解决浮动塌陷与布局问题。
-- Q3：Flex 与 Grid 的适用场景？
-  - A：一维布局 vs 二维布局。
-- Q4：Tailwind 的设计理念？
-  - A：原子化类名提升效率。
-- Q5：响应式断点如何配置？
-  - A：通过 Tailwind 配置与工具类。
+---
 
-### 进阶/场景题
-- Q1：如何控制 CSS 性能与可维护性？
-  - A：模块化、减少层叠复杂度。
-- Q2：如何统一样式体系？
-  - A：设计 tokens + Tailwind 主题。
+## 🎨 CSS3 核心
 
-### 避坑指南
-- 过度嵌套选择器导致维护困难。
-- Tailwind 类名堆叠过多可考虑抽组件。
+### 盒模型
 
-## B. 实战文档（Usage Manual）
-### 速查链接
-```txt
-- MDN CSS 文档：https://developer.mozilla.org/zh-CN/docs/Web/CSS
-- Tailwind 文档：https://tailwindcss.com/docs
-- 响应式断点：https://tailwindcss.com/docs/responsive-design
+```css
+/* 标准盒模型 */
+.box {
+  box-sizing: content-box; /* 默认 */
+  width: 200px;
+  padding: 20px;
+  border: 10px solid;
+  /* 实际宽度 = 200 + 20*2 + 10*2 = 260px */
+}
+
+/* IE 盒模型（推荐） */
+.box {
+  box-sizing: border-box;
+  width: 200px;
+  padding: 20px;
+  border: 10px solid;
+  /* 实际宽度 = 200px */
+}
 ```
 
-### 常用代码片段
+### Flexbox 布局
+
+```css
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.item {
+  flex: 1; /* flex-grow: 1; flex-shrink: 1; flex-basis: 0%; */
+}
+```
+
+### Grid 布局
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* 响应式 Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+```
+
+---
+
+## ⚡ Tailwind CSS
+
+### 快速开始
+
+```bash
+# 安装
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+# 配置 tailwind.config.js
+module.exports = {
+  content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
+  theme: {
+    extend: {}
+  },
+  plugins: []
+}
+```
+
+### 基础用法
+
 ```html
-<div class="flex flex-col md:flex-row gap-4">
-  <div class="md:w-1/2">左侧</div>
-  <div class="md:w-1/2">右侧</div>
+<!-- 布局 -->
+<div class="flex items-center justify-between p-4">
+  <h1 class="text-2xl font-bold">标题</h1>
+  <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+    按钮
+  </button>
 </div>
+
+<!-- 响应式 -->
+<div class="w-full md:w-1/2 lg:w-1/3">
+  响应式宽度
+</div>
+
+<!-- 状态变体 -->
+<button class="bg-blue-500 hover:bg-blue-600 focus:ring-2 disabled:opacity-50">
+  按钮
+</button>
 ```
 
-### 版本差异
-- CSS 特性与 Tailwind 版本随浏览器支持演进。
-- 升级以官方文档为准。
+### 主题定制
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#3B82F6',
+        secondary: '#10B981'
+      },
+      spacing: {
+        '128': '32rem'
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif']
+      }
+    }
+  }
+}
+```
+
+---
+
+## 📚 参考资源
+
+- [MDN CSS 文档](https://developer.mozilla.org/zh-CN/docs/Web/CSS)
+- [Tailwind CSS 官网](https://tailwindcss.com/)
+- [CSS Tricks](https://css-tricks.com/)
+
+---
+
+**最后更新**: 2025-02
