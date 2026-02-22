@@ -1350,3 +1350,42 @@
   **验证**：
   - ⏳ 等待 GitHub Actions 重新触发部署
   - ⏳ 检查 Cloudflare Pages 部署状态
+
+
+- ✅ **解决 Cloudflare Pages 部署问题**（2025-02-15）
+  
+  **问题**：
+  - Cloudflare API 返回 404 错误
+  - 错误信息：`Project not found. The specified project name does not match any of your existing projects.`
+  - 原因：Cloudflare Pages 项目 `tech-docs` 不存在
+  
+  **解决方案**：
+  1. ✅ 创建 `CLOUDFLARE_SETUP.md` 详细设置指南
+     - 方案一：通过 Cloudflare Dashboard 自动部署（推荐）
+     - 方案二：使用 GitHub Actions 部署（需要先创建项目）
+  
+  2. ✅ 禁用 GitHub Actions Cloudflare 部署
+     - 重命名 `.github/workflows/deploy.yml` → `deploy.yml.disabled`
+     - 推荐使用 Cloudflare Dashboard 连接 GitHub（更简单）
+  
+  3. ✅ 保留 GitHub Pages 部署
+     - `.github/workflows/deploy-github-pages.yml` 继续工作
+     - 网站地址：`https://longer008.github.io/tech-docs/`
+  
+  **推荐部署方式**：
+  - **GitHub Pages**（已启用）：自动部署，访问 `https://longer008.github.io/tech-docs/`
+  - **Cloudflare Pages**（需手动设置）：
+    1. 登录 Cloudflare Dashboard
+    2. Workers & Pages → Create application → Pages → Connect to Git
+    3. 选择 `tech-docs` 仓库
+    4. 配置构建：`pnpm docs:build`，输出目录：`docs/.vitepress/dist`
+    5. 保存并部署
+  
+  **提交信息**：
+  - Commit ID: fcc7278
+  - 已推送到 GitHub
+  
+  **文件更新**：
+  - ✅ 新增 `CLOUDFLARE_SETUP.md`
+  - ✅ 禁用 `.github/workflows/deploy.yml`
+  - ✅ 保留 `.github/workflows/deploy-github-pages.yml`
