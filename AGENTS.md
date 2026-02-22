@@ -1389,3 +1389,48 @@
   - ✅ 新增 `CLOUDFLARE_SETUP.md`
   - ✅ 禁用 `.github/workflows/deploy.yml`
   - ✅ 保留 `.github/workflows/deploy-github-pages.yml`
+
+
+- ✅ **修复 Cloudflare Pages 内存溢出问题**（2025-02-15）
+  
+  **问题**：
+  - 构建时出现 `JavaScript heap out of memory` 错误
+  - 错误代码：`ELIFECYCLE Command failed with exit code 134`
+  - 原因：Cloudflare Pages 默认内存限制约 1GB，VitePress 构建大型文档需要更多内存
+  
+  **解决方案**：
+  1. ✅ 创建 `wrangler.toml` 配置文件
+     - 设置构建命令：`NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build`
+     - 增加内存限制到 3GB
+     - 配置环境变量：`NODE_VERSION=20`, `NODE_OPTIONS=--max-old-space-size=3072`
+  
+  2. ✅ 更新 `package.json`
+     - 添加 `docs:build:cf` 脚本（带内存限制）
+  
+  3. ✅ 更新 `CLOUDFLARE_SETUP.md`
+     - 添加内存优化配置说明
+     - 更新构建命令和环境变量设置
+  
+  4. ✅ 创建 `CLOUDFLARE_BUILD_OPTIMIZATION.md`
+     - 详细的内存优化指南
+     - 三种解决方案
+     - 常见问题解答
+  
+  **Cloudflare 配置要点**：
+  ```yaml
+  构建命令: NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
+  构建输出目录: docs/.vitepress/dist
+  
+  环境变量:
+    NODE_VERSION: 20
+    NODE_OPTIONS: --max-old-space-size=3072
+  ```
+  
+  **提交信息**：
+  - Commit ID: 0629b8a
+  - 已推送到 GitHub
+  
+  **下一步**：
+  - 在 Cloudflare Dashboard 中更新项目配置
+  - 或者 Cloudflare 会自动读取 wrangler.toml 配置
+  - 重新触发部署（推送代码或手动 Retry）
