@@ -28,19 +28,29 @@
 ```yaml
 项目名称: tech-docs
 生产分支: main
-框架预设: VitePress
-构建命令: pnpm docs:build
+框架预设: None (不选择预设)
+构建命令: NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
 构建输出目录: docs/.vitepress/dist
 根目录: / (留空)
 ```
+
+**重要**：构建命令必须包含 `NODE_OPTIONS='--max-old-space-size=3072'` 以增加内存限制，避免构建时内存溢出。
 
 ### 步骤 5：环境变量（可选）
 
 点击 **Environment variables** 添加：
 
 ```bash
+# Node.js 版本
 NODE_VERSION=20
+
+# 内存限制（重要！防止构建时内存溢出）
+NODE_OPTIONS=--max-old-space-size=3072
 ```
+
+**说明**：
+- `NODE_VERSION=20`：指定 Node.js 版本
+- `NODE_OPTIONS=--max-old-space-size=3072`：增加内存限制到 3GB
 
 ### 步骤 6：保存并部署
 

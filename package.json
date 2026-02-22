@@ -6,6 +6,7 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
+    "docs:build:cf": "NODE_OPTIONS='--max-old-space-size=3072' vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 docs/public/favicon.svg"
   },
