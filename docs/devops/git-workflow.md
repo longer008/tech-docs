@@ -372,7 +372,7 @@ Closes #123
 
 ### .gitignore 模板
 
-```gitignore
+```text
 # 依赖
 node_modules/
 vendor/

@@ -1509,8 +1509,8 @@ uni.chooseImage({
 ```vue
 <template>
   <!-- 优先使用 WebP，不支持则降级到 JPG -->
-  <image 
-    :src="imageUrl + '.webp'" 
+  <image
+    :src="imageUrl + '.webp'"
     @error="handleImageError"
   />
 </template>
@@ -1519,71 +1519,73 @@ uni.chooseImage({
 export default {
   data() {
     return {
-      imageUrl: 'https://exa}
-      })
-      
-      this.list = res.data.list
-      this.hasMore = res.data.hasMore
-      this.loading = false
-    },
-    
-    async loadMore() {
-      this.loading = true
-      this.page++
-      
-      const res = await uni.request({
-        url: '/api/list',
-        data: {
-          page: this.page,
-          pageSize: this.pageSize
-        }
-      })
-      
-      this.list = [...this.list, ...res.data.list]
-      this.hasMore = res.data.hasMore
-      this.loading = false
+      imageUrl: 'https://example.com/image'
+    }
+  },
+
+  methods: {
+    handleImageError(e) {
+      // WebP 加载失败，降级到 JPG
+      e.target.src = this.imageUrl + '.jpg'
     }
   }
 }
 </script>
 ```
 
-### 图mplate>
+### 图片懒加载
+
+```vue
+<template>
+  <image
+    :src="item.image"
+    lazy-load
+    mode="aspectFill"
+  />
+</template>
+```
+
+### 长列表优化
+
+**1. 虚拟列表**：
+
+```vue
+<template>
+  <view class="container">
+    <scroll-view
+      scroll-y
+      :style="{ height: scrollHeight + 'px' }"
+      @scroll="handleScroll"
+    >
+      <view
+        v-for="item in visibleList"
+        :key="item.id"
+        class="item"
+      >
+        {{ item.name }}
+      </view>
+    </scroll-view>
+  </view>
+</template>
 
 <script>
 export default {
   data() {
     return {
       list: [],
-      page: 1,
-      pageSize: 20,
-      loading: false,
-      hasMore: true
+      visibleList: [],
+      scrollHeight: 600,
+      itemHeight: 80,
+      visibleCount: 10
     }
   },
-  
-  onLoad() {
-    this.loadData()
-  },
-  
-  onReachBottom() {
-    if (!this.hasMore || this.loading) return
-    this.loadMore()
-  },
-  
+
   methods: {
-    async loadData() {
-      this.loading = true
-      
-      const res = await uni.request({
-        url: '/api/list',
-        data: {
-          page: this.page,
-          pageSize: this.pageSize
-        ollTop
+    handleScroll(e) {
+      const scrollTop = e.detail.scrollTop
       const startIndex = Math.floor(scrollTop / this.itemHeight)
       const endIndex = startIndex + this.visibleCount
-      
+
       this.visibleList = this.list.slice(startIndex, endIndex)
     }
   }
@@ -1599,26 +1601,14 @@ export default {
     <view v-for="item in list" :key="item.id">
       {{ item.name }}
     </view>
-    
+
     <view v-if="loading" class="loading">
       加载中...
     </view>
-    
+
     <view v-if="!hasMore" class="no-more">
       没有更多了
     </view>
-  </view>
-</tet: scrollHeight + 'px' }"
-      @scroll="handleScroll"
-    >
-      <view 
-        v-for="item in visibleList" 
-        :key="item.id"
-        class="item"
-      >
-        {{ item.name }}
-      </view>
-    </scroll-view>
   </view>
 </template>
 
@@ -1626,62 +1616,71 @@ export default {
 export default {
   data() {
     return {
-      list: [],           // 完整列表
-      visibleList: [],    // 可见列表
-      scrollHeight: 600,
-      itemHeight: 80,
-      visibleCount: 10
+      list: [],
+      page: 1,
+      pageSize: 20,
+      loading: false,
+      hasMore: true
     }
   },
-  
+
+  onLoad() {
+    this.loadData()
+  },
+
+  onReachBottom() {
+    if (!this.hasMore || this.loading) return
+    this.loadMore()
+  },
+
   methods: {
-    handleScroll(e) {
-      const scrollTop = e.detail.scrleton-item {
-  height: 80rpx;
-  background: #f5f5f5;
-  margin-bottom: 20rpx;
-  border-radius: 8rpx;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-}
+    async loadData() {
+      this.loading = true
 
-@keyframes skeleton-loading {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
+      const res = await uni.request({
+        url: '/api/list',
+        data: {
+          page: this.page,
+          pageSize: this.pageSize
+        }
+      })
+
+      this.list = res.data.list
+      this.hasMore = res.data.hasMore
+      this.loading = false
+    },
+
+    async loadMore() {
+      this.loading = true
+      this.page++
+
+      const res = await uni.request({
+        url: '/api/list',
+        data: {
+          page: this.page,
+          pageSize: this.pageSize
+        }
+      })
+
+      this.list = [...this.list, ...res.data.list]
+      this.hasMore = res.data.hasMore
+      this.loading = false
+    }
   }
 }
-</style>
+</script>
 ```
 
-**3. 图片懒加载**：
-
-```vue
-<template>
-  <image 
-    :src="item.image" 
-    lazy-load
-    mode="aspectFill"
-  />
-</template>
-```
-
-### 长列表优化
-
-**1. 虚拟列表**：
+**3. 骨架屏**：
 
 ```vue
 <template>
   <view class="container">
-    <scroll-view 
-      scroll-y
-      :style="{ heigh-->
     <view v-if="loading" class="skeleton">
       <view class="skeleton-item"></view>
       <view class="skeleton-item"></view>
     </view>
-    
+
     <!-- 实际内容 -->
     <view v-else>
       <view v-for="item in list" :key="item.id">
@@ -1699,7 +1698,7 @@ export default {
       list: []
     }
   },
-  
+
   onLoad() {
     this.loadData().then(() => {
       this.loading = false
@@ -1709,109 +1708,23 @@ export default {
 </script>
 
 <style>
-.ske
+.skeleton-item {
+  height: 80rpx;
+  background: #f5f5f5;
+  margin-bottom: 20rpx;
+  border-radius: 8rpx;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
 
-      const scrollTop = e.detail.scrollTop
-      const startIndex = Math.floor(scrollTop / this.itemHeight)
-      const endIndex = startIndex + this.visibleCount
-      
-      this.visibleList = this.list.slice(startIndex, endIndex)
-    }
+@keyframes skeleton-loading {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
-</script>
-```
-
-**2. 分页加载**：
-
-```vue
-<template>
-  <view class="container">
-    <view v-for="item in list" :key="item.id">
-      {{ item.name }}
-    </view>
-    
-    <view v-if="loading" class="loading">
-      加载中...
-    </view>
-    
-    <view v-if="!hasMore" class="no-more">
-      没有更多了
-    </view>
-  </view>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      list: [],
-      page: 1,
-      pageSize: 20,
-      loading: false,
-      hasMore: true
-    }
-  },
-  
-  onLoad() {
-    this.loadData()
-  },
-  
-  onReachBottom() {
-    if (!this.hasMore || this.loading) return
-    this.loadMore()
-  },
-  
-  methods: {
-    async loadData() {
-      this.loading = true
-      
-      const res = await uni.request({
-        url: '/api/list',
-        data: {
-          page: this.page,
-          pageSize: this.pageSize
-        }
-      })
-      
-      this.list = res.data.list
-      this.hasMore = res.data.hasMore
-      this.loading = false
-    },
-    
-    async loadMore() {
-      this.loading = true
-      this.page++
-      
-      const res = await uni.request({
-        url: '/api/list',
-        data: {
-          page: this.page,
-          pageSize: this.pageSize
-        }
-      })
-image 
-    :src="imageUrl + '.webp'" 
-    @error="handleImageError"
-  />
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      imageUrl: 'https://example.com/image'
-    }
-  },
-  
-  methods: {
-    handleImageError(e) {
-      // WebP 加载失败，降级到 JPG
-      e.target.src = this.imageUrl + '.jpg'
-    }
-  }
-}
-</script>
+</style>
 ```
 
 ### nvue 原生渲染

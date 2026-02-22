@@ -1,6 +1,12 @@
 # 数据结构基础面试题集
 
 > 数据结构基础知识与高频面试题
+> 
+> 更新时间：2025-02
+
+## 目录
+
+[[toc]]
 
 ## A. 面试宝典
 
@@ -885,4 +891,806 @@ const obj = {};
 obj.key = 'value';        // O(1)
 obj.key;                  // O(1)
 delete obj.key;           // O(1)
+```
+
+
+---
+
+#### 8. Trie 树（前缀树）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Trie 树结构                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  存储单词：cat, car, card, dog, door                        │
+│                                                              │
+│                  root                                        │
+│                 /    \                                       │
+│                c      d                                      │
+│               /        \                                     │
+│              a          o                                    │
+│             / \          \                                   │
+│            t   r          g*                                 │
+│           *     \          \                                 │
+│                  d          o                                │
+│                   \          \                               │
+│                    *          r*                             │
+│                                                              │
+│  * 表示单词结束                                              │
+│                                                              │
+│  时间复杂度：                                               │
+│  - 插入：O(m)  m为字符串长度                                │
+│  - 查找：O(m)                                               │
+│  - 前缀搜索：O(m)                                           │
+│                                                              │
+│  空间复杂度：O(ALPHABET_SIZE * N * M)                      │
+│  N为单词数，M为平均长度                                     │
+│                                                              │
+│  应用场景：                                                  │
+│  - 自动补全                                                  │
+│  - 拼写检查                                                  │
+│  - IP 路由表                                                │
+│  - 字符串前缀匹配                                           │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+```javascript
+// Trie 节点
+class TrieNode {
+  constructor() {
+    this.children = new Map();
+    this.isEndOfWord = false;
+  }
+}
+
+// Trie 树
+class Trie {
+  constructor() {
+    this.root = new TrieNode();
+  }
+
+  // 插入单词
+  insert(word) {
+    let node = this.root;
+    for (const char of word) {
+      if (!node.children.has(char)) {
+        node.children.set(char, new TrieNode());
+      }
+      node = node.children.get(char);
+    }
+    node.isEndOfWord = true;
+  }
+
+  // 查找单词
+  search(word) {
+    let node = this.root;
+    for (const char of word) {
+      if (!node.children.has(char)) {
+        return false;
+      }
+      node = node.children.get(char);
+    }
+    return node.isEndOfWord;
+  }
+
+  // 前缀搜索
+  startsWith(prefix) {
+    let node = this.root;
+    for (const char of p
+ath);
+      }
+      for (const [char, child] of node.children) {
+        dfs(child, path + char);
+      }
+    };
+
+    dfs(node, '');
+    return result;
+  }
+
+  // 删除单词
+  delete(word) {
+    const deleteHelper = (node, word, index) => {
+      if (index === word.length) {
+        if (!node.isEndOfWord) return false;
+        node.isEndOfWord = false;
+        return node.children.size === 0;
+      }
+
+      const char = word[index];
+      const child = node.children.get(char);
+      if (!child) return false;
+
+      const shouldDeleteChild = deleteHelper(child, word, index + 1);
+
+      if (shouldDeleteChild) {
+        node.children.delete(char);
+        return node.children.size === 0 && !node.isEndOfWord;
+      }
+
+      return false;
+    };
+
+    deleteHelper(this.root, word, 0);
+  }
+}
+
+// 使用示例
+const trie = new Trie();
+trie.insert('apple');
+trie.insert('app');
+trie.insert('application');
+console.log(trie.search('app'));        // true
+console.log(trie.startsWith('app'));    // true
+console.log(trie.autocomplete('app'));  // ['app', 'apple', 'application']
+```
+
+---
+
+#### 9. 并查集（Union-Find）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    并查集原理                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  用途：处理不相交集合的合并与查询                           │
+│                                                              │
+│  初始状态（每个元素独立）：                                 │
+│  0  1  2  3  4  5                                           │
+│  │  │  │  │  │  │                                           │
+│                                                              │
+│  合并 0-1, 2-3, 4-5：                                       │
+│  0     2     4                                              │
+│  │     │     │                                              │
+│  1     3     5                                              │
+│                                                              │
+│  再合并 0-2：                                               │
+│      0                                                      │
+│    /   \                                                    │
+│   1     2                                                   │
+│         │                                                   │
+│         3                                                   │
+│                                                              │
+│  操作：                                                      │
+│  - find(x)：查找 x 的根节点                                 │
+│  - union(x, y)：合并 x 和 y 所在集合                        │
+│  - connected(x, y)：判断 x 和 y 是否在同一集合              │
+│                                                              │
+│  优化：                                                      │
+│  1. 路径压缩：find 时将节点直接连到根                       │
+│  2. 按秩合并：小树合并到大树                                │
+│                                                              │
+│  时间复杂度：O(α(n))  α为反阿克曼函数，近似 O(1)            │
+│                                                              │
+│  应用场景：                                                  │
+│  - 判断图的连通性                                           │
+│  - 最小生成树（Kruskal）                                    │
+│  - 社交网络（朋友圈）                                       │
+│  - 图像分割                                                 │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+```javascript
+// 并查集
+class UnionFind {
+  constructor(n) {
+    this.parent = Array.from({ length: n }, (_, i) => i);
+    this.rank = new Array(n).fill(1);  // 树的高度
+    this.count = n;  // 连通分量数
+  }
+
+  // 查找根节点（路径压缩）
+  find(x) {
+    if (this.parent[x] !== x) {
+      this.parent[x] = this.find(this.parent[x]);  // 路径压缩
+    }
+    return this.parent[x];
+  }
+
+  // 合并两个集合（按秩合并）
+  union(x, y) {
+    const rootX = this.find(x);
+    const rootY = this.find(y);
+
+    if (rootX === rootY) return false;
+
+    // 按秩合并：小树合并到大树
+    if (this.rank[rootX] < this.rank[rootY]) {
+      this.parent[rootX] = rootY;
+    } else if (this.rank[rootX] > this.rank[rootY]) {
+      this.parent[rootY] = rootX;
+    } else {
+      this.parent[rootY] = rootX;
+      this.rank[rootX]++;
+    }
+
+    this.count--;
+    return true;
+  }
+
+  // 判断是否连通
+  connected(x, y) {
+    return this.find(x) === this.find(y);
+  }
+
+  // 获取连通分量数
+  getCount() {
+    return this.count;
+  }
+}
+
+// 应用：判断图中是否有环
+function hasCycle(n, edges) {
+  const uf = new UnionFind(n);
+  for (const [u, v] of edges) {
+    if (uf.connected(u, v)) {
+      return true;  // 已连通，添加边会形成环
+    }
+    uf.union(u, v);
+  }
+  return false;
+}
+
+// 应用：朋友圈数量
+function findCircleNum(isConnected) {
+  const n = isConnected.length;
+  const uf = new UnionFind(n);
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (isConnected[i][j] === 1) {
+        uf.union(i, j);
+      }
+    }
+  }
+
+  return uf.getCount();
+}
+```
+
+---
+
+#### 10. 线段树（Segment Tree）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    线段树结构                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  数组：[1, 3, 5, 7, 9, 11]                                  │
+│                                                              │
+│  线段树（存储区间和）：                                      │
+│                                                              │
+│                    [0,5]:36                                  │
+│                   /         \                                │
+│            [0,2]:9          [3,5]:27                         │
+│           /      \          /       \                        │
+│       [0,1]:4  [2,2]:5  [3,4]:16  [5,5]:11                  │
+│       /    \            /     \                              │
+│   [0,0]:1 [1,1]:3   [3,3]:7  [4,4]:9                        │
+│                                                              │
+│  操作：                                                      │
+│  - build：构建线段树 O(n)                                   │
+│  - update：更新单点 O(log n)                                │
+│  - query：查询区间 O(log n)                                 │
+│                                                              │
+│  应用场景：                                                  │
+│  - 区间求和/最值                                            │
+│  - 区间更新                                                 │
+│  - 动态 RMQ（Range Minimum Query）                          │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+```javascript
+// 线段树（区间求和）
+class SegmentTree {
+  constructor(arr) {
+    this.n = arr.length;
+    this.tree = new Array(4 * this.n).fill(0);
+    this.build(arr, 0, 0, this.n - 1);
+  }
+
+  // 构建线段树
+  build(arr, node, start, end) {
+    if (start === end) {
+      this.tree[node] = arr[start];
+      return;
+    }
+
+    const mid = Math.floor((start + end) / 2);
+    const leftNode = 2 * node + 1;
+    const rightNode = 2 * node + 2;
+
+    this.build(arr, leftNode, start, mid);
+    this.build(arr, rightNode, mid + 1, end);
+
+    this.tree[node] = this.tree[leftNode] + this.tree[rightNode];
+  }
+
+  // 更新单点
+  update(index, value) {
+    this._update(0, 0, this.n - 1, index, value);
+  }
+
+  _update(node, start, end, index, value) {
+    if (start === end) {
+      this.tree[node] = value;
+      return;
+    }
+
+    const mid = Math.floor((start + end) / 2);
+    const leftNode = 2 * node + 1;
+    const rightNode = 2 * node + 2;
+
+    if (index <= mid) {
+      this._update(leftNode, start, mid, index, value);
+    } else {
+      this._update(rightNode, mid + 1, end, index, value);
+    }
+
+    this.tree[node] = this.tree[leftNode] + this.tree[rightNode];
+  }
+
+  // 查询区间和
+  query(left, right) {
+    return this._query(0, 0, this.n - 1, left, right);
+  }
+
+  _query(node, start, end, left, right) {
+    // 区间完全不重叠
+    if (right < start || left > end) {
+      return 0;
+    }
+
+    // 区间完全包含
+    if (left <= start && end <= right) {
+      return this.tree[node];
+    }
+
+    // 区间部分重叠
+    const mid = Math.floor((start + end) / 2);
+    const leftNode = 2 * node + 1;
+    const rightNode = 2 * node + 2;
+
+    const leftSum = this._query(leftNode, start, mid, left, right);
+    const rightSum = this._query(rightNode, mid + 1, end, left, right);
+
+    return leftSum + rightSum;
+  }
+}
+
+// 使用示例
+const arr = [1, 3, 5, 7, 9, 11];
+const segTree = new SegmentTree(arr);
+console.log(segTree.query(1, 3));  // 3 + 5 + 7 = 15
+segTree.update(1, 10);
+console.log(segTree.query(1, 3));  // 10 + 5 + 7 = 22
+```
+
+---
+
+### 高频面试题
+
+#### 11. LRU 缓存实现
+
+```javascript
+/**
+ * LRU（Least Recently Used）缓存
+ * 使用哈希表 + 双向链表实现
+ * 
+ * 时间复杂度：get O(1), put O(1)
+ * 空间复杂度：O(capacity)
+ */
+
+class LRUNode {
+  constructor(key, value) {
+    this.key = key;
+    this.value = value;
+    this.prev = null;
+    this.next = null;
+  }
+}
+
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.cache = new Map();
+    // 哨兵节点
+    this.head = new LRUNode(0, 0);
+    this.tail = new LRUNode(0, 0);
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) {
+      return -1;
+    }
+    const node = this.cache.get(key);
+    // 移到头部（最近使用）
+    this.removeNode(node);
+    this.addToHead(node);
+    return node.value;
+  }
+
+  put(key, value) {
+    if (this.cache.has(key)) {
+      // 更新已存在的节点
+      const node = this.cache.get(key);
+      node.value = value;
+      this.removeNode(node);
+      this.addToHead(node);
+    } else {
+      // 添加新节点
+      const node = new LRUNode(key, value);
+      this.cache.set(key, node);
+      this.addToHead(node);
+
+      // 超过容量，删除尾部（最久未使用）
+      if (this.cache.size > this.capacity) {
+        const removed = this.removeTail();
+        this.cache.delete(removed.key);
+      }
+    }
+  }
+
+  addToHead(node) {
+    node.prev = this.head;
+    node.next = this.head.next;
+    this.head.next.prev = node;
+    this.head.next = node;
+  }
+
+  removeNode(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+  }
+
+  removeTail() {
+    const node = this.tail.prev;
+    this.removeNode(node);
+    return node;
+  }
+}
+
+// 使用示例
+const cache = new LRUCache(2);
+cache.put(1, 1);
+cache.put(2, 2);
+console.log(cache.get(1));  // 1
+cache.put(3, 3);            // 淘汰 key 2
+console.log(cache.get(2));  // -1
+```
+
+---
+
+#### 12. 跳表（Skip List）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    跳表结构                                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Level 3:  1 ────────────────────────▶ 9                   │
+│  Level 2:  1 ──────▶ 4 ──────▶ 7 ───▶ 9                    │
+│  Level 1:  1 ──▶ 3 ─▶ 4 ──▶ 6 ─▶ 7 ──▶ 9                   │
+│  Level 0:  1 ─▶ 2 ─▶ 3 ─▶ 4 ─▶ 5 ─▶ 6 ─▶ 7 ─▶ 8 ─▶ 9      │
+│                                                              │
+│  特点：                                                      │
+│  - 有序链表 + 多层索引                                      │
+│  - 空间换时间                                               │
+│  - 随机化层数                                               │
+│                                                              │
+│  时间复杂度：                                               │
+│  - 查找：O(log n)                                           │
+│  - 插入：O(log n)                                           │
+│  - 删除：O(log n)                                           │
+│                                                              │
+│  应用：Redis 的 Sorted Set                                  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+```javascript
+class SkipListNode {
+  constructor(value, level) {
+    this.value = value;
+    this.forward = new Array(level + 1).fill(null);
+  }
+}
+
+class SkipList {
+  constructor(maxLevel = 16, p = 0.5) {
+    this.maxLevel = maxLevel;
+    this.p = p;
+    this.level = 0;
+    this.header = new SkipListNode(-Infinity, maxLevel);
+  }
+
+  // 随机层数
+  randomLevel() {
+    let level = 0;
+    while (Math.random() < this.p && level < this.maxLevel) {
+      level++;
+    }
+    return level;
+  }
+
+  // 查找
+  search(target) {
+    let curr = this.header;
+    for (let i = this.level; i >= 0; i--) {
+      while (curr.forward[i] && curr.forward[i].value < target) {
+        curr = curr.forward[i];
+      }
+    }
+    curr = curr.forward[0];
+    return curr && curr.value === target;
+  }
+
+  // 插入
+  insert(value) {
+    const update = new Array(this.maxLevel + 1).fill(null);
+    let curr = this.header;
+
+    // 找到每层的插入位置
+    for (let i = this.level; i >= 0; i--) {
+      while (curr.forward[i] && curr.forward[i].value < value) {
+        curr = curr.forward[i];
+      }
+      update[i] = curr;
+    }
+
+    const newLevel = this.randomLevel();
+    if (newLevel > this.level) {
+      for (let i = this.level + 1; i <= newLevel; i++) {
+        update[i] = this.header;
+      }
+      this.level = newLevel;
+    }
+
+    const newNode = new SkipListNode(value, newLevel);
+    for (let i = 0; i <= newLevel; i++) {
+      newNode.forward[i] = update[i].forward[i];
+      update[i].forward[i] = newNode;
+    }
+  }
+
+  // 删除
+  delete(value) {
+    const update = new Array(this.maxLevel + 1).fill(null);
+    let curr = this.header;
+
+    for (let i = this.level; i >= 0; i--) {
+      while (curr.forward[i] && curr.forward[i].value < value) {
+        curr = curr.forward[i];
+      }
+      update[i] = curr;
+    }
+
+    curr = curr.forward[0];
+    if (curr && curr.value === value) {
+      for (let i = 0; i <= this.level; i++) {
+        if (update[i].forward[i] !== curr) break;
+        update[i].forward[i] = curr.forward[i];
+      }
+
+      // 更新层数
+      while (this.level > 0 && !this.header.forward[this.level]) {
+        this.level--;
+      }
+      return true;
+    }
+    return false;
+  }
+}
+```
+
+---
+
+## C. 数据结构选择指南
+
+### 场景对应表
+
+| 场景 | 推荐数据结构 | 原因 |
+|------|-------------|------|
+| 快速查找 | 哈希表 | O(1) 查找 |
+| 有序数据 | 二叉搜索树、跳表 | 支持范围查询 |
+| 优先级队列 | 堆 | O(log n) 插入删除 |
+| 最近使用 | LRU（哈希表+链表） | O(1) 访问和更新 |
+| 前缀匹配 | Trie 树 | 高效前缀搜索 |
+| 集合操作 | 并查集 | 快速合并查询 |
+| 区间查询 | 线段树、树状数组 | O(log n) 区间操作 |
+| 撤销操作 | 栈 | LIFO 特性 |
+| 任务调度 | 队列 | FIFO 特性 |
+| 图遍历 | DFS（栈）、BFS（队列） | 系统性遍历 |
+
+### 性能对比
+
+```
+数据结构          查找      插入      删除      空间
+──────────────────────────────────────────────────
+数组              O(n)      O(n)      O(n)      O(n)
+有序数组          O(log n)  O(n)      O(n)      O(n)
+链表              O(n)      O(1)*     O(1)*     O(n)
+哈希表            O(1)      O(1)      O(1)      O(n)
+二叉搜索树        O(log n)  O(log n)  O(log n)  O(n)
+平衡树(AVL/红黑)  O(log n)  O(log n)  O(log n)  O(n)
+堆                O(n)      O(log n)  O(log n)  O(n)
+Trie              O(m)      O(m)      O(m)      O(ALPHABET*N*M)
+跳表              O(log n)  O(log n)  O(log n)  O(n log n)
+
+* 已知位置的情况下
+m: 字符串长度
+```
+
+---
+
+## D. 面试技巧
+
+### 1. 问题分析步骤
+
+```
+1. 理解问题
+   - 输入输出是什么？
+   - 有什么限制条件？
+   - 边界情况有哪些？
+
+2. 选择数据结构
+   - 需要什么操作？
+   - 时间空间要求？
+   - 是否需要有序？
+
+3. 设计算法
+   - 暴力解法
+   - 优化思路
+   - 权衡取舍
+
+4. 编码实现
+   - 清晰的变量命名
+   - 处理边界情况
+   - 添加注释
+
+5. 测试验证
+   - 正常用例
+   - 边界用例
+   - 异常用例
+```
+
+### 2. 常见优化技巧
+
+```javascript
+// 1. 空间换时间：使用哈希表
+// 两数之和 - O(n²) → O(n)
+function twoSum(nums, target) {
+  const map = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (map.has(complement)) {
+      return [map.get(complement), i];
+    }
+    map.set(nums[i], i);
+  }
+  return [];
+}
+
+// 2. 双指针：减少嵌套循环
+// 三数之和 - O(n³) → O(n²)
+function threeSum(nums) {
+  nums.sort((a, b) => a - b);
+  const result = [];
+  
+  for (let i = 0; i < nums.length - 2; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+    
+    let left = i + 1, right = nums.length - 1;
+    while (left < right) {
+      const sum = nums[i] + nums[left] + nums[right];
+      if (sum === 0) {
+        result.push([nums[i], nums[left], nums[right]]);
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
+        left++;
+        right--;
+      } else if (sum < 0) {
+        left++;
+      } else {
+        right--;
+      }
+    }
+  }
+  return result;
+}
+
+// 3. 单调栈：优化查找
+// 下一个更大元素 - O(n²) → O(n)
+function nextGreaterElement(nums) {
+  const result = new Array(nums.length).fill(-1);
+  const stack = [];
+  
+  for (let i = 0; i < nums.length; i++) {
+    while (stack.length > 0 && nums[i] > nums[stack[stack.length - 1]]) {
+      const index = stack.pop();
+      result[index] = nums[i];
+    }
+    stack.push(i);
+  }
+  return result;
+}
+
+// 4. 前缀和：优化区间查询
+// 区间和查询 - O(n) → O(1)
+class NumArray {
+  constructor(nums) {
+    this.prefixSum = [0];
+    for (const num of nums) {
+      this.prefixSum.push(this.prefixSum[this.prefixSum.length - 1] + num);
+    }
+  }
+  
+  sumRange(left, right) {
+    return this.prefixSum[right + 1] - this.prefixSum[left];
+  }
+}
+```
+
+### 3. 面试加分项
+
+```
+✅ 主动讨论时间空间复杂度
+✅ 考虑边界情况和异常处理
+✅ 代码风格清晰，命名规范
+✅ 提出多种解法并对比
+✅ 优化思路清晰
+✅ 能够举一反三
+
+❌ 直接写代码不思考
+❌ 忽略边界情况
+❌ 代码混乱难读
+❌ 只会一种解法
+❌ 不考虑复杂度
+```
+
+---
+
+## E. 参考资料
+
+### 在线资源
+
+- [LeetCode](https://leetcode.com/) - 算法题库
+- [VisuAlgo](https://visualgo.net/) - 数据结构可视化
+- [Big-O Cheat Sheet](https://www.bigocheatsheet.com/) - 复杂度速查
+- [JavaScript Algorithms](https://github.com/trekhleb/javascript-algorithms) - JS 算法实现
+
+### 推荐书籍
+
+- 《算法导论》- 经典教材
+- 《数据结构与算法分析》- 系统学习
+- 《剑指 Offer》- 面试题集
+- 《编程珠玑》- 算法思维
+
+### 学习路线
+
+```
+初级（1-2个月）：
+- 数组、链表、栈、队列
+- 哈希表、字符串
+- 基础算法（排序、查找）
+
+中级（2-3个月）：
+- 树（二叉树、BST、堆）
+- 图（DFS、BFS）
+- 动态规划入门
+- 回溯算法
+
+高级（3-6个月）：
+- 高级树（Trie、线段树、并查集）
+- 高级图算法
+- 复杂动态规划
+- 贪心算法
 ```

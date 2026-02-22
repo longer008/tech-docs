@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
+import { withPwa } from '@vite-pwa/vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { katex } from '@mdit/plugin-katex'
 import footnote from 'markdown-it-footnote'
@@ -9,12 +10,12 @@ import sup from 'markdown-it-sup'
 import taskLists from 'markdown-it-task-lists'
 import UnoCSS from 'unocss/vite'
 import NProgress from 'vitepress-plugin-nprogress'
-import googleAnalytics from 'vitepress-plugin-google-analytics'
 import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-icons'
 
 // https://vitepress.dev/reference/site-config
-export default withMermaid(
-  defineConfig({
+export default withPwa(
+  withMermaid(
+    defineConfig({
     title: '技术面试知识库',
     description: '全栈开发技术面试准备与实战文档',
     lang: 'zh-CN',
@@ -29,6 +30,9 @@ export default withMermaid(
       ['link', { rel: 'icon', type: 'image/svg+xml', href: '/tech-docs/favicon.svg' }],
       ['link', { rel: 'icon', type: 'image/png', href: '/tech-docs/favicon.png' }],
       ['meta', { name: 'theme-color', content: '#3eaf7c' }],
+      ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
+      ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
+      ['link', { rel: 'apple-touch-icon', href: '/tech-docs/apple-touch-icon-180x180.png' }],
       ['meta', { name: 'og:type', content: 'website' }],
       ['meta', { name: 'og:locale', content: 'zh-CN' }],
       // KaTeX 样式
@@ -43,18 +47,19 @@ export default withMermaid(
         UnoCSS(),
         NProgress(),
         groupIconVitePlugin(),
-        googleAnalytics({
-          id: process.env.GOOGLE_ANALYTICS_ID || 'G-PLACEHOLDER'
-        }),
       ],
       optimizeDeps: {
-        exclude: ['@ai-sdk/provider-utils'],
+        exclude: [
+          '@ai-sdk/provider-utils',
+          '@nolebase/vitepress-plugin-enhanced-readabilities/client',
+        ],
         include: [
           '@braintree/sanitize-url',
           'dayjs',
           'debug',
           'cytoscape',
-          'cytoscape-cose-bilkent'
+          'cytoscape-cose-bilkent',
+          '@nolebase/vitepress-plugin-enhanced-readabilities > @nolebase/ui > @rive-app/canvas',
         ]
       },
       resolve: {
@@ -63,7 +68,12 @@ export default withMermaid(
         }
       },
       ssr: {
-        noExternal: ['mermaid']
+        noExternal: [
+          'mermaid',
+          '@nolebase/vitepress-plugin-enhanced-readabilities',
+          '@nolebase/ui',
+          '@nolebase/vitepress-plugin-highlight-targeted-heading',
+        ]
       }
     },
 
@@ -104,6 +114,7 @@ export default withMermaid(
     // 主题配置
     themeConfig: {
       // 站点标题和 Logo
+      logo: '/tech-docs/logo.svg',
       siteTitle: '技术面试知识库',
 
       // 搜索配置 - 使用官方 Local Search
@@ -146,10 +157,12 @@ export default withMermaid(
         {
           text: '前端',
           items: [
-            { text: 'JavaScript 基础', link: '/frontend/fundamentals/javascript-core-interview' },
+            { text: 'JavaScript 核心', link: '/frontend/fundamentals/javascript-core-interview' },
+            { text: 'JavaScript 进阶', link: '/frontend/fundamentals/javascript-advanced' },
             { text: 'Vue.js', link: '/frontend/vue/vue3-interview' },
             { text: 'React', link: '/frontend/react/react-hooks-interview' },
             { text: 'TypeScript', link: '/frontend/fundamentals/typescript-interview' },
+            { text: 'SSR 框架', link: '/frontend/react/nextjs-interview' },
             { text: '跨端开发', link: '/frontend/cross-platform/uniapp-interview' },
           ]
         },
@@ -157,10 +170,13 @@ export default withMermaid(
           text: '后端',
           items: [
             { text: 'Java', link: '/backend/java/java-core-interview' },
+            { text: 'Spring Boot', link: '/backend/spring-boot/' },
+            { text: 'MyBatis', link: '/backend/mybatis/' },
             { text: 'Node.js', link: '/backend/nodejs/nodejs-runtime-interview' },
             { text: 'Python', link: '/backend/python/python-core-interview' },
           ]
         },
+        { text: '全栈开发', link: '/fullstack/' },
         {
           text: '数据库',
           items: [
@@ -172,6 +188,15 @@ export default withMermaid(
         },
         { text: 'DevOps', link: '/devops/git-workflow' },
         { text: 'AI 面试', link: '/ai-interview/' },
+        {
+          text: '计算机基础',
+          items: [
+            { text: '数据结构', link: '/appendix/data-structures' },
+            { text: '算法模式', link: '/appendix/algorithm-patterns' },
+            { text: '设计模式', link: '/appendix/design-patterns' },
+            { text: '系统设计', link: '/appendix/system-design-templates' },
+          ]
+        },
         { text: '架构图', link: '/diagrams/' },
         { text: '插件文档', link: '/vitepress-plugins' },
       ],
@@ -219,6 +244,7 @@ export default withMermaid(
               { text: 'HTML5', link: '/frontend/fundamentals/html5-interview' },
               { text: 'CSS 核心', link: '/frontend/fundamentals/css-core-interview' },
               { text: 'JavaScript 核心', link: '/frontend/fundamentals/javascript-core-interview' },
+              { text: 'JavaScript 进阶', link: '/frontend/fundamentals/javascript-advanced' },
               { text: 'TypeScript', link: '/frontend/fundamentals/typescript-interview' },
               { text: 'SCSS/Less', link: '/frontend/fundamentals/scss-less-interview' },
               { text: '浏览器原理', link: '/frontend/fundamentals/browser-interview' },
@@ -235,6 +261,7 @@ export default withMermaid(
               { text: 'Vue2 面试题', link: '/frontend/vue/vue2-interview' },
               { text: 'Vue3 面试题', link: '/frontend/vue/vue3-interview' },
               { text: 'Vue3 vs Vue2', link: '/frontend/vue/vue3-vs-vue2' },
+              { text: 'Nuxt.js', link: '/frontend/vue/nuxtjs-interview' },
               { text: 'Vue 速查表', link: '/frontend/vue/vue-cheatsheet' },
               { text: 'Vue 题库', link: '/frontend/vue/interview-bank' },
             ]
@@ -293,9 +320,9 @@ export default withMermaid(
             items: [
               { text: 'Java 核心', link: '/backend/java/java-core-interview' },
               { text: 'JUC 并发', link: '/backend/java/juc-interview' },
-              { text: 'Spring Boot', link: '/backend/java/spring-boot-interview' },
-              { text: 'Spring Cloud', link: '/backend/java/spring-cloud-interview' },
-              { text: 'MyBatis', link: '/backend/java/mybatis-interview' },
+              { text: 'Spring Boot', link: '/backend/spring-boot/' },
+              { text: 'Spring Cloud', link: '/backend/spring-cloud/' },
+              { text: 'MyBatis', link: '/backend/mybatis/' },
               { text: 'Java 速查表', link: '/backend/java/java-cheatsheet' },
               { text: 'Java 题库', link: '/backend/java/interview-bank' },
             ]
@@ -461,9 +488,21 @@ export default withMermaid(
             items: [
               { text: '概述', link: '/ai-interview/' },
               { text: 'AI 工具使用', link: '/ai-interview/ai-tools-interview' },
-              { text: 'Prompt 工程', link: '/ai-interview/prompt-engineering-interview' },
+              { text: 'Prompt Engineering', link: '/ai-interview/prompt-engineering-interview' },
+              { text: 'Spring AI', link: '/ai-interview/spring-ai-interview' },
               { text: 'AI 辅助开发', link: '/ai-interview/ai-assisted-development' },
               { text: 'AI 伦理与风险', link: '/ai-interview/ai-ethics-risks' },
+            ]
+          }
+        ],
+
+        // 全栈开发
+        '/fullstack/': [
+          {
+            text: '全栈开发',
+            items: [
+              { text: '概述', link: '/fullstack/' },
+              { text: '全栈面试题', link: '/fullstack/fullstack-interview' },
             ]
           }
         ],
@@ -519,6 +558,30 @@ export default withMermaid(
       darkModeSwitchLabel: '主题',
       lightModeSwitchTitle: '切换到浅色模式',
       darkModeSwitchTitle: '切换到深色模式',
-    }
+    },
+
+    // PWA 配置
+    pwa: {
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'favicon.ico'],
+      manifest: {
+        name: '技术面试知识库',
+        short_name: '技术面试',
+        description: '全栈开发技术面试准备与实战文档',
+        theme_color: '#3eaf7c',
+        lang: 'zh-CN',
+        icons: [
+          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{css,js,html,svg,png,ico,txt,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
+    },
   })
+  )
 )
