@@ -58,23 +58,6 @@ NODE_OPTIONS=--max-old-space-size=3072
 2. 等待首次构建完成（约 2-5 分钟）
 3. 构建成功后，你会获得一个 URL：`https://tech-docs.pages.dev`
 
-### 步骤 7：禁用 GitHub Actions 部署（可选）
-
-如果使用 Cloudflare 自动部署，可以禁用 GitHub Actions：
-
-```bash
-# 重命名文件以禁用
-mv .github/workflows/deploy.yml .github/workflows/deploy.yml.disabled
-```
-
-或者删除该文件：
-
-```bash
-git rm .github/workflows/deploy.yml
-git commit -m "chore: 禁用 GitHub Actions Cloudflare 部署"
-git push
-```
-
 ---
 
 ## 🔧 方案二：使用 GitHub Actions 部署

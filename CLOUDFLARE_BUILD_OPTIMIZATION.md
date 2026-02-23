@@ -41,9 +41,11 @@ NODE_OPTIONS=--max-old-space-size=3072
 
 ---
 
-### 方案二：使用 wrangler.toml 配置文件
+### 方案二：使用 wrangler.toml 配置文件（不推荐）
 
-项目根目录已包含 `wrangler.toml` 文件，配置如下：
+**注意**：此方案仅在使用 Wrangler CLI 或 GitHub Actions 部署时需要。如果通过 Cloudflare Dashboard 连接 GitHub，无需此文件。
+
+如果你确实需要 wrangler.toml，可以创建：
 
 ```toml
 [build]
@@ -228,17 +230,7 @@ build complete in XXs.
 }
 ```
 
-### wrangler.toml 配置
-
-```toml
-[build]
-command = "NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build"
-publish = "docs/.vitepress/dist"
-
-[build.environment]
-NODE_VERSION = "20"
-NODE_OPTIONS = "--max-old-space-size=3072"
-```
+**说明**：`docs:build:cf` 脚本仅供本地测试使用，Cloudflare 部署时使用 Dashboard 配置的构建命令。
 
 ---
 
