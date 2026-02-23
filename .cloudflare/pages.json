@@ -1,0 +1,7 @@
+{
+  "build": {
+    "command": "NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build",
+    "cwd": ".",
+    "output": "docs/.vitepress/dist"
+  }
+}

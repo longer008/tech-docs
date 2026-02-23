@@ -1502,3 +1502,46 @@
   **验证**：
   - GitHub Pages：资源路径 `/tech-docs/assets/...` ✅
   - Cloudflare Pages：资源路径 `/assets/...` ✅（需在 Dashboard 设置环境变量）
+
+
+### 2025-02-23
+- ✅ **解决 Cloudflare Pages Worker 类型误判问题**
+  
+  **问题**：
+  - Cloudflare 部署时报错：`A compatibility_date is required when publishing`
+  - 错误原因：Cloudflare 误判项目类型为 Worker，而不是 Pages 静态站点
+  - Worker 需要 `compatibility_date` 配置，但 Pages 不需要
+  
+  **解决方案**：
+  - ✅ 创建 `CLOUDFLARE_QUICK_START.md` 快速启动指南
+  - ✅ 明确说明：不要使用 GitHub Actions 部署
+  - ✅ 推荐使用 Cloudflare Dashboard 连接 GitHub（自动识别为 Pages）
+  - ✅ 详细步骤：创建 Pages 项目、配置构建命令、设置环境变量
+  
+  **关键配置**：
+  ```yaml
+  构建命令: NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
+  构建输出目录: docs/.vitepress/dist
+  
+  环境变量:
+    NODE_VERSION: 20
+    NODE_OPTIONS: --max-old-space-size=3072
+    VITE_BASE_PATH: /
+  ```
+  
+  **为什么推荐 Dashboard 方式**：
+  - ✅ 自动识别为 Pages 项目（不会误判为 Worker）
+  - ✅ 无需配置 API Token 和 Secrets
+  - ✅ 自动检测构建命令
+  - ✅ 支持 PR 预览部署
+  - ✅ 更简单、更稳定
+  
+  **文件更新**：
+  - ✅ 创建 `CLOUDFLARE_QUICK_START.md`（详细步骤和故障排查）
+  - ✅ 保持 `.github/workflows/deploy.yml.disabled` 禁用状态
+  
+  **部署地址**：
+  - GitHub Pages: `https://longer008.github.io/tech-docs/` ✅
+  - Cloudflare Pages: `https://tech-docs.pages.dev` ⏳（需在 Dashboard 配置）
+
+- 📊 **当前总进度**：74/150+ 文档已优化（约 49%）

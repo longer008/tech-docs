@@ -1,72 +1,81 @@
-# Cloudflare Pages 快速连接指南
+# Cloudflare Pages 快速启动指南
 
-## 为什么推送代码后 Cloudflare 没有自动部署？
+## ⚠️ 重要提示
 
-因为你还没有在 Cloudflare Dashboard 中连接 GitHub 仓库。
+当前项目遇到的错误：
+```
+✘ [ERROR] A compatibility_date is required when publishing.
+```
 
-目前的状态：
-- ✅ GitHub Actions 部署到 GitHub Pages（自动）
-- ❌ Cloudflare Pages 部署（需要手动连接）
+**原因**：Cloudflare 误判项目类型为 Worker，而不是 Pages 静态站点。
 
-## 快速连接步骤（5 分钟）
+---
 
-### 步骤 1：登录 Cloudflare
+## 🎯 推荐解决方案：使用 Cloudflare Dashboard
+
+**不要使用 GitHub Actions 部署**，改用 Cloudflare Dashboard 连接 GitHub 仓库。
+
+### 为什么推荐这种方式？
+
+✅ 自动识别为 Pages 项目（不会误判为 Worker）  
+✅ 无需配置 API Token 和 Secrets  
+✅ 自动检测构建命令  
+✅ 支持 PR 预览部署  
+✅ 更简单、更稳定  
+
+---
+
+## 📋 详细步骤
+
+### 1. 登录 Cloudflare Dashboard
 
 访问：https://dash.cloudflare.com/
 
-### 步骤 2：创建 Pages 项目
+### 2. 创建 Pages 项目
 
 1. 点击左侧菜单 **Workers & Pages**
 2. 点击 **Create application**
 3. 选择 **Pages** 标签
 4. 点击 **Connect to Git**
 
-### 步骤 3：授权 GitHub
+### 3. 连接 GitHub 仓库
 
 1. 选择 **GitHub** 作为 Git 提供商
-2. 点击 **Connect GitHub**
-3. 授权 Cloudflare 访问你的 GitHub 账户
-4. 选择 **Only select repositories**
-5. 选择 `tech-docs` 仓库
-6. 点击 **Install & Authorize**
+2. 授权 Cloudflare 访问你的 GitHub 账户
+3. 选择 `tech-docs` 仓库
+4. 点击 **Begin setup**
 
-### 步骤 4：配置项目
+### 4. 配置构建设置
 
-**项目设置**：
 ```yaml
 项目名称: tech-docs
 生产分支: main
 框架预设: None (不选择预设)
-```
-
-**构建设置**：
-```yaml
 构建命令: NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
 构建输出目录: docs/.vitepress/dist
 根目录: / (留空)
 ```
 
-### 步骤 5：添加环境变量
+**⚠️ 重要**：
+- 构建命令必须包含 `NODE_OPTIONS='--max-old-space-size=3072'`
+- 这会增加内存限制到 3GB，避免构建时内存溢出
 
-点击 **Environment variables** → **Add variable**
+### 5. 设置环境变量
 
-添加以下变量（**Production** 环境）：
+点击 **Environment variables** → **Production** 添加：
 
-```bash
-# 变量 1
-名称: NODE_VERSION
-值: 20
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `NODE_VERSION` | `20` | Node.js 版本 |
+| `NODE_OPTIONS` | `--max-old-space-size=3072` | 内存限制（3GB） |
+| `VITE_BASE_PATH` | `/` | VitePress base 路径 |
 
-# 变量 2
-名称: NODE_OPTIONS
-值: --max-old-space-size=3072
+**说明**：
+- 这些是**构建时环境变量**，在构建过程中生效
+- `VITE_BASE_PATH=/` 告诉 VitePress 使用根路径（Cloudflare）
+- GitHub Pages 使用 `/tech-docs/` 路径，会自动检测
 
-# 变量 3（重要！）
-名称: VITE_BASE_PATH
-值: /
-```
-
-### 步骤 6：保存并部署
+### 6. 保存并部署
 
 1. 点击 **Save and Deploy**
 2. 等待首次构建完成（约 2-5 分钟）
@@ -74,108 +83,118 @@
 
 ---
 
-## 完成后的效果
+## 🔄 自动部署
 
-### 自动部署流程
+配置完成后，每次推送代码到 `main` 分支，Cloudflare 会自动：
 
-```
-你推送代码到 GitHub
-    ↓
-GitHub 通知 Cloudflare
-    ↓
-Cloudflare 自动拉取代码
-    ↓
-自动构建（使用环境变量）
-    ↓
-自动部署到 Cloudflare Pages
-    ↓
-网站自动更新 ✅
-```
+1. 检测到新的提交
+2. 触发构建流程
+3. 部署到 `https://tech-docs.pages.dev`
+4. 发送部署通知（可选）
 
-### 两个部署地址
+**PR 预览**：
+- 每个 Pull Request 会自动创建预览部署
+- 预览 URL：`https://[commit-hash].tech-docs.pages.dev`
 
-- **GitHub Pages**: `https://longer008.github.io/tech-docs/`
+---
+
+## 🚫 不要使用的方式
+
+### ❌ GitHub Actions 部署
+
+当前 `.github/workflows/deploy.yml.disabled` 文件已被禁用，因为：
+
+1. Cloudflare 会误判项目类型为 Worker
+2. 需要配置 API Token 和 Secrets（复杂）
+3. 构建速度较慢
+4. 容易出现兼容性问题
+
+**建议**：删除或保持禁用状态。
+
+### ❌ Wrangler CLI 部署
+
+不要创建 `wrangler.toml` 文件，因为：
+
+1. 这是 Worker 项目的配置文件
+2. 会导致 Cloudflare 误判项目类型
+3. Pages 项目不需要此文件
+
+---
+
+## 📊 验证部署
+
+### 检查部署状态
+
+1. 访问 Cloudflare Dashboard
+2. 点击 **Workers & Pages** → `tech-docs`
+3. 查看 **Deployments** 标签
+4. 确认最新部署状态为 **Success**
+
+### 访问网站
+
 - **Cloudflare Pages**: `https://tech-docs.pages.dev`
+- **GitHub Pages**: `https://longer008.github.io/tech-docs/`
 
-两个都会自动部署，无需手动操作！
-
----
-
-## 验证部署
-
-### 1. 查看 Cloudflare 部署状态
-
-在 Cloudflare Dashboard：
-1. Workers & Pages → tech-docs
-2. 点击 **Deployments** 标签
-3. 查看最新的部署状态
-
-### 2. 测试网站
-
-访问：`https://tech-docs.pages.dev`
-
-检查：
-- ✅ 页面正常加载
-- ✅ 资源路径为 `/assets/...`（根路径）
-- ✅ 图片、样式正常显示
-
-### 3. 测试自动部署
-
-1. 修改任意文档
-2. 提交并推送到 GitHub
-3. 等待 2-3 分钟
-4. 刷新 Cloudflare Pages 网站，查看更新
+两个部署地址都可以正常访问。
 
 ---
 
-## 常见问题
+## 🔍 故障排查
 
-### Q1: 为什么不使用 GitHub Actions 部署到 Cloudflare？
+### 构建失败：内存溢出
 
-**A**: 
-- GitHub Actions 方式需要配置 API Token 和 Account ID
-- 通过 Dashboard 连接更简单，无需配置 Secrets
-- 两种方式效果相同，Dashboard 方式更直观
+**错误信息**：
+```
+JavaScript heap out of memory
+ELIFECYCLE Command failed with exit code 134
+```
 
-### Q2: 可以同时部署到 GitHub Pages 和 Cloudflare Pages 吗？
+**解决方案**：
+1. 确认构建命令包含 `NODE_OPTIONS='--max-old-space-size=3072'`
+2. 确认环境变量 `NODE_OPTIONS=--max-old-space-size=3072` 已设置
+3. 如果仍然失败，尝试增加到 4096
 
-**A**: 可以！
-- GitHub Pages：通过 GitHub Actions 自动部署
-- Cloudflare Pages：通过 Dashboard 连接自动部署
-- 两个互不影响，都会自动更新
+### 资源文件 404
 
-### Q3: 如果构建失败怎么办？
+**错误信息**：
+```
+/tech-docs/assets/style.css 404
+```
 
-**A**: 
-1. 在 Cloudflare Dashboard 查看构建日志
-2. 检查环境变量是否正确设置
-3. 确认构建命令正确
-4. 参考 `CLOUDFLARE_BUILD_OPTIMIZATION.md` 解决内存问题
+**解决方案**：
+1. 确认环境变量 `VITE_BASE_PATH=/` 已设置
+2. 重新触发部署（推送代码或手动 Retry）
+3. 清除浏览器缓存
 
-### Q4: 如何禁用自动部署？
+### Worker 类型错误
 
-**A**: 
-在 Cloudflare Dashboard：
-1. Settings → Builds & deployments
-2. 关闭 **Automatic deployments**
+**错误信息**：
+```
+A compatibility_date is required when publishing
+```
+
+**解决方案**：
+1. 删除项目中的 `wrangler.toml` 文件（如果存在）
+2. 在 Cloudflare Dashboard 中删除项目
+3. 重新创建项目，确保选择 **Pages** 而不是 **Workers**
 
 ---
 
-## 相关文档
+## 📚 相关文档
 
-- `CLOUDFLARE_SETUP.md`：详细设置指南
-- `CLOUDFLARE_ENV_VARS.md`：环境变量说明
-- `DEPLOYMENT_PATHS.md`：路径配置说明
-- `CLOUDFLARE_BUILD_OPTIMIZATION.md`：构建优化指南
+- [CLOUDFLARE_SETUP.md](./CLOUDFLARE_SETUP.md) - 详细设置指南
+- [CLOUDFLARE_BUILD_OPTIMIZATION.md](./CLOUDFLARE_BUILD_OPTIMIZATION.md) - 构建优化
+- [CLOUDFLARE_ENV_VARS.md](./CLOUDFLARE_ENV_VARS.md) - 环境变量说明
+- [DEPLOYMENT_PATHS.md](./DEPLOYMENT_PATHS.md) - 路径配置说明
 
 ---
 
-## 总结
+## 💡 总结
 
-完成上述步骤后：
-- ✅ 推送代码到 GitHub
-- ✅ Cloudflare 自动检测并部署
-- ✅ 无需手动操作
-- ✅ 2-3 分钟后网站自动更新
+1. ✅ 使用 Cloudflare Dashboard 连接 GitHub（推荐）
+2. ✅ 设置构建命令和环境变量
+3. ✅ 每次推送代码自动部署
+4. ❌ 不要使用 GitHub Actions 部署
+5. ❌ 不要创建 wrangler.toml 文件
 
-**现在就去 Cloudflare Dashboard 连接你的 GitHub 仓库吧！** 🚀
+**一句话总结**：通过 Cloudflare Dashboard 连接 GitHub 仓库，配置构建命令和环境变量，即可实现自动部署。
