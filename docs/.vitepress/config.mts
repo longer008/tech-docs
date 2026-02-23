@@ -12,6 +12,11 @@ import UnoCSS from 'unocss/vite'
 import NProgress from 'vitepress-plugin-nprogress'
 import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-icons'
 
+// 根据环境变量动态设置 base 路径
+// GitHub Pages: /tech-docs/
+// Cloudflare Pages: /
+const base = process.env.VITE_BASE_PATH || (process.env.CF_PAGES ? '/' : '/tech-docs/')
+
 // https://vitepress.dev/reference/site-config
 export default withPwa(
   withMermaid(
@@ -20,19 +25,19 @@ export default withPwa(
     description: '全栈开发技术面试准备与实战文档',
     lang: 'zh-CN',
 
-    // 部署配置
-    base: '/tech-docs/',
+    // 部署配置 - 根据环境动态设置
+    base: base,
     cleanUrls: true,
     lastUpdated: true,
 
     // Head 配置
     head: [
-      ['link', { rel: 'icon', type: 'image/svg+xml', href: '/tech-docs/favicon.svg' }],
-      ['link', { rel: 'icon', type: 'image/png', href: '/tech-docs/favicon.png' }],
+      ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
+      ['link', { rel: 'icon', type: 'image/png', href: `${base}favicon.png` }],
       ['meta', { name: 'theme-color', content: '#3eaf7c' }],
       ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
       ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
-      ['link', { rel: 'apple-touch-icon', href: '/tech-docs/apple-touch-icon-180x180.png' }],
+      ['link', { rel: 'apple-touch-icon', href: `${base}apple-touch-icon-180x180.png` }],
       ['meta', { name: 'og:type', content: 'website' }],
       ['meta', { name: 'og:locale', content: 'zh-CN' }],
       // KaTeX 样式
@@ -114,7 +119,7 @@ export default withPwa(
     // 主题配置
     themeConfig: {
       // 站点标题和 Logo
-      logo: '/tech-docs/logo.svg',
+      logo: `${base}logo.svg`,
       siteTitle: '技术面试知识库',
 
       // 搜索配置 - 使用官方 Local Search

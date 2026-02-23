@@ -38,7 +38,7 @@
 
 ### 步骤 5：环境变量（可选）
 
-点击 **Environment variables** 添加：
+点击 **Environment variables** → **Production** 添加：
 
 ```bash
 # Node.js 版本
@@ -46,11 +46,15 @@ NODE_VERSION=20
 
 # 内存限制（重要！防止构建时内存溢出）
 NODE_OPTIONS=--max-old-space-size=3072
+
+# Base 路径（构建时环境变量）
+VITE_BASE_PATH=/
 ```
 
-**说明**：
-- `NODE_VERSION=20`：指定 Node.js 版本
-- `NODE_OPTIONS=--max-old-space-size=3072`：增加内存限制到 3GB
+**重要说明**：
+- 这些是**构建时环境变量**，在构建过程中生效
+- `VITE_BASE_PATH=/`：告诉 VitePress 使用根路径
+- Cloudflare Pages 的静态站点不支持运行时环境变量
 
 ### 步骤 6：保存并部署
 
