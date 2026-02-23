@@ -1434,3 +1434,26 @@
   - 在 Cloudflare Dashboard 中更新项目配置
   - 或者 Cloudflare 会自动读取 wrangler.toml 配置
   - 重新触发部署（推送代码或手动 Retry）
+
+
+- ✅ **删除 wrangler.toml 配置文件**（2025-02-15）
+  
+  **原因**：
+  - 已禁用 GitHub Actions Cloudflare 部署
+  - 推荐直接在 Cloudflare Dashboard 中配置
+  - wrangler.toml 仅在使用 Wrangler CLI 或 GitHub Actions 时需要
+  - 通过 Dashboard 连接 GitHub 更简单，无需此文件
+  
+  **文件更新**：
+  - ✅ 删除 `wrangler.toml`
+  - ✅ 更新 `CLOUDFLARE_SETUP.md`：移除步骤 7
+  - ✅ 更新 `CLOUDFLARE_BUILD_OPTIMIZATION.md`：标记 wrangler.toml 为不推荐
+  
+  **推荐配置方式**：
+  - 直接在 Cloudflare Dashboard 的项目设置中配置
+  - 构建命令：`NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build`
+  - 环境变量：`NODE_VERSION=20`, `NODE_OPTIONS=--max-old-space-size=3072`
+  
+  **提交记录**：
+  - Commit 1f5a341: 删除 wrangler.toml
+  - Commit 65d5059: 更新文档说明
