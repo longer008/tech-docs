@@ -1457,3 +1457,48 @@
   **提交记录**：
   - Commit 1f5a341: 删除 wrangler.toml
   - Commit 65d5059: 更新文档说明
+
+
+- ✅ **修复 Cloudflare Pages 资源 404 问题**（2025-02-15）
+  
+  **问题**：
+  - Cloudflare Pages 部署后所有资源文件 404
+  - 错误路径：`/tech-docs/assets/style.css`、`/tech-docs/logo.svg`
+  - 原因：base 路径配置为 `/tech-docs/`，但 Cloudflare 部署在根路径 `/`
+  
+  **解决方案**：
+  1. ✅ 添加动态 base 路径配置
+     - 检测 `CF_PAGES` 或 `VITE_BASE_PATH` 环境变量
+     - GitHub Pages: `/tech-docs/`（子路径）
+     - Cloudflare Pages: `/`（根路径）
+  
+  2. ✅ 使用构建时环境变量
+     - Cloudflare Pages 静态站点只支持构建时环境变量
+     - 在 Dashboard 设置 `VITE_BASE_PATH=/`
+  
+  3. ✅ 添加详细文档
+     - `DEPLOYMENT_PATHS.md`：路径配置说明
+     - `CLOUDFLARE_ENV_VARS.md`：环境变量说明
+     - 更新 `CLOUDFLARE_SETUP.md`
+  
+  **修改文件**：
+  - ✅ `docs/.vitepress/config.mts`：动态 base 路径逻辑
+  - ✅ `CLOUDFLARE_SETUP.md`：添加环境变量说明
+  - ✅ `DEPLOYMENT_PATHS.md`（新增）：详细配置文档
+  - ✅ `CLOUDFLARE_ENV_VARS.md`（新增）：环境变量文档
+  
+  **Cloudflare Pages 配置**：
+  ```yaml
+  Environment variables (Production):
+    NODE_VERSION: 20
+    NODE_OPTIONS: --max-old-space-size=3072
+    VITE_BASE_PATH: /
+  ```
+  
+  **提交信息**：
+  - Commit ID: 2bb7939
+  - 已推送到 GitHub
+  
+  **验证**：
+  - GitHub Pages：资源路径 `/tech-docs/assets/...` ✅
+  - Cloudflare Pages：资源路径 `/assets/...` ✅（需在 Dashboard 设置环境变量）
