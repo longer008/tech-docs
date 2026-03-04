@@ -214,6 +214,8 @@ export default withPwa(
             text: '快速开始',
             items: [
               { text: '面试准备清单', link: '/quick-start/interview-prep-checklist' },
+              { text: '自我介绍模板库', link: '/quick-start/self-introduction-templates' },
+              { text: '独立前端面试指南', link: '/quick-start/solo-frontend-interview' },
               { text: '面试学习计划', link: '/quick-start/interview-study-plan' },
               { text: '技术栈路线图', link: '/quick-start/tech-stack-roadmap' },
             ]
