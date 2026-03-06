@@ -1661,3 +1661,42 @@
     - ✅ solo-frontend-interview.md（独立前端面试指南，22 个问题+追问策略）
     - ✅ interview-study-plan.md（面试学习计划）
     - ✅ tech-stack-roadmap.md（技术栈路线图）
+
+### 2025-02-23（下午）
+- ✅ **创建前端性能优化进阶文档**
+  - 文件：`docs/frontend/fundamentals/performance-optimization-advanced.md`
+  - 内容：~1000+ 行，包含小程序性能优化、性能监控系统、Web Vitals 详解等
+  - 章节覆盖：
+    1. **小程序性能优化**：
+       - 微信小程序（启动优化、渲染优化、网络优化、包体积优化）
+       - UniApp 性能优化（条件编译、nvue 页面、长列表、图片优化）
+    2. **性能监控系统**：
+       - 完整的性能监控方案（页面加载、资源加载、长任务、Web Vitals、内存、错误）
+       - 数据上报策略（采样率、sendBeacon、网络信息）
+    3. **Web Vitals 详解**：
+       - LCP、FID、CLS 核心指标
+       - 测量方法和优化策略
+       - CLS 优化实战（aspect-ratio、font-display、transform 动画）
+    4. **缓存策略实战**：
+       - 多级缓存（内存缓存、本地存储、网络获取）
+       - LRU 缓存策略
+       - Service Worker 缓存策略
+    5. **移动端性能优化**：
+       - 触摸事件优化（FastClick、touch-action）
+       - 图片懒加载（IntersectionObserver、网络状态适配）
+       - 首屏优化、离线缓存（PWA）
+  
+  **技术覆盖**：
+  - 微信小程序：分包加载、按需注入、setData 优化、虚拟列表、请求缓存
+  - UniApp：条件编译、nvue 页面、长列表优化
+  - 性能监控：PerformanceObserver、Web Vitals、内存监控、错误监控
+  - 缓存策略：多级缓存、LRU、Service Worker
+  - 移动端：触摸优化、图片懒加载、网络状态适配、PWA
+  
+  **更新导航**：
+  - ✅ 更新 `docs/.vitepress/config.mts`：前端基础侧边栏添加"性能优化进阶"
+
+- 📊 **当前总进度**：77/150+ 文档已优化（约 51%）
+  - frontend/fundamentals 目录：12/12 文件（100%）
+    - ✅ performance-interview.md（性能优化基础，~660 行）
+    - ✅ performance-optimization-advanced.md（性能优化进阶，~1000+ 行，新增）

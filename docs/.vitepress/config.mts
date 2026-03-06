@@ -256,6 +256,7 @@ export default withPwa(
               { text: 'SCSS/Less', link: '/frontend/fundamentals/scss-less-interview' },
               { text: '浏览器原理', link: '/frontend/fundamentals/browser-interview' },
               { text: '性能优化', link: '/frontend/fundamentals/performance-interview' },
+              { text: '性能优化进阶', link: '/frontend/fundamentals/performance-optimization-advanced' },
               { text: '前端安全', link: '/frontend/fundamentals/security-interview' },
               { text: '构建工具', link: '/frontend/fundamentals/webpack-vite-interview' },
               { text: 'CSS/Tailwind', link: '/frontend/fundamentals/css-tailwind-interview' },
