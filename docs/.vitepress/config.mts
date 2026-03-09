@@ -169,6 +169,7 @@ export default withPwa(
             { text: 'TypeScript', link: '/frontend/fundamentals/typescript-interview' },
             { text: 'SSR 框架', link: '/frontend/react/nextjs-interview' },
             { text: '跨端开发', link: '/frontend/cross-platform/uniapp-interview' },
+            { text: '桌面端开发', link: '/frontend/desktop/' },
           ]
         },
         {
@@ -328,6 +329,16 @@ export default withPwa(
               { text: '小程序面试题', link: '/frontend/cross-platform/miniprogram-interview' },
               { text: 'Uniapp 题库', link: '/frontend/uniapp/interview-bank' },
               { text: '微信小程序题库', link: '/frontend/wechat-mini-program/interview-bank' },
+            ]
+          },
+          {
+            text: '桌面端开发',
+            collapsed: true,
+            items: [
+              { text: '概述', link: '/frontend/desktop/' },
+              { text: 'Electron 完全指南', link: '/frontend/desktop/electron/' },
+              { text: 'Electron IPC 通信', link: '/frontend/desktop/electron/ipc-communication' },
+              { text: 'Electron 面试题集', link: '/frontend/desktop/electron/interview-bank' },
             ]
           },
         ],
