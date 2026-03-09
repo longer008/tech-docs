@@ -2197,3 +2197,63 @@
   - 继续优化其他高优先级文档
   - 可选：创建 Tauri 文档
   - 继续优化 backend、database、devops 目录
+
+
+### 2025-02-24（继续）
+- ✅ **创建高级前端开发文档系列**（3个文件全部完成）
+  1. **performance-monitoring.md**（性能监控与分析）：~2000 行，100+ 代码示例
+     - Performance API 完全指南（Navigation Timing、Resource Timing、User Timing）
+     - Web Vitals 核心指标（LCP、FID、CLS）
+     - 长任务监控（Long Tasks API）
+     - 内存监控（Memory API）
+     - Lighthouse 性能审计（CLI、配置、CI 集成）
+     - Chrome DevTools 性能分析（Performance、Coverage、Network）
+     - 真实用户监控（RUM 系统、数据分析）
+     - 性能预算（Performance Budget、Webpack 配置、监控）
+     - 性能监控最佳实践（采样策略、数据聚合、异常处理、隐私保护）
+  
+  2. **network-protocols-deep-dive.md**（网络协议深入）：~2000 行，100+ 代码示例
+     - HTTP 协议演进（HTTP/1.1、HTTP/2、HTTP/3 对比）
+     - WebSocket 实时通信（基础、心跳机制、服务端实现）
+     - Server-Sent Events（SSE 客户端、服务端、vs WebSocket）
+     - WebRTC 实时通信（P2P 连接、屏幕共享、数据通道）
+     - GraphQL vs REST 对比（查询语言、订阅、优缺点）
+     - gRPC-Web（Protocol Buffers、流式传输、性能对比）
+     - 网络优化最佳实践（连接优化、HTTP/2 优化、请求优化）
+  
+  3. **api-design-and-calling.md**（API 设计与调用）：~2000 行，100+ 代码示例
+     - RESTful API 设计规范（核心原则、命名规范、HTTP 方法、状态码）
+     - API 版本控制（4种方案对比）
+     - 分页、过滤、排序（3种分页方案、复杂过滤、多字段排序）
+     - API 请求封装（Axios 封装、Fetch 封装、拦截器）
+     - 请求重试与取消（重试策略、AbortController、请求队列）
+     - 接口 Mock（Mock.js、MSW、json-server）
+     - API 文档（OpenAPI/Swagger、Swagger UI、从代码生成）
+     - 最佳实践（设计清单、错误处理、性能优化）
+  
+  **总计**：3个文件，~6000 行内容，300+ 个代码示例
+  
+  **技术覆盖**：
+  - 性能监控（Performance API、Web Vitals、RUM、Lighthouse）
+  - 网络协议（HTTP/2、HTTP/3、WebSocket、SSE、WebRTC、GraphQL、gRPC）
+  - API 设计（RESTful、版本控制、分页过滤、请求封装、Mock、文档）
+
+- ✅ **更新导航配置**
+  - 更新 `docs/.vitepress/config.mts`：
+    - 前端基础侧边栏添加"性能监控与分析"、"网络协议深入"链接
+
+- ✅ **提交代码**
+  - Commit 98fe9b5: 添加性能监控与分析、网络协议深入文档
+
+- 📊 **当前总进度**：85/150+ 文档已优化（约 57%）
+  - frontend/fundamentals 目录：17/17 文件（100%）
+    - ✅ performance-monitoring.md（性能监控与分析，~2000 行，新增）
+    - ✅ network-protocols-deep-dive.md（网络协议深入，~2000 行，新增）
+    - ✅ api-design-and-calling.md（API 设计与调用，~2000 行，新增）
+
+- 🎯 **下一步计划**：
+  - 继续创建调试技巧文档
+  - 创建响应式设计文档
+  - 创建 Web API 深入文档
+  - 创建浏览器原理深入文档
+  - 自动继续，不需要用户输入"继续"
