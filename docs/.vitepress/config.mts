@@ -260,6 +260,18 @@ export default withPwa(
               { text: '前端安全', link: '/frontend/fundamentals/security-interview' },
               { text: '构建工具', link: '/frontend/fundamentals/webpack-vite-interview' },
               { text: 'CSS/Tailwind', link: '/frontend/fundamentals/css-tailwind-interview' },
+              { text: '埋点系统', link: '/frontend/fundamentals/tracking-system' },
+            ]
+          },
+          {
+            text: '可视化技术',
+            collapsed: true,
+            items: [
+              { text: '概述', link: '/frontend/visualization/' },
+              { text: 'Canvas 完全指南', link: '/frontend/visualization/canvas-guide' },
+              { text: 'WebGL 完全指南', link: '/frontend/visualization/webgl-guide' },
+              { text: 'Three.js 完全指南', link: '/frontend/visualization/threejs-guide' },
+              { text: 'ECharts 完全指南', link: '/frontend/visualization/echarts-guide' },
             ]
           },
           {
