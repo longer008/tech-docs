@@ -16,6 +16,7 @@
 - [进阶题（重要）](#进阶题重要)
 - [高级题（加分）](#高级题加分)
 - [场景题（实战）](#场景题实战)
+- [Vue 3.4+ 新特性（重要）](#vue-34-新特性重要)
 - [反问环节](#反问环节)
 
 ---
@@ -665,6 +666,173 @@ const emit = defineEmits(['update:username', 'update:password'])
     @input="emit('update:password', $event.target.value)"
   />
 </template>
+```
+
+**⭐ Vue 3.4+ 新特性：defineModel（推荐）**
+
+从 Vue 3.4 开始，`defineModel` 简化了 v-model 的实现，不再需要手动定义 props 和 emits。
+
+```vue
+<!-- CustomInput.vue（Vue 3.4+ 推荐写法） -->
+<script setup>
+// defineModel 自动处理 props 和 emits
+const model = defineModel()
+
+// 等价于：
+// const props = defineProps(['modelValue'])
+// const emit = defineEmits(['update:modelValue'])
+// const model = computed({
+//   get: () => props.modelValue,
+//   set: (value) => emit('update:modelValue', value)
+// })
+</script>
+
+<template>
+  <!-- 直接使用 v-model 绑定 -->
+  <input v-model="model" />
+</template>
+
+<!-- 使用组件 -->
+<script setup>
+import { ref } from 'vue'
+import CustomInput from './CustomInput.vue'
+
+const username = ref('')
+</script>
+
+<template>
+  <CustomInput v-model="username" />
+</template>
+```
+
+**多个 v-model（Vue 3.4+）**
+
+```vue
+<!-- UserForm.vue -->
+<script setup>
+// 定义多个 model
+const username = defineModel('username')
+const password = defineModel('password')
+
+// 带选项的 defineModel
+const email = defineModel('email', {
+  type: String,
+  required: true,
+  default: '',
+  validator: (value) => value.includes('@')
+})
+</script>
+
+<template>
+  <input v-model="username" placeholder="用户名" />
+  <input v-model="password" type="password" placeholder="密码" />
+  <input v-model="email" type="email" placeholder="邮箱" />
+</template>
+
+<!-- 使用组件 -->
+<script setup>
+import { ref } from 'vue'
+import UserForm from './UserForm.vue'
+
+const username = ref('')
+const password = ref('')
+const email = ref('')
+</script>
+
+<template>
+  <UserForm
+    v-model:username="username"
+    v-model:password="password"
+    v-model:email="email"
+  />
+</template>
+```
+
+**defineModel 修饰符（Vue 3.4+）**
+
+```vue
+<!-- CustomInput.vue -->
+<script setup>
+// 获取 v-model 修饰符
+const [model, modifiers] = defineModel({
+  // 设置默认修饰符
+  set(value) {
+    if (modifiers.capitalize) {
+      return value.charAt(0).toUpperCase() + value.slice(1)
+    }
+    if (modifiers.trim) {
+      return value.trim()
+    }
+    return value
+  }
+})
+</script>
+
+<template>
+  <input v-model="model" />
+</template>
+
+<!-- 使用修饰符 -->
+<template>
+  <CustomInput v-model.capitalize="name" />
+  <CustomInput v-model.trim="username" />
+</template>
+```
+
+**defineModel vs 传统方式对比**
+
+```vue
+<!-- ❌ 传统方式（Vue 3.0-3.3） -->
+<script setup>
+const props = defineProps(['modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+const model = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+})
+</script>
+
+<template>
+  <input v-model="model" />
+</template>
+
+<!-- ✅ defineModel 方式（Vue 3.4+，推荐） -->
+<script setup>
+const model = defineModel()
+</script>
+
+<template>
+  <input v-model="model" />
+</template>
+```
+
+**defineModel 高级用法**
+
+```vue
+<script setup>
+// 1. 带类型的 defineModel（TypeScript）
+const count = defineModel<number>()
+
+// 2. 带默认值
+const message = defineModel({ default: 'Hello' })
+
+// 3. 必填项
+const userId = defineModel({ required: true })
+
+// 4. 自定义 getter/setter
+const price = defineModel({
+  get(value) {
+    return value / 100 // 分转元
+  },
+  set(value) {
+    return value * 100 // 元转分
+  }
+})
+
+// 5. 本地状态（不同步到父组件）
+const localValue = defineModel({ local: true })
+</script>
 ```
 
 **3. provide / inject（跨级通信）**
@@ -2195,6 +2363,363 @@ onMounted(async () => {
   - A: 查看控制台警告，对比服务端和客户端的 HTML
 - Q: 水合失败会怎样？
   - A: Vue 会销毁服务端 HTML，重新渲染，失去 SSR 的优势
+
+---
+
+## Vue 3.4+ 新特性（重要）
+
+### 1. defineModel 宏（Vue 3.4+）
+
+**难度**: ⭐⭐⭐☆☆
+
+**问题**：
+Vue 3.4 引入的 defineModel 有什么优势？如何使用？
+
+**答案**：
+
+**defineModel 优势**：
+1. **简化代码**：不需要手动定义 props 和 emits
+2. **更直观**：直接使用 v-model 绑定
+3. **类型安全**：更好的 TypeScript 支持
+4. **减少样板代码**：自动处理双向绑定逻辑
+
+**基础用法**：
+```vue
+<!-- 子组件 -->
+<script setup>
+// ✅ Vue 3.4+ 推荐写法
+const model = defineModel()
+</script>
+
+<template>
+  <input v-model="model" />
+</template>
+
+<!-- 父组件 -->
+<template>
+  <CustomInput v-model="username" />
+</template>
+```
+
+**多个 v-model**：
+```vue
+<script setup>
+const firstName = defineModel('firstName')
+const lastName = defineModel('lastName')
+</script>
+
+<template>
+  <input v-model="firstName" />
+  <input v-model="lastName" />
+</template>
+```
+
+**带选项的 defineModel**：
+```vue
+<script setup>
+const count = defineModel({
+  type: Number,
+  required: true,
+  default: 0,
+  validator: (value) => value >= 0
+})
+
+// TypeScript 类型
+const message = defineModel<string>()
+</script>
+```
+
+**追问点**：
+- Q: defineModel 和传统方式的区别？
+  - A: defineModel 自动处理 props 和 emits，代码更简洁
+- Q: defineModel 支持修饰符吗？
+  - A: 支持，可以通过第二个参数获取修饰符
+- Q: 如何在 defineModel 中自定义 getter/setter？
+  - A: 使用 get 和 set 选项
+
+---
+
+### 2. 泛型组件（Vue 3.3+）
+
+**难度**: ⭐⭐⭐⭐☆
+
+**问题**：
+Vue 3.3 引入的泛型组件有什么用途？如何实现？
+
+**答案**：
+
+**泛型组件用途**：
+1. **类型安全**：保持数据类型的一致性
+2. **代码复用**：同一组件支持多种类型
+3. **更好的 IDE 支持**：自动补全和类型检查
+
+**基础用法**：
+```vue
+<!-- GenericList.vue -->
+<script setup lang="ts" generic="T">
+defineProps<{
+  items: T[]
+  keyField: keyof T
+}>()
+
+defineEmits<{
+  select: [item: T]
+}>()
+</script>
+
+<template>
+  <div v-for="item in items" :key="item[keyField]">
+    <slot :item="item" />
+  </div>
+</template>
+
+<!-- 使用 -->
+<script setup lang="ts">
+interface User {
+  id: number
+  name: string
+}
+
+const users: User[] = [
+  { id: 1, name: 'John' },
+  { id: 2, name: 'Jane' }
+]
+</script>
+
+<template>
+  <GenericList :items="users" key-field="id" @select="handleSelect">
+    <template #default="{ item }">
+      <!-- item 的类型是 User，有完整的类型提示 -->
+      <div>{{ item.name }}</div>
+    </template>
+  </GenericList>
+</template>
+```
+
+**多个泛型参数**：
+```vue
+<script setup lang="ts" generic="T, K extends keyof T">
+defineProps<{
+  data: T
+  field: K
+}>()
+
+// K 被约束为 T 的键
+</script>
+```
+
+**泛型约束**：
+```vue
+<script setup lang="ts" generic="T extends { id: number }">
+// T 必须包含 id 属性
+defineProps<{
+  items: T[]
+}>()
+</script>
+```
+
+**追问点**：
+- Q: 泛型组件和普通组件的区别？
+  - A: 泛型组件可以保持类型信息，提供更好的类型安全
+- Q: 如何在泛型组件中使用 defineModel？
+  - A: 可以结合使用，defineModel 也支持泛型
+- Q: 泛型组件的性能影响？
+  - A: 仅在编译时有影响，运行时无性能损失
+
+---
+
+### 3. defineSlots 宏（Vue 3.3+）
+
+**难度**: ⭐⭐⭐☆☆
+
+**问题**：
+defineSlots 有什么作用？如何使用？
+
+**答案**：
+
+**defineSlots 作用**：
+1. **类型安全**：为插槽提供类型定义
+2. **IDE 支持**：更好的自动补全
+3. **文档化**：明确插槽的参数类型
+
+**基础用法**：
+```vue
+<!-- Card.vue -->
+<script setup lang="ts">
+const slots = defineSlots<{
+  // 默认插槽
+  default(props: { message: string }): any
+  // 具名插槽
+  header(props: { title: string }): any
+  footer(): any
+}>()
+</script>
+
+<template>
+  <div class="card">
+    <header v-if="slots.header">
+      <slot name="header" :title="title" />
+    </header>
+    <main>
+      <slot :message="message" />
+    </main>
+    <footer v-if="slots.footer">
+      <slot name="footer" />
+    </footer>
+  </div>
+</template>
+
+<!-- 使用 -->
+<template>
+  <Card>
+    <template #header="{ title }">
+      <!-- title 有类型提示 -->
+      <h1>{{ title }}</h1>
+    </template>
+    
+    <template #default="{ message }">
+      <!-- message 有类型提示 -->
+      <p>{{ message }}</p>
+    </template>
+    
+    <template #footer>
+      <button>确定</button>
+    </template>
+  </Card>
+</template>
+```
+
+**追问点**：
+- Q: defineSlots 是必须的吗？
+  - A: 不是，但推荐在 TypeScript 项目中使用
+- Q: 如何检查插槽是否存在？
+  - A: 使用 slots.slotName 判断
+
+---
+
+### 4. Reactive Props 解构（Vue 3.5+）
+
+**难度**: ⭐⭐⭐☆☆
+
+**问题**：
+Vue 3.5 的响应式 Props 解构有什么特点？
+
+**答案**：
+
+**响应式 Props 解构**：
+从 Vue 3.5 开始，解构 props 会保持响应性。
+
+```vue
+<script setup>
+// ✅ Vue 3.5+ 解构保持响应性
+const { count, message } = defineProps(['count', 'message'])
+
+// 可以直接在 watch 中使用
+watch(() => count, (newVal) => {
+  console.log('count changed:', newVal)
+})
+
+// 可以在 computed 中使用
+const doubled = computed(() => count * 2)
+</script>
+
+<!-- ❌ Vue 3.4 及以前需要这样写 -->
+<script setup>
+const props = defineProps(['count', 'message'])
+
+watch(() => props.count, (newVal) => {
+  console.log('count changed:', newVal)
+})
+</script>
+```
+
+**带默认值的解构**：
+```vue
+<script setup>
+// Vue 3.5+ 支持默认值
+const { count = 0, message = 'Hello' } = defineProps(['count', 'message'])
+</script>
+```
+
+**追问点**：
+- Q: 为什么 Vue 3.4 解构会失去响应性？
+  - A: 因为解构是值的拷贝，不是引用
+- Q: Vue 3.5 如何实现响应式解构？
+  - A: 编译器会将解构转换为 getter 访问
+
+---
+
+### 5. 其他 Vue 3.4+ 改进
+
+**1. 更好的 Hydration 错误提示**
+```vue
+<!-- Vue 3.4+ 会提供详细的 hydration 不匹配信息 -->
+<script setup>
+import { ref, onMounted } from 'vue'
+
+const isClient = ref(false)
+
+onMounted(() => {
+  isClient.value = true
+})
+</script>
+
+<template>
+  <!-- ❌ 会导致 hydration 不匹配 -->
+  <div v-if="isClient">Client Only</div>
+  
+  <!-- ✅ 正确做法 -->
+  <ClientOnly>
+    <div>Client Only</div>
+  </ClientOnly>
+</template>
+```
+
+**2. defineOptions 宏（Vue 3.3+）**
+```vue
+<script setup>
+// 定义组件选项
+defineOptions({
+  name: 'MyComponent',
+  inheritAttrs: false,
+  customOptions: {
+    // 自定义选项
+  }
+})
+</script>
+```
+
+**3. 更好的 TypeScript 支持**
+```vue
+<script setup lang="ts">
+// 更好的类型推断
+const props = defineProps<{
+  count: number
+  message?: string
+}>()
+
+// 支持复杂类型
+interface User {
+  id: number
+  name: string
+}
+
+const users = defineModel<User[]>()
+</script>
+```
+
+**4. 性能改进**
+- 更快的响应式系统
+- 更小的打包体积
+- 更好的 Tree-shaking
+
+**追问点**：
+- Q: Vue 3.4 和 Vue 3.3 的主要区别？
+  - A: defineModel、更好的 TypeScript 支持、性能改进
+- Q: 如何升级到 Vue 3.4+？
+  - A: 更新依赖，检查 breaking changes，测试应用
+- Q: Vue 3.5 有哪些新特性？
+  - A: 响应式 Props 解构、更好的 SSR 支持、性能优化
 
 ---
 
