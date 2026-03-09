@@ -143,8 +143,62 @@ let b = a
 b = 20
 console.log(a)  // 10（a 不受影响）
 
-// 引用类型
+// 引用类型：复制引用地址
+let obj1 = { name: 'John' }
+let obj2 = obj1
+obj2.name = 'Jane'
+console.log(obj1.name)  // 'Jane'（obj1 受影响）
 
+// 数组也是引用类型
+let arr1 = [1, 2, 3]
+let arr2 = arr1
+arr2.push(4)
+console.log(arr1)  // [1, 2, 3, 4]（arr1 受影响）
+```
+
+**深拷贝与浅拷贝**：
+
+```javascript
+// 浅拷贝：只复制第一层
+const obj1 = { a: 1, b: { c: 2 } }
+const obj2 = { ...obj1 }
+obj2.a = 10
+obj2.b.c = 20
+console.log(obj1.a)    // 1（第一层不受影响）
+console.log(obj1.b.c)  // 20（嵌套对象受影响）
+
+// 深拷贝：递归复制所有层级
+function deepClone(obj) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepClone(item))
+  }
+  
+  const cloned = {}
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      cloned[key] = deepClone(obj[key])
+    }
+  }
+  return cloned
+}
+
+const obj3 = { a: 1, b: { c: 2 } }
+const obj4 = deepClone(obj3)
+obj4.b.c = 20
+console.log(obj3.b.c)  // 2（不受影响）
+
+// 使用 JSON 深拷贝（有限制）
+const obj5 = JSON.parse(JSON.stringify(obj3))
+// 限制：无法复制函数、undefined、Symbol、循环引用
+
+// 深度比较
+function deepEqual(a, b) {
+  if (a === b) return true
+  
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
     return false
   }
@@ -1412,3 +1466,894 @@ console.log(name, age)  // 'John' 18
 
 // 嵌套解构
 const user = {
+  name: 'John',
+  address: {
+    city: 'Beijing',
+    street: 'Main St'
+  }
+}
+const { name, address: { city, street } } = user
+console.log(name, city, street)  // 'John' 'Beijing' 'Main St'
+
+// 剩余属性
+const { name, ...rest } = { name: 'John', age: 25, city: 'Beijing' }
+console.log(name)  // 'John'
+console.log(rest)  // { age: 25, city: 'Beijing' }
+
+// 函数参数解构
+function greet({ name, age = 18 }) {
+  console.log(`Hello, ${name}! You are ${age} years old.`)
+}
+greet({ name: 'John', age: 25 })  // 'Hello, John! You are 25 years old.'
+greet({ name: 'Jane' })            // 'Hello, Jane! You are 18 years old.'
+```
+
+### 模板字符串
+
+```javascript
+// 基础用法
+const name = 'John'
+const age = 25
+console.log(`My name is ${name}, I'm ${age} years old.`)
+
+// 多行字符串
+const html = `
+  <div>
+    <h1>${name}</h1>
+    <p>Age: ${age}</p>
+  </div>
+`
+
+// 表达式
+console.log(`1 + 1 = ${1 + 1}`)  // '1 + 1 = 2'
+console.log(`${age > 18 ? 'Adult' : 'Minor'}`)  // 'Adult'
+
+// 标签模板
+function highlight(strings, ...values) {
+  return strings.reduce((result, str, i) => {
+    return result + str + (values[i] ? `<strong>${values[i]}</strong>` : '')
+  }, '')
+}
+
+const message = highlight`Hello, ${name}! You are ${age} years old.`
+console.log(message)  // 'Hello, <strong>John</strong>! You are <strong>25</strong> years old.'
+```
+
+### 扩展运算符
+
+```javascript
+// 数组扩展
+const arr1 = [1, 2, 3]
+const arr2 = [4, 5, 6]
+const combined = [...arr1, ...arr2]  // [1, 2, 3, 4, 5, 6]
+
+// 数组复制
+const original = [1, 2, 3]
+const copy = [...original]
+
+// 对象扩展
+const obj1 = { a: 1, b: 2 }
+const obj2 = { c: 3, d: 4 }
+const merged = { ...obj1, ...obj2 }  // { a: 1, b: 2, c: 3, d: 4 }
+
+// 对象复制
+const user = { name: 'John', age: 25 }
+const userCopy = { ...user }
+
+// 函数参数
+function sum(...numbers) {
+  return numbers.reduce((total, num) => total + num, 0)
+}
+console.log(sum(1, 2, 3, 4, 5))  // 15
+
+// 数组转参数
+const numbers = [1, 2, 3]
+console.log(Math.max(...numbers))  // 3
+```
+
+### 箭头函数
+
+```javascript
+// 基础用法
+const add = (a, b) => a + b
+console.log(add(1, 2))  // 3
+
+// 单参数可省略括号
+const double = x => x * 2
+console.log(double(5))  // 10
+
+// 无参数需要括号
+const greet = () => 'Hello!'
+console.log(greet())  // 'Hello!'
+
+// 返回对象需要括号
+const createUser = (name, age) => ({ name, age })
+console.log(createUser('John', 25))  // { name: 'John', age: 25 }
+
+// 多行函数体需要 return
+const multiply = (a, b) => {
+  const result = a * b
+  return result
+}
+```
+
+### Set 和 Map
+
+**Set（集合）**：
+
+```javascript
+// 创建 Set
+const set = new Set([1, 2, 3, 3, 4])
+console.log(set)  // Set(4) { 1, 2, 3, 4 }（自动去重）
+
+// 添加元素
+set.add(5)
+set.add(5)  // 重复添加无效
+console.log(set.size)  // 5
+
+// 删除元素
+set.delete(3)
+console.log(set.has(3))  // false
+
+// 遍历
+set.forEach(value => console.log(value))
+for (let value of set) {
+  console.log(value)
+}
+
+// 转数组
+const arr = [...set]
+const arr2 = Array.from(set)
+
+// 数组去重
+const numbers = [1, 2, 2, 3, 3, 4]
+const unique = [...new Set(numbers)]  // [1, 2, 3, 4]
+
+// 交集、并集、差集
+const setA = new Set([1, 2, 3])
+const setB = new Set([2, 3, 4])
+
+// 并集
+const union = new Set([...setA, ...setB])  // Set(4) { 1, 2, 3, 4 }
+
+// 交集
+const intersection = new Set([...setA].filter(x => setB.has(x)))  // Set(2) { 2, 3 }
+
+// 差集
+const difference = new Set([...setA].filter(x => !setB.has(x)))  // Set(1) { 1 }
+```
+
+**Map（映射）**：
+
+```javascript
+// 创建 Map
+const map = new Map()
+map.set('name', 'John')
+map.set('age', 25)
+console.log(map.get('name'))  // 'John'
+
+// 初始化
+const map2 = new Map([
+  ['name', 'John'],
+  ['age', 25]
+])
+
+// 对象作为键
+const obj = { id: 1 }
+map.set(obj, 'value')
+console.log(map.get(obj))  // 'value'
+
+// 遍历
+map.forEach((value, key) => {
+  console.log(`${key}: ${value}`)
+})
+
+for (let [key, value] of map) {
+  console.log(`${key}: ${value}`)
+}
+
+// 转对象
+const obj2 = Object.fromEntries(map)
+
+// 转数组
+const arr = [...map]  // [['name', 'John'], ['age', 25]]
+```
+
+### Symbol
+
+```javascript
+// 创建 Symbol
+const sym1 = Symbol()
+const sym2 = Symbol('description')
+const sym3 = Symbol('description')
+
+console.log(sym2 === sym3)  // false（每个 Symbol 都是唯一的）
+
+// 作为对象属性
+const obj = {
+  [sym1]: 'value1',
+  [sym2]: 'value2'
+}
+console.log(obj[sym1])  // 'value1'
+
+// Symbol 属性不会被遍历
+console.log(Object.keys(obj))  // []
+console.log(Object.getOwnPropertySymbols(obj))  // [Symbol(), Symbol(description)]
+
+// 内置 Symbol
+const arr = [1, 2, 3]
+console.log(arr[Symbol.iterator])  // 迭代器函数
+
+// Symbol.for（全局注册）
+const sym4 = Symbol.for('shared')
+const sym5 = Symbol.for('shared')
+console.log(sym4 === sym5)  // true（共享同一个 Symbol）
+```
+
+### Class 类
+
+```javascript
+// 基础类
+class Person {
+  constructor(name, age) {
+    this.name = name
+    this.age = age
+  }
+  
+  sayName() {
+    console.log(`My name is ${this.name}`)
+  }
+  
+  // 静态方法
+  static create(name, age) {
+    return new Person(name, age)
+  }
+  
+  // Getter
+  get info() {
+    return `${this.name}, ${this.age}`
+  }
+  
+  // Setter
+  set info(value) {
+    const [name, age] = value.split(', ')
+    this.name = name
+    this.age = parseInt(age)
+  }
+}
+
+const person = new Person('John', 25)
+person.sayName()  // 'My name is John'
+console.log(person.info)  // 'John, 25'
+
+// 继承
+class Student extends Person {
+  constructor(name, age, grade) {
+    super(name, age)  // 调用父类构造函数
+    this.grade = grade
+  }
+  
+  sayName() {
+    super.sayName()  // 调用父类方法
+    console.log(`I'm a student in grade ${this.grade}`)
+  }
+}
+
+const student = new Student('Jane', 18, 12)
+student.sayName()
+// 'My name is Jane'
+// 'I'm a student in grade 12'
+
+// 私有属性（ES2022）
+class Counter {
+  #count = 0  // 私有属性
+  
+  increment() {
+    this.#count++
+  }
+  
+  getCount() {
+    return this.#count
+  }
+}
+
+const counter = new Counter()
+counter.increment()
+console.log(counter.getCount())  // 1
+console.log(counter.#count)  // SyntaxError: Private field '#count' must be declared in an enclosing class
+```
+
+### 模块化
+
+**ES Modules**：
+
+```javascript
+// 导出（export）
+// math.js
+export const PI = 3.14159
+export function add(a, b) {
+  return a + b
+}
+export function subtract(a, b) {
+  return a - b
+}
+
+// 默认导出
+export default function multiply(a, b) {
+  return a * b
+}
+
+// 导入（import）
+// main.js
+import multiply, { PI, add, subtract } from './math.js'
+console.log(PI)  // 3.14159
+console.log(add(1, 2))  // 3
+console.log(multiply(2, 3))  // 6
+
+// 重命名导入
+import { add as sum } from './math.js'
+console.log(sum(1, 2))  // 3
+
+// 导入所有
+import * as math from './math.js'
+console.log(math.PI)  // 3.14159
+console.log(math.add(1, 2))  // 3
+
+// 动态导入
+async function loadModule() {
+  const module = await import('./math.js')
+  console.log(module.add(1, 2))  // 3
+}
+```
+
+### 可选链和空值合并
+
+**可选链（Optional Chaining）**：
+
+```javascript
+const user = {
+  name: 'John',
+  address: {
+    city: 'Beijing'
+  }
+}
+
+// 传统写法
+const street = user && user.address && user.address.street
+console.log(street)  // undefined
+
+// 可选链
+const street2 = user?.address?.street
+console.log(street2)  // undefined
+
+// 数组可选链
+const arr = null
+console.log(arr?.[0])  // undefined
+
+// 函数可选链
+const obj = {}
+console.log(obj.method?.())  // undefined
+```
+
+**空值合并（Nullish Coalescing）**：
+
+```javascript
+// || 运算符的问题
+const count = 0
+const result1 = count || 10
+console.log(result1)  // 10（0 被视为 falsy）
+
+// ?? 运算符只判断 null 和 undefined
+const result2 = count ?? 10
+console.log(result2)  // 0
+
+const name = ''
+console.log(name || 'Guest')  // 'Guest'
+console.log(name ?? 'Guest')  // ''
+
+const value = null
+console.log(value ?? 'default')  // 'default'
+```
+
+## 常见面试题
+
+### 1. 实现 call、apply、bind
+
+```javascript
+// 实现 call
+Function.prototype.myCall = function(context, ...args) {
+  context = context || window
+  const fn = Symbol('fn')
+  context[fn] = this
+  const result = context[fn](...args)
+  delete context[fn]
+  return result
+}
+
+// 实现 apply
+Function.prototype.myApply = function(context, args) {
+  context = context || window
+  const fn = Symbol('fn')
+  context[fn] = this
+  const result = context[fn](...args)
+  delete context[fn]
+  return result
+}
+
+// 实现 bind
+Function.prototype.myBind = function(context, ...args) {
+  const fn = this
+  return function(...newArgs) {
+    return fn.apply(context, [...args, ...newArgs])
+  }
+}
+
+// 测试
+function greet(greeting, punctuation) {
+  console.log(`${greeting}, ${this.name}${punctuation}`)
+}
+
+const person = { name: 'John' }
+greet.myCall(person, 'Hello', '!')  // 'Hello, John!'
+greet.myApply(person, ['Hi', '.'])  // 'Hi, John.'
+const boundGreet = greet.myBind(person, 'Hey')
+boundGreet('?')  // 'Hey, John?'
+```
+
+### 2. 实现 new 操作符
+
+```javascript
+function myNew(constructor, ...args) {
+  // 1. 创建一个新对象
+  const obj = {}
+  
+  // 2. 将新对象的 __proto__ 指向构造函数的 prototype
+  obj.__proto__ = constructor.prototype
+  
+  // 3. 将构造函数的 this 绑定到新对象
+  const result = constructor.apply(obj, args)
+  
+  // 4. 如果构造函数返回对象，则返回该对象；否则返回新对象
+  return result instanceof Object ? result : obj
+}
+
+// 测试
+function Person(name, age) {
+  this.name = name
+  this.age = age
+}
+
+Person.prototype.sayName = function() {
+  console.log(this.name)
+}
+
+const person = myNew(Person, 'John', 25)
+person.sayName()  // 'John'
+console.log(person instanceof Person)  // true
+```
+
+### 3. 实现 instanceof
+
+```javascript
+function myInstanceof(obj, constructor) {
+  let proto = obj.__proto__
+  const prototype = constructor.prototype
+  
+  while (proto) {
+    if (proto === prototype) {
+      return true
+    }
+    proto = proto.__proto__
+  }
+  
+  return false
+}
+
+// 测试
+console.log(myInstanceof([], Array))  // true
+console.log(myInstanceof([], Object))  // true
+console.log(myInstanceof({}, Array))  // false
+```
+
+### 4. 实现 Promise
+
+```javascript
+class MyPromise {
+  constructor(executor) {
+    this.state = 'pending'
+    this.value = undefined
+    this.reason = undefined
+    this.onFulfilledCallbacks = []
+    this.onRejectedCallbacks = []
+    
+    const resolve = (value) => {
+      if (this.state === 'pending') {
+        this.state = 'fulfilled'
+        this.value = value
+        this.onFulfilledCallbacks.forEach(fn => fn())
+      }
+    }
+    
+    const reject = (reason) => {
+      if (this.state === 'pending') {
+        this.state = 'rejected'
+        this.reason = reason
+        this.onRejectedCallbacks.forEach(fn => fn())
+      }
+    }
+    
+    try {
+      executor(resolve, reject)
+    } catch (error) {
+      reject(error)
+    }
+  }
+  
+  then(onFulfilled, onRejected) {
+    onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value
+    onRejected = typeof onRejected === 'function' ? onRejected : reason => { throw reason }
+    
+    const promise2 = new MyPromise((resolve, reject) => {
+      if (this.state === 'fulfilled') {
+        setTimeout(() => {
+          try {
+            const x = onFulfilled(this.value)
+            resolve(x)
+          } catch (error) {
+            reject(error)
+          }
+        })
+      }
+      
+      if (this.state === 'rejected') {
+        setTimeout(() => {
+          try {
+            const x = onRejected(this.reason)
+            resolve(x)
+          } catch (error) {
+            reject(error)
+          }
+        })
+      }
+      
+      if (this.state === 'pending') {
+        this.onFulfilledCallbacks.push(() => {
+          setTimeout(() => {
+            try {
+              const x = onFulfilled(this.value)
+              resolve(x)
+            } catch (error) {
+              reject(error)
+            }
+          })
+        })
+        
+        this.onRejectedCallbacks.push(() => {
+          setTimeout(() => {
+            try {
+              const x = onRejected(this.reason)
+              resolve(x)
+            } catch (error) {
+              reject(error)
+            }
+          })
+        })
+      }
+    })
+    
+    return promise2
+  }
+  
+  catch(onRejected) {
+    return this.then(null, onRejected)
+  }
+  
+  static resolve(value) {
+    return new MyPromise((resolve) => resolve(value))
+  }
+  
+  static reject(reason) {
+    return new MyPromise((resolve, reject) => reject(reason))
+  }
+  
+  static all(promises) {
+    return new MyPromise((resolve, reject) => {
+      const results = []
+      let count = 0
+      
+      promises.forEach((promise, index) => {
+        Promise.resolve(promise).then(value => {
+          results[index] = value
+          count++
+          if (count === promises.length) {
+            resolve(results)
+          }
+        }, reject)
+      })
+    })
+  }
+  
+  static race(promises) {
+    return new MyPromise((resolve, reject) => {
+      promises.forEach(promise => {
+        Promise.resolve(promise).then(resolve, reject)
+      })
+    })
+  }
+}
+
+// 测试
+const promise = new MyPromise((resolve, reject) => {
+  setTimeout(() => resolve('Success!'), 1000)
+})
+
+promise.then(value => {
+  console.log(value)  // 'Success!'
+  return 'Next'
+}).then(value => {
+  console.log(value)  // 'Next'
+})
+```
+
+### 5. 实现防抖和节流
+
+```javascript
+// 防抖：延迟执行，如果在延迟期间再次触发，则重新计时
+function debounce(func, delay) {
+  let timer = null
+  
+  return function(...args) {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      func.apply(this, args)
+    }, delay)
+  }
+}
+
+// 节流：固定时间内只执行一次
+function throttle(func, delay) {
+  let lastTime = 0
+  
+  return function(...args) {
+    const now = Date.now()
+    if (now - lastTime >= delay) {
+      func.apply(this, args)
+      lastTime = now
+    }
+  }
+}
+
+// 测试
+const handleInput = debounce((e) => {
+  console.log('搜索:', e.target.value)
+}, 500)
+
+const handleScroll = throttle(() => {
+  console.log('滚动位置:', window.scrollY)
+}, 200)
+```
+
+### 6. 实现深拷贝
+
+```javascript
+function deepClone(obj, hash = new WeakMap()) {
+  // 处理 null 和基本类型
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+  
+  // 处理循环引用
+  if (hash.has(obj)) {
+    return hash.get(obj)
+  }
+  
+  // 处理 Date
+  if (obj instanceof Date) {
+    return new Date(obj)
+  }
+  
+  // 处理 RegExp
+  if (obj instanceof RegExp) {
+    return new RegExp(obj)
+  }
+  
+  // 处理数组
+  if (Array.isArray(obj)) {
+    const cloned = []
+    hash.set(obj, cloned)
+    obj.forEach((item, index) => {
+      cloned[index] = deepClone(item, hash)
+    })
+    return cloned
+  }
+  
+  // 处理对象
+  const cloned = {}
+  hash.set(obj, cloned)
+  Object.keys(obj).forEach(key => {
+    cloned[key] = deepClone(obj[key], hash)
+  })
+  
+  return cloned
+}
+
+// 测试
+const obj = {
+  a: 1,
+  b: { c: 2 },
+  d: [1, 2, 3],
+  e: new Date(),
+  f: /abc/g
+}
+obj.self = obj  // 循环引用
+
+const cloned = deepClone(obj)
+console.log(cloned)
+console.log(cloned.self === cloned)  // true
+```
+
+### 7. 实现柯里化
+
+```javascript
+function curry(func) {
+  return function curried(...args) {
+    if (args.length >= func.length) {
+      return func.apply(this, args)
+    } else {
+      return function(...newArgs) {
+        return curried.apply(this, [...args, ...newArgs])
+      }
+    }
+  }
+}
+
+// 测试
+function sum(a, b, c) {
+  return a + b + c
+}
+
+const curriedSum = curry(sum)
+console.log(curriedSum(1)(2)(3))  // 6
+console.log(curriedSum(1, 2)(3))  // 6
+console.log(curriedSum(1)(2, 3))  // 6
+```
+
+### 8. 实现 EventEmitter
+
+```javascript
+class EventEmitter {
+  constructor() {
+    this.events = {}
+  }
+  
+  on(event, listener) {
+    if (!this.events[event]) {
+      this.events[event] = []
+    }
+    this.events[event].push(listener)
+  }
+  
+  off(event, listener) {
+    if (!this.events[event]) return
+    
+    this.events[event] = this.events[event].filter(fn => fn !== listener)
+  }
+  
+  emit(event, ...args) {
+    if (!this.events[event]) return
+    
+    this.events[event].forEach(listener => {
+      listener.apply(this, args)
+    })
+  }
+  
+  once(event, listener) {
+    const wrapper = (...args) => {
+      listener.apply(this, args)
+      this.off(event, wrapper)
+    }
+    this.on(event, wrapper)
+  }
+}
+
+// 测试
+const emitter = new EventEmitter()
+
+emitter.on('click', (data) => {
+  console.log('Clicked:', data)
+})
+
+emitter.emit('click', { x: 100, y: 200 })  // 'Clicked: { x: 100, y: 200 }'
+
+emitter.once('submit', (data) => {
+  console.log('Submitted:', data)
+})
+
+emitter.emit('submit', { name: 'John' })  // 'Submitted: { name: 'John' }'
+emitter.emit('submit', { name: 'Jane' })  // 不会触发
+```
+
+### 9. 实现数组扁平化
+
+```javascript
+// 方法 1：递归
+function flatten1(arr) {
+  const result = []
+  
+  arr.forEach(item => {
+    if (Array.isArray(item)) {
+      result.push(...flatten1(item))
+    } else {
+      result.push(item)
+    }
+  })
+  
+  return result
+}
+
+// 方法 2：reduce
+function flatten2(arr) {
+  return arr.reduce((result, item) => {
+    return result.concat(Array.isArray(item) ? flatten2(item) : item)
+  }, [])
+}
+
+// 方法 3：flat（ES2019）
+function flatten3(arr) {
+  return arr.flat(Infinity)
+}
+
+// 方法 4：toString（仅适用于数字数组）
+function flatten4(arr) {
+  return arr.toString().split(',').map(Number)
+}
+
+// 测试
+const arr = [1, [2, [3, [4, 5]]]]
+console.log(flatten1(arr))  // [1, 2, 3, 4, 5]
+console.log(flatten2(arr))  // [1, 2, 3, 4, 5]
+console.log(flatten3(arr))  // [1, 2, 3, 4, 5]
+console.log(flatten4(arr))  // [1, 2, 3, 4, 5]
+```
+
+### 10. 实现数组去重
+
+```javascript
+// 方法 1：Set
+function unique1(arr) {
+  return [...new Set(arr)]
+}
+
+// 方法 2：filter + indexOf
+function unique2(arr) {
+  return arr.filter((item, index) => arr.indexOf(item) === index)
+}
+
+// 方法 3：reduce
+function unique3(arr) {
+  return arr.reduce((result, item) => {
+    return result.includes(item) ? result : [...result, item]
+  }, [])
+}
+
+// 方法 4：Map
+function unique4(arr) {
+  const map = new Map()
+  return arr.filter(item => !map.has(item) && map.set(item, true))
+}
+
+// 测试
+const arr = [1, 2, 2, 3, 3, 4, 5, 5]
+console.log(unique1(arr))  // [1, 2, 3, 4, 5]
+console.log(unique2(arr))  // [1, 2, 3, 4, 5]
+console.log(unique3(arr))  // [1, 2, 3, 4, 5]
+console.log(unique4(arr))  // [1, 2, 3, 4, 5]
+```
+
+## 参考资料
+
+- [MDN Web Docs - JavaScript](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
+- [JavaScript.info](https://zh.javascript.info/)
+- [ES6 入门教程 - 阮一峰](https://es6.ruanyifeng.com/)
+- [You Don't Know JS](https://github.com/getify/You-Dont-Know-JS)
+- [JavaScript 高级程序设计（第 4 版）](https://book.douban.com/subject/35175321/)
