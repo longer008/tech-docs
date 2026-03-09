@@ -14,7 +14,7 @@
 |------|------|---------|
 | **微前端架构** | 大型应用拆分和管理 | [详细文档](/frontend/architecture/micro-frontend) |
 | **前端监控系统** | 性能、错误、行为监控 | [详细文档](/frontend/architecture/monitoring-system) |
-| **前端测试体系** | 单元测试、集成测试、E2E 测试 | 待补充 |
+| **前端测试体系** | 单元测试、集成测试、E2E 测试 | [详细文档](/frontend/architecture/testing-system) |
 
 ## 微前端架构
 
@@ -63,8 +63,14 @@
 - E2E 测试（Playwright、Cypress）
 - 视觉回归测试（Percy、Chromatic）
 
+**核心技术**：
+- Jest / Vitest（测试框架）
+- Testing Library（组件测试）
+- Playwright（E2E 测试）
+- Cypress（E2E 测试）
+
 **学习资源**：
-- 待补充
+- [前端测试体系详解](/frontend/architecture/testing-system)
 
 ## 学习路线
 
