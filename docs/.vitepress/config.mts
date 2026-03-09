@@ -341,6 +341,15 @@ export default withPwa(
               { text: 'Electron 面试题集', link: '/frontend/desktop/electron/interview-bank' },
             ]
           },
+          {
+            text: '前端架构',
+            collapsed: true,
+            items: [
+              { text: '概述', link: '/frontend/architecture/' },
+              { text: '微前端架构', link: '/frontend/architecture/micro-frontend' },
+              { text: '前端监控系统', link: '/frontend/architecture/monitoring-system' },
+            ]
+          },
         ],
 
         // 后端
