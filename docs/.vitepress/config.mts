@@ -263,6 +263,7 @@ export default withPwa(
               { text: '网络协议深入', link: '/frontend/fundamentals/network-protocols-deep-dive' },
               { text: 'API 设计与调用', link: '/frontend/fundamentals/api-design-and-calling' },
               { text: '调试技巧', link: '/frontend/fundamentals/debugging-techniques' },
+              { text: '响应式设计', link: '/frontend/fundamentals/responsive-design' },
               { text: '前端安全', link: '/frontend/fundamentals/security-interview' },
               { text: '构建工具', link: '/frontend/fundamentals/webpack-vite-interview' },
               { text: 'CSS/Tailwind', link: '/frontend/fundamentals/css-tailwind-interview' },
