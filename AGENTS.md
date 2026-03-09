@@ -1823,3 +1823,48 @@
     - ✅ webgl-guide.md（WebGL 完全指南，~900 行）
     - ✅ threejs-guide.md（Three.js 完全指南，~1000+ 行）
     - ✅ echarts-guide.md（ECharts 完全指南，~1000+ 行）
+
+
+### 2025-02-23（深夜）
+- ✅ **创建 DevOps 核心文档**
+  
+  **1. Docker 完全指南**（docker/index.md，~800 行）
+  - Docker 架构：Client、Daemon、Registry
+  - 核心概念：Image、Container、Dockerfile、Volume、Network
+  - 容器 vs 虚拟机对比
+  - 镜像管理：搜索、拉取、构建、多阶段构建
+  - 容器管理：运行、查看、日志、进入、停止、删除
+  - 数据管理：Volume、Bind Mount、tmpfs Mount
+  - 网络管理：bridge、host、none、container、overlay
+  - Dockerfile 最佳实践：优化镜像体积、.dockerignore、安全实践
+  - Docker Compose：基础配置、命令、完整示例
+  - 性能优化：镜像优化、构建缓存、资源限制
+  - 实战案例：Node.js 应用部署、微服务架构
+  
+  **2. Kubernetes 完全指南**（kubernetes/index.md，~900 行）
+  - Kubernetes 架构：Control Plane、Worker Nodes
+  - 核心组件：API Server、etcd、Scheduler、Controller Manager、kubelet、kube-proxy
+  - 核心概念：Pod、Namespace、Label、Selector
+  - 工作负载：Deployment、StatefulSet、DaemonSet、Job、CronJob
+  - 服务与网络：Service（ClusterIP、NodePort、LoadBalancer）、Ingress
+  - 存储：Volume、PersistentVolume、PersistentVolumeClaim、StorageClass
+  - 配置管理：ConfigMap、Secret
+  - 安全：RBAC、NetworkPolicy
+  - 实战案例：完整的 Web 应用部署
+  - 常见问题：Pod Pending、调试技巧、零停机部署
+  
+  **技术覆盖**：
+  - Docker：容器化技术、镜像构建、数据持久化、网络通信、编排工具
+  - Kubernetes：容器编排、服务发现、负载均衡、自动扩缩容、滚动更新
+  - 100+ 配置示例和命令
+  - 完整的生产环境部署方案
+  
+  **更新导航**：
+  - 更新 `docs/.vitepress/config.mts`：
+    - DevOps 侧边栏 Docker 和 Kubernetes 链接更新为"完全指南"
+
+- 📊 **当前总进度**：84/150+ 文档已优化（约 56%）
+  - devops/docker 目录：1/2 文件（新增）
+    - ✅ index.md（Docker 完全指南，~800 行）
+  - devops/kubernetes 目录：1/2 文件（新增）
+    - ✅ index.md（Kubernetes 完全指南，~900 行）

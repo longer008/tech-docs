@@ -641,3 +641,130 @@ class PostProcessing {
   }
 }
 ```
+
+
+---
+
+## ECharts 数据可视化
+
+### 1. ECharts 基础
+
+```typescript
+import * as echarts from 'echarts';
+
+// 初始化图表
+const chartDom = document.getElementById('chart')!;
+const myChart = echarts.init(chartDom);
+
+// 柱状图配置
+const barOption = {
+  title: {
+    text: '销售数据统计',
+    left: 'center'
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow'
+    }
+  },
+  legend: {
+    data: ['2022', '2023', '2024'],
+    top: 30
+  },
+  xAxis: {
+    type: 'category',
+    data: ['1月', '2月', '3月', '4月', '5月', '6月']
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: '2022',
+      type: 'bar',
+      data: [120, 200, 150, 80, 70, 110],
+      itemStyle: { color: '#3498db' }
+    },
+    {
+      name: '2023',
+      type: 'bar',
+      data: [150, 230, 180, 100, 90, 130],
+      itemStyle: { color: '#2ecc71' }
+    },
+    {
+      name: '2024',
+      type: 'bar',
+      data: [180, 260, 210, 120, 110, 150],
+      itemStyle: { color: '#e74c3c' }
+    }
+  ]
+};
+
+myChart.setOption(barOption);
+
+// 响应式
+window.addEventListener('resize', () => {
+  myChart.resize();
+});
+```
+
+### 2. ECharts 折线图
+
+```typescript
+// 折线图配置
+const lineOption = {
+  title: {
+    text: '温度变化趋势'
+  },
+  tooltip: {
+    trigger: 'axis'
+  },
+  legend: {
+    data: ['最高气温', '最低气温']
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  },
+  yAxis: {
+    type: 'value',
+    axisLabel: {
+      formatter: '{value} °C'
+    }
+  },
+  series: [
+    {
+      name: '最高气温',
+      type: 'line',
+      data: [11, 11, 15, 13, 12, 13, 10],
+      smooth: true,
+      itemStyle: { color: '#e74c3c' },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(231, 76, 60, 0.5)' },
+          { offset: 1, color: 'rgba(231, 76, 60, 0.1)' }
+        ])
+      }
+    },
+    {
+      name: '最低气温',
+      type: 'line',
+      data: [1, -2, 2, 5, 3, 2, 0],
+      smooth: true,
+      itemStyle: { color: '#3498db' },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: 'rgba(52, 152, 219, 0.5)' },
+          { offset: 1, color: 'rgba(52, 152, 219, 0.1)' }
+        ])
+      }
+    }
+  ]
+};
+
+myChart.setOption(lineOption);
+```
+
+### 3. ECh

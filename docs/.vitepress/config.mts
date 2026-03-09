@@ -455,7 +455,7 @@ export default withPwa(
             text: 'Docker',
             collapsed: true,
             items: [
-              { text: '概述', link: '/devops/docker/' },
+              { text: 'Docker 完全指南', link: '/devops/docker/' },
               { text: '题库', link: '/devops/docker/interview-bank' },
             ]
           },
@@ -463,7 +463,7 @@ export default withPwa(
             text: 'Kubernetes',
             collapsed: true,
             items: [
-              { text: '概述', link: '/devops/kubernetes/' },
+              { text: 'Kubernetes 完全指南', link: '/devops/kubernetes/' },
               { text: '题库', link: '/devops/kubernetes/interview-bank' },
             ]
           },
