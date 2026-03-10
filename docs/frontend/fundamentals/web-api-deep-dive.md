@@ -29,8 +29,17 @@ const lifecycle = {
 
 // 注册 Service Worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () =>
-.controller) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW 注册成功:', registration)
+        
+        // 监听更新
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               console.log('新的 Service Worker 已安装，等待激活')
               // 提示用户刷新页面
               if (confirm('发现新版本，是否刷新页面？')) {
@@ -954,8 +963,13 @@ input.addEventListener('change', (event) => {
     console.log('文件内容:', e.target.result)
   }
   
-  reader.o
-argeFile(file) {
+  reader.onerror = (e) => {
+    console.error('读取失败:', e)
+  }
+})
+
+// 2. 读取大文件（分片读取）
+async function readLargeFile(file) {
   const chunkSize = 1024 * 1024 // 1MB
   const chunks = Math.ceil(file.size / chunkSize)
   
