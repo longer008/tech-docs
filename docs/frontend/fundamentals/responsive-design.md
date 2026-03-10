@@ -8,24 +8,35 @@
 
 ## 什么是响应式设计
 
-响应式设计（Responsive Design）是一种网页设计方法，使网站能够在不同设备和屏幕尺寸上提供最佳的浏览体验。
+响应式设计（Responsive Web Design，RWD）是一种网页设计方法，使网站能够在不同设备和屏幕尺寸上提供最佳的浏览体验。
 
 ### 核心原则
 
 ```javascript
 // 响应式设计三大核心原则
 const responsivePrinciples = {
-  流式布局: '使用相对单位（%、vw、vh）而非固定像素',
-  弹性图片: '图片能够根据容器大小自适应',
-  媒体查询: '根据设备特性应用不同的样式'
+  流式布局: {
+    描述: '使用相对单位（%、vw、vh）而非固定单位（px）',
+    示例: 'width: 100%; max-width: 1200px;'
+  },
+  
+  弹性图片: {
+    描述: '图片能够根据容器大小自动缩放',
+    示例: 'img { max-width: 100%; height: auto; }'
+  },
+  
+  媒体查询: {
+    描述: '根据设备特性应用不同的样式',
+    示例: '@media (max-width: 768px) { ... }'
+  }
 }
 
-// 响应式设计的目标
-const goals = {
-  适配多设备: '手机、平板、桌面、大屏',
-  优化体验: '每种设备都有最佳的浏览体验',
-  统一代码: '一套代码适配所有设备',
-  易于维护: '减少重复代码'
+// 响应式设计的优势
+const advantages = {
+  用户体验: '在任何设备上都能获得良好体验',
+  SEO友好: 'Google 推荐的移动优化方案',
+  维护成本低: '一套代码适配所有设备',
+  未来友好: '能够适应新的设备和屏幕尺寸'
 }
 ```
 
@@ -37,7 +48,7 @@ const goals = {
 <!-- 基础 viewport 设置 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- 完整配置 -->
+<!-- 完整的 viewport 设置 -->
 <meta name="viewport" content="
   width=device-width,
   initial-scale=1.0,
@@ -47,14 +58,14 @@ const goals = {
   viewport-fit=cover
 ">
 
-<!-- 参数说明 -->
+<!-- viewport 属性说明 -->
 <!--
   width: 视口宽度（device-width 表示设备宽度）
   initial-scale: 初始缩放比例
   maximum-scale: 最大缩放比例
   minimum-scale: 最小缩放比例
-  user-scalable: 是否允许用户缩放
-  viewport-fit: 视口适配（cover 表示覆盖整个屏幕）
+  user-scalable: 是否允许用户缩放（yes/no）
+  viewport-fit: 视口适配（cover 表示覆盖整个屏幕，包括刘海区域）
 -->
 ```
 
@@ -64,55 +75,88 @@ const goals = {
 // rem 适配原理
 // 1rem = 根元素（html）的 font-size
 
-// 方案 1：动态设置 rem
+// 方案 1：动态设置 rem 基准值
 (function() {
-  const baseSize = 16 // 基准大小（设计稿 375px 时，1rem = 16px）
-  const designWidth = 375 // 设计稿宽度
+  // 设计稿宽度
+  const designWidth = 750
+  
+  // 基准字体大小
+  const baseFontSize = 100
   
   function setRem() {
-    const scale = document.documentElement.clientWidth / designWidth
-    document.documentElement.style.fontSize = baseSize * scale + 'px'
+    // 获取当前设备宽度
+    const deviceWidth = document.documentElement.clientWidth || window.innerWidth
+    
+    // 计算 rem 基准值
+    const rem = (deviceWidth / designWidth) * baseFontSize
+    
+    // 设置根元素字体大小
+    document.documentElement.style.fontSize = rem + 'px'
   }
   
+  // 初始化
   setRem()
+  
+  // 监听窗口大小变化
   window.addEventListener('resize', setRem)
   window.addEventListener('orientationchange', setRem)
 })()
 
-// 方案 2：使用 lib-flexible（淘宝方案）
-// 安装: npm install lib-flexible
-import 'lib-flexible'
+// 使用示例
+// 设计稿：750px
+// 元素宽度：375px
+// 转换：375 / 100 = 3.75rem
 
-// 配合 postcss-pxtorem 自动转换
+// CSS
+.box {
+  width: 3.75rem; /* 375px */
+  height: 2rem;   /* 200px */
+  font-size: 0.16rem; /* 16px */
+}
+
+// 方案 2：使用 postcss-pxtorem 自动转换
 // postcss.config.js
 module.exports = {
   plugins: {
     'postcss-pxtorem': {
-      rootValue: 37.5, // 设计稿宽度 / 10
-      propList: ['*'],
-      selectorBlackList: ['.no-rem'] // 不转换的类名
+      rootValue: 100, // 根元素字体大小
+      propList: ['*'], // 需要转换的属性
+      selectorBlackList: ['.no-rem'], // 不转换的选择器
+      minPixelValue: 2 // 最小转换值
     }
   }
 }
 
-// 使用示例
-// 设计稿 750px，元素宽度 100px
-// CSS 中写 width: 100px
-// 自动转换为 width: 2.6667rem
+// CSS（编译前）
+.box {
+  width: 375px;
+  height: 200px;
+  font-size: 16px;
+}
+
+// CSS（编译后）
+.box {
+  width: 3.75rem;
+  height: 2rem;
+  font-size: 0.16rem;
+}
 ```
 
 ### 3. vw/vh 适配方案
 
 ```css
-/* vw/vh 适配 */
+/* vw/vh 适配原理 */
 /* 1vw = 视口宽度的 1% */
 /* 1vh = 视口高度的 1% */
 
-/* 设计稿 750px，元素宽度 100px */
-/* 100 / 750 * 100 = 13.33vw */
+/* 设计稿：750px */
+/* 元素宽度：375px */
+/* 转换：375 / 750 * 100 = 50vw */
+
 .box {
-  width: 13.33vw;
-  height: 13.33vw;
+  width: 50vw; /* 375px */
+  height: 26.67vw; /* 200px */
+  font-size: 2.13vw; /* 16px */
 }
 
 /* 使用 postcss-px-to-viewport 自动转换 */
@@ -124,108 +168,249 @@ module.exports = {
       viewportHeight: 1334, // 设计稿高度
       unitPrecision: 5, // 转换精度
       viewportUnit: 'vw', // 转换单位
-      selectorBlackList: ['.ignore'], // 不转换的类名
+      selectorBlackList: ['.no-vw'], // 不转换的选择器
       minPixelValue: 1, // 最小转换值
       mediaQuery: false // 是否转换媒体查询中的 px
     }
   }
 }
+
+/* CSS（编译前） */
+.box {
+  width: 375px;
+  height: 200px;
+  font-size: 16px;
+}
+
+/* CSS（编译后） */
+.box {
+  width: 50vw;
+  height: 26.66667vw;
+  font-size: 2.13333vw;
+}
+
+/* vw/vh 的优势 */
+/* 1. 不需要 JavaScript */
+/* 2. 计算简单 */
+/* 3. 兼容性好 */
+
+/* vw/vh 的问题 */
+/* 1. 无法设置最大最小值 */
+/* 解决方案：结合 calc() 和 clamp() */
+.box {
+  /* 最小 16px，最大 24px */
+  font-size: clamp(16px, 2.13vw, 24px);
+  
+  /* 或使用 calc() + min/max */
+  font-size: min(max(16px, 2.13vw), 24px);
+}
 ```
 
-### 4. 1px 边框问题
+### 4. flexible 方案（淘宝）
 
-```css
-/* 问题：在高清屏（DPR > 1）上，1px 边框会显得很粗 */
-
-/* 解决方案 1：使用 transform scale */
-.border-1px {
-  position: relative;
-}
-
-.border-1px::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 200%;
-  height: 200%;
-  border: 1px solid #000;
-  transform: scale(0.5);
-  transform-origin: 0 0;
-  box-sizing: border-box;
-}
-
-/* 解决方案 2：使用 box-shadow */
-.border-1px {
-  box-shadow: 0 0 0 0.5px #000;
-}
-
-/* 解决方案 3：使用 SVG */
-.border-1px {
-  border: 1px solid transparent;
-  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='none' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E") 1;
-}
-
-/* 解决方案 4：使用 postcss-write-svg */
-@svg 1px-border {
-  width: 4px;
-  height: 4px;
-  @rect {
-    fill: transparent;
-    width: 100%;
-    height: 100%;
-    stroke-width: 25%;
-    stroke: var(--color, black);
+```javascript
+// lib-flexible 原理
+(function(win, lib) {
+  const doc = win.document
+  const docEl = doc.documentElement
+  let metaEl = doc.querySelector('meta[name="viewport"]')
+  let flexibleEl = doc.querySelector('meta[name="flexible"]')
+  let dpr = 0
+  let scale = 0
+  let tid
+  
+  // 获取 dpr
+  if (metaEl) {
+    const match = metaEl.getAttribute('content').match(/initial\-scale=([\d\.]+)/)
+    if (match) {
+      scale = parseFloat(match[1])
+      dpr = parseInt(1 / scale)
+    }
+  } else if (flexibleEl) {
+    const content = flexibleEl.getAttribute('content')
+    if (content) {
+      const initialDpr = content.match(/initial\-dpr=([\d\.]+)/)
+      const maximumDpr = content.match(/maximum\-dpr=([\d\.]+)/)
+      if (initialDpr) {
+        dpr = parseFloat(initialDpr[1])
+        scale = parseFloat((1 / dpr).toFixed(2))
+      }
+      if (maximumDpr) {
+        dpr = parseFloat(maximumDpr[1])
+        scale = parseFloat((1 / dpr).toFixed(2))
+      }
+    }
   }
+  
+  if (!dpr && !scale) {
+    const isAndroid = win.navigator.appVersion.match(/android/gi)
+    const isIPhone = win.navigator.appVersion.match(/iphone/gi)
+    const devicePixelRatio = win.devicePixelRatio
+    
+    if (isIPhone) {
+      // iOS 下，对于 2 和 3 的屏，用 2 倍的方案，其余的用 1 倍方案
+      if (devicePixelRatio >= 3 && (!dpr || dpr >= 3)) {
+        dpr = 3
+      } else if (devicePixelRatio >= 2 && (!dpr || dpr >= 2)) {
+        dpr = 2
+      } else {
+        dpr = 1
+      }
+    } else {
+      // 其他设备下，仍旧使用 1 倍的方案
+      dpr = 1
+    }
+    scale = 1 / dpr
+  }
+  
+  docEl.setAttribute('data-dpr', dpr)
+  
+  if (!metaEl) {
+    metaEl = doc.createElement('meta')
+    metaEl.setAttribute('name', 'viewport')
+    metaEl.setAttribute('content', 'initial-scale=' + scale + ', maximum-scale=' + scale + ', minimum-scale=' + scale + ', user-scalable=no')
+    if (docEl.firstElementChild) {
+      docEl.firstElementChild.appendChild(metaEl)
+    } else {
+      const wrap = doc.createElement('div')
+      wrap.appendChild(metaEl)
+      doc.write(wrap.innerHTML)
+    }
+  }
+  
+  function refreshRem() {
+    let width = docEl.getBoundingClientRect().width
+    if (width / dpr > 540) {
+      width = 540 * dpr
+    }
+    const rem = width / 10
+    docEl.style.fontSize = rem + 'px'
+    lib.rem = win.rem = rem
+  }
+  
+  win.addEventListener('resize', function() {
+    clearTimeout(tid)
+    tid = setTimeout(refreshRem, 300)
+  }, false)
+  
+  win.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      clearTimeout(tid)
+      tid = setTimeout(refreshRem, 300)
+    }
+  }, false)
+  
+  if (doc.readyState === 'complete') {
+    doc.body.style.fontSize = 12 * dpr + 'px'
+  } else {
+    doc.addEventListener('DOMContentLoaded', function() {
+      doc.body.style.fontSize = 12 * dpr + 'px'
+    }, false)
+  }
+  
+  refreshRem()
+  
+  lib.dpr = win.dpr = dpr
+  lib.refreshRem = refreshRem
+  lib.rem2px = function(d) {
+    let val = parseFloat(d) * this.rem
+    if (typeof d === 'string' && d.match(/rem$/)) {
+      val += 'px'
+    }
+    return val
+  }
+  lib.px2rem = function(d) {
+    let val = parseFloat(d) / this.rem
+    if (typeof d === 'string' && d.match(/px$/)) {
+      val += 'rem'
+    }
+    return val
+  }
+})(window, window['lib'] || (window['lib'] = {}))
+
+// 使用示例
+// HTML
+<html data-dpr="2">
+  <head>
+    <meta name="viewport" content="initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no">
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+</html>
+
+// CSS
+.box {
+  width: 3.75rem; /* 375px */
+  height: 2rem;   /* 200px */
+  font-size: 0.16rem; /* 16px */
 }
 
-.border-1px {
-  border: 1px solid transparent;
-  border-image: svg(1px-border param(--color #000)) 1 stretch;
-}
+/* 根据 dpr 设置不同的字体大小 */
+[data-dpr="1"] .box { font-size: 16px; }
+[data-dpr="2"] .box { font-size: 32px; }
+[data-dpr="3"] .box { font-size: 48px; }
 ```
 
-### 5. 安全区域适配（iPhone X）
+### 5. 适配方案对比
 
-```css
-/* iPhone X 刘海屏适配 */
-
-/* 1. 设置 viewport-fit=cover */
-<meta name="viewport" content="viewport-fit=cover">
-
-/* 2. 使用 env() 获取安全区域 */
-.header {
-  /* 顶部安全区域 */
-  padding-top: env(safe-area-inset-top);
-}
-
-.footer {
-  /* 底部安全区域 */
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.sidebar {
-  /* 左侧安全区域 */
-  padding-left: env(safe-area-inset-left);
-  /* 右侧安全区域 */
-  padding-right: env(safe-area-inset-right);
-}
-
-/* 3. 完整示例 */
-.container {
-  padding: 
-    env(safe-area-inset-top)
-    env(safe-area-inset-right)
-    env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
-}
-
-/* 4. 兼容性处理 */
-.container {
-  /* 降级方案 */
-  padding: 20px;
-  /* 支持 env() 的浏览器会覆盖 */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+```javascript
+// 适配方案对比
+const comparisonTable = {
+  rem: {
+    原理: '动态设置根元素字体大小',
+    优点: [
+      '兼容性好',
+      '可以设置最大最小值',
+      '计算简单'
+    ],
+    缺点: [
+      '需要 JavaScript',
+      '首屏可能闪烁'
+    ],
+    适用场景: '大部分移动端项目'
+  },
+  
+  vw_vh: {
+    原理: '使用视口单位',
+    优点: [
+      '不需要 JavaScript',
+      '计算简单',
+      '兼容性好'
+    ],
+    缺点: [
+      '无法设置最大最小值（需要配合 clamp）',
+      '某些浏览器有兼容性问题'
+    ],
+    适用场景: '简单的移动端项目'
+  },
+  
+  flexible: {
+    原理: 'rem + dpr',
+    优点: [
+      '解决 1px 问题',
+      '适配各种屏幕',
+      '淘宝方案，成熟稳定'
+    ],
+    缺点: [
+      '需要 JavaScript',
+      '配置复杂'
+    ],
+    适用场景: '对视觉要求高的项目'
+  },
+  
+  媒体查询: {
+    原理: '根据屏幕宽度应用不同样式',
+    优点: [
+      '灵活',
+      '可以针对不同设备定制'
+    ],
+    缺点: [
+      '代码量大',
+      '维护成本高'
+    ],
+    适用场景: '响应式网站'
+  }
 }
 ```
 
@@ -234,40 +419,78 @@ module.exports = {
 ### 1. 常用断点
 
 ```css
-/* 移动优先（Mobile First）断点 */
-/* 小屏幕（手机）：< 768px */
-/* 中等屏幕（平板）：768px - 1024px */
-/* 大屏幕（桌面）：> 1024px */
-
-/* 基础样式（移动端） */
+/* 移动优先（Mobile First） */
+/* 默认样式（移动端） */
 .container {
   width: 100%;
-  padding: 10px;
+  padding: 0 15px;
 }
 
-/* 平板 */
+/* 平板（≥768px） */
 @media (min-width: 768px) {
   .container {
-    width: 750px;
+    max-width: 750px;
     margin: 0 auto;
-    padding: 20px;
   }
 }
 
-/* 桌面 */
-@media (min-width: 1024px) {
+/* 桌面（≥992px） */
+@media (min-width: 992px) {
   .container {
-    width: 1000px;
-    padding: 30px;
+    max-width: 970px;
   }
 }
 
-/* 大屏 */
-@media (min-width: 1440px) {
+/* 大屏（≥1200px） */
+@media (min-width: 1200px) {
   .container {
-    width: 1200px;
+    max-width: 1170px;
   }
 }
+
+/* 超大屏（≥1400px） */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1320px;
+  }
+}
+
+/* 桌面优先（Desktop First） */
+/* 默认样式（桌面） */
+.container {
+  max-width: 1170px;
+  margin: 0 auto;
+}
+
+/* 平板（≤992px） */
+@media (max-width: 992px) {
+  .container {
+    max-width: 750px;
+  }
+}
+
+/* 移动端（≤768px） */
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    padding: 0 15px;
+  }
+}
+
+/* Bootstrap 断点 */
+/* xs: <576px */
+/* sm: ≥576px */
+/* md: ≥768px */
+/* lg: ≥992px */
+/* xl: ≥1200px */
+/* xxl: ≥1400px */
+
+/* Tailwind CSS 断点 */
+/* sm: 640px */
+/* md: 768px */
+/* lg: 1024px */
+/* xl: 1280px */
+/* 2xl: 1536px */
 ```
 
 ### 2. 媒体查询类型
@@ -275,12 +498,12 @@ module.exports = {
 ```css
 /* 1. 屏幕宽度 */
 @media (min-width: 768px) { }
-@media (max-width: 767px) { }
-@media (min-width: 768px) and (max-width: 1023px) { }
+@media (max-width: 768px) { }
+@media (min-width: 768px) and (max-width: 992px) { }
 
 /* 2. 屏幕高度 */
 @media (min-height: 600px) { }
-@media (max-height: 599px) { }
+@media (max-height: 600px) { }
 
 /* 3. 设备方向 */
 @media (orientation: portrait) { /* 竖屏 */ }
@@ -289,19 +512,58 @@ module.exports = {
 /* 4. 设备像素比 */
 @media (-webkit-min-device-pixel-ratio: 2),
        (min-resolution: 192dpi) {
-  /* 高清屏（Retina） */
+  /* Retina 屏幕 */
 }
 
 /* 5. 颜色深度 */
+@media (min-color: 8) { }
+
+/* 6. 悬停能力 */
+@media (hover: hover) {
+  /* 支持悬停（鼠标） */
+  .button:hover {
+    background: blue;
+  }
+}
+
+@media (hover: none) {
+  /* 不支持悬停（触摸屏） */
+  .button:active {
+    background: blue;
+  }
+}
+
+/* 7. 指针精度 */
+@media (pointer: fine) {
+  /* 精确指针（鼠标） */
+  .button {
+    padding: 5px 10px;
+  }
+}
+
+@media (pointer: coarse) {
+  /* 粗糙指针（手指） */
+  .button {
+    padding: 10px 20px;
+  }
+}
+
+/* 8. 深色模式 */
 @media (prefers-color-scheme: dark) {
-  /* 深色模式 */
+  body {
+    background: #000;
+    color: #fff;
+  }
 }
 
 @media (prefers-color-scheme: light) {
-  /* 浅色模式 */
+  body {
+    background: #fff;
+    color: #000;
+  }
 }
 
-/* 6. 减少动画 */
+/* 9. 减少动画 */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
@@ -309,104 +571,80 @@ module.exports = {
   }
 }
 
-/* 7. 打印样式 */
+/* 10. 打印样式 */
 @media print {
+  body {
+    font-size: 12pt;
+  }
+  
   .no-print {
     display: none;
   }
 }
 ```
 
-### 3. JavaScript 媒体查询
+### 3. 容器查询（Container Queries）
 
-```javascript
-// 使用 matchMedia API
-const mediaQuery = window.matchMedia('(min-width: 768px)')
+```css
+/* 容器查询（CSS Container Queries） */
+/* 根据容器大小而非视口大小应用样式 */
 
-// 检查是否匹配
-if (mediaQuery.matches) {
-  console.log('屏幕宽度 >= 768px')
-} else {
-  console.log('屏幕宽度 < 768px')
+/* 定义容器 */
+.container {
+  container-type: inline-size; /* 或 size、normal */
+  container-name: sidebar; /* 可选 */
 }
 
-// 监听变化
-mediaQuery.addEventListener('change', (e) => {
-  if (e.matches) {
-    console.log('切换到桌面布局')
-  } else {
-    console.log('切换到移动布局')
-  }
-})
-
-// 封装响应式工具类
-class ResponsiveHelper {
-  constructor() {
-    this.breakpoints = {
-      mobile: '(max-width: 767px)',
-      tablet: '(min-width: 768px) and (max-width: 1023px)',
-      desktop: '(min-width: 1024px)'
-    }
-    
-    this.listeners = new Map()
-  }
-  
-  // 检查断点
-  is(breakpoint) {
-    const query = this.breakpoints[breakpoint]
-    return window.matchMedia(query).matches
-  }
-  
-  // 监听断点变化
-  on(breakpoint, callback) {
-    const query = this.breakpoints[breakpoint]
-    const mediaQuery = window.matchMedia(query)
-    
-    const handler = (e) => callback(e.matches)
-    mediaQuery.addEventListener('change', handler)
-    
-    // 保存监听器以便移除
-    this.listeners.set(callback, { mediaQuery, handler })
-    
-    // 立即执行一次
-    callback(mediaQuery.matches)
-  }
-  
-  // 移除监听
-  off(callback) {
-    const listener = this.listeners.get(callback)
-    if (listener) {
-      listener.mediaQuery.removeEventListener('change', listener.handler)
-      this.listeners.delete(callback)
-    }
-  }
-  
-  // 获取当前断点
-  getCurrentBreakpoint() {
-    if (this.is('mobile')) return 'mobile'
-    if (this.is('tablet')) return 'tablet'
-    if (this.is('desktop')) return 'desktop'
-    return 'unknown'
+/* 容器查询 */
+@container (min-width: 400px) {
+  .card {
+    display: flex;
   }
 }
 
-// 使用示例
-const responsive = new ResponsiveHelper()
-
-// 检查断点
-if (responsive.is('mobile')) {
-  console.log('移动端')
+/* 命名容器查询 */
+@container sidebar (min-width: 400px) {
+  .card {
+    display: flex;
+  }
 }
 
-// 监听断点变化
-responsive.on('mobile', (matches) => {
-  if (matches) {
-    console.log('切换到移动端')
-  }
-})
+/* 实际示例 */
+.sidebar {
+  container-type: inline-size;
+}
 
-// 获取当前断点
-console.log('当前断点:', responsive.getCurrentBreakpoint())
+.card {
+  display: block;
+}
+
+/* 当容器宽度 ≥ 400px 时 */
+@container (min-width: 400px) {
+  .card {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .card-image {
+    width: 40%;
+  }
+  
+  .card-content {
+    width: 60%;
+  }
+}
+
+/* 容器查询单位 */
+/* cqw: 容器宽度的 1% */
+/* cqh: 容器高度的 1% */
+/* cqi: 容器内联尺寸的 1% */
+/* cqb: 容器块尺寸的 1% */
+/* cqmin: cqi 和 cqb 中较小的值 */
+/* cqmax: cqi 和 cqb 中较大的值*/
+
+.card-title {
+  font-size: clamp(1rem, 5cqi, 2rem);
+}
 ```
 
 ## 响应式图片
@@ -416,7 +654,7 @@ console.log('当前断点:', responsive.getCurrentBreakpoint())
 ```html
 <!-- 基础用法 -->
 <img
-  src="image-400.jpg"
+  src="image-800.jpg"
   srcset="
     image-400.jpg 400w,
     image-800.jpg 800w,
@@ -424,151 +662,204 @@ console.log('当前断点:', responsive.getCurrentBreakpoint())
   "
   sizes="(max-width: 600px) 400px, (max-width: 1000px) 800px, 1200px"
   alt="响应式图片"
->
+/>
 
-<!-- 说明 -->
-<!--
-  srcset: 提供多个图片源和宽度描述符（w）
-  sizes: 告诉浏览器在不同视口宽度下图片的显示宽度
-  浏览器会根据设备像素比和视口宽度自动选择最合适的图片
--->
+<!-- srcset 说明 -->
+<!-- 400w 表示图片宽度为 400px -->
+<!-- 浏览器会根据设备像素比和 sizes 选择合适的图片 -->
 
-<!-- 使用像素密度描述符 -->
+<!-- sizes 说明 -->
+<!-- (max-width: 600px) 400px: 视口宽度 ≤600px 时，图片显示宽度为 400px -->
+<!-- (max-width: 1000px) 800px: 视口宽度 ≤1000px 时，图片显示宽度为 800px -->
+<!-- 1200px: 默认显示宽度为 1200px -->
+
+<!-- 使用 x 描述符（设备像素比） -->
 <img
-  src="image.jpg"
+  src="image-1x.jpg"
   srcset="
-    image.jpg 1x,
-    image@2x.jpg 2x,
-    image@3x.jpg 3x
+    image-1x.jpg 1x,
+    image-2x.jpg 2x,
+    image-3x.jpg 3x
   "
-  alt="高清图片"
->
+  alt="响应式图片"
+/>
+
+<!-- 完整示例 -->
+<img
+  src="fallback.jpg"
+  srcset="
+    small.jpg 300w,
+    medium.jpg 600w,
+    large.jpg 1200w
+  "
+  sizes="
+    (max-width: 320px) 280px,
+    (max-width: 640px) 580px,
+    1000px
+  "
+  alt="响应式图片"
+  loading="lazy"
+/>
 ```
 
 ### 2. picture 元素
 
 ```html
+<!-- 基础用法 -->
+<picture>
+  <source srcset="image.webp" type="image/webp" />
+  <source srcset="image.jpg" type="image/jpeg" />
+  <img src="image.jpg" alt="图片" />
+</picture>
+
+<!-- 根据屏幕宽度选择图片 -->
+<picture>
+  <source media="(max-width: 600px)" srcset="small.jpg" />
+  <source media="(max-width: 1200px)" srcset="medium.jpg" />
+  <img src="large.jpg" alt="图片" />
+</picture>
+
+<!-- 结合 srcset -->
+<picture>
+  <source
+    media="(max-width: 600px)"
+    srcset="small-1x.jpg 1x, small-2x.jpg 2x"
+  />
+  <source
+    media="(max-width: 1200px)"
+    srcset="medium-1x.jpg 1x, medium-2x.jpg 2x"
+  />
+  <img
+    src="large-1x.jpg"
+    srcset="large-1x.jpg 1x, large-2x.jpg 2x"
+    alt="图片"
+  />
+</picture>
+
 <!-- 艺术指导（Art Direction） -->
+<!-- 不同屏幕显示不同裁剪的图片 -->
 <picture>
   <!-- 移动端：竖版图片 -->
-  <source media="(max-width: 767px)" srcset="image-mobile.jpg">
-  
-  <!-- 平板：横版图片 -->
-  <source media="(min-width: 768px) and (max-width: 1023px)" srcset="image-tablet.jpg">
-  
-  <!-- 桌面：宽屏图片 -->
-  <source media="(min-width: 1024px)" srcset="image-desktop.jpg">
-  
-  <!-- 降级方案 -->
-  <img src="image-desktop.jpg" alt="响应式图片">
+  <source
+    media="(max-width: 600px)"
+    srcset="portrait.jpg"
+  />
+  <!-- 桌面端：横版图片 -->
+  <source
+    media="(min-width: 601px)"
+    srcset="landscape.jpg"
+  />
+  <img src="landscape.jpg" alt="图片" />
 </picture>
 
-<!-- 不同格式图片 -->
+<!-- 深色模式 -->
 <picture>
-  <!-- WebP 格式（现代浏览器） -->
-  <source type="image/webp" srcset="image.webp">
-  
-  <!-- AVIF 格式（最新浏览器） -->
-  <source type="image/avif" srcset="image.avif">
-  
-  <!-- JPEG 格式（降级方案） -->
-  <img src="image.jpg" alt="图片">
-</picture>
-
-<!-- 结合使用 -->
-<picture>
-  <!-- 移动端 WebP -->
   <source
-    media="(max-width: 767px)"
-    type="image/webp"
-    srcset="image-mobile.webp"
-  >
-  
-  <!-- 移动端 JPEG -->
-  <source
-    media="(max-width: 767px)"
-    srcset="image-mobile.jpg"
-  >
-  
-  <!-- 桌面 WebP -->
-  <source
-    type="image/webp"
-    srcset="image-desktop.webp"
-  >
-  
-  <!-- 降级方案 -->
-  <img src="image-desktop.jpg" alt="图片">
+    srcset="dark.jpg"
+    media="(prefers-color-scheme: dark)"
+  />
+  <img src="light.jpg" alt="图片" />
 </picture>
 ```
 
-### 3. 懒加载
+### 3. CSS 响应式背景图
 
-```javascript
-// 方案 1：原生懒加载
-<img src="image.jpg" loading="lazy" alt="懒加载图片">
+```css
+/* 基础用法 */
+.hero {
+  background-image: url('small.jpg');
+}
 
-// 方案 2：Intersection Observer
-class LazyLoad {
-  constructor(selector = 'img[data-src]') {
-    this.images = document.querySelectorAll(selector)
-    this.observer = null
-    this.init()
-  }
-  
-  init() {
-    // 检查浏览器支持
-    if (!('IntersectionObserver' in window)) {
-      this.loadAllImages()
-      return
-    }
-    
-    // 创建观察器
-    this.observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          this.loadImage(entry.target)
-          this.observer.unobserve(entry.target)
-        }
-      })
-    }, {
-      rootMargin: '50px' // 提前 50px 开始加载
-    })
-    
-    // 观察所有图片
-    this.images.forEach(img => this.observer.observe(img))
-  }
-  
-  loadImage(img) {
-    const src = img.dataset.src
-    const srcset = img.dataset.srcset
-    
-    if (src) {
-      img.src = src
-    }
-    
-    if (srcset) {
-      img.srcset = srcset
-    }
-    
-    img.classList.add('loaded')
-  }
-  
-  loadAllImages() {
-    this.images.forEach(img => this.loadImage(img))
+@media (min-width: 768px) {
+  .hero {
+    background-image: url('medium.jpg');
   }
 }
 
-// 使用示例
-// HTML
-<img
-  data-src="image.jpg"
-  data-srcset="image-400.jpg 400w, image-800.jpg 800w"
-  alt="懒加载图片"
->
+@media (min-width: 1200px) {
+  .hero {
+    background-image: url('large.jpg');
+  }
+}
 
-// JavaScript
-const lazyLoad = new LazyLoad()
+/* 使用 image-set() */
+.hero {
+  background-image: image-set(
+    url('image-1x.jpg') 1x,
+    url('image-2x.jpg') 2x,
+    url('image-3x.jpg') 3x
+  );
+}
+
+/* WebP 支持检测 */
+.hero {
+  background-image: url('image.jpg');
+}
+
+@supports (background-image: image-set(url('image.webp') type('image/webp'))) {
+  .hero {
+    background-image: image-set(
+      url('image.webp') type('image/webp'),
+      url('image.jpg') type('image/jpeg')
+    );
+  }
+}
+
+/* 深色模式 */
+.hero {
+  background-image: url('light.jpg');
+}
+
+@media (prefers-color-scheme: dark) {
+  .hero {
+    background-image: url('dark.jpg');
+  }
+}
 ```
+
+### 4. 图片懒加载
+
+```html
+<!-- 原生懒加载 -->
+<img src="image.jpg" alt="图片" loading="lazy" />
+
+<!-- 浏览器支持检测 -->
+<script>
+if ('loading' in HTMLImageElement.prototype) {
+  // 支持原生懒加载
+  const images = document.querySelectorAll('img[loading="lazy"]')
+  images.forEach(img => {
+    img.src = img.dataset.src
+  })
+} else {
+  // 不支持，使用 polyfill
+  const script = document.createElement('script')
+  script.src = 'lazysizes.min.js'
+  document.body.appendChild(script)
+}
+</script>
+
+<!-- 使用 Intersection Observer -->
+<img data-src="image.jpg" alt="图片" class="lazy" />
+
+<script>
+const lazyImages = document.querySelectorAll('.lazy')
+
+const imageObserver = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target
+      img.src = img.dataset.src
+      img.classList.remove('lazy')
+      observer.unobserve(img)
+    }
+  })
+})
+
+lazyImages.forEach(img => imageObserver.observe(img))
+</script>
+```
+
 
 ## 移动端性能优化
 
@@ -579,15 +870,19 @@ const lazyLoad = new LazyLoad()
 // 将关键 CSS 内联到 HTML 中
 <style>
   /* 关键 CSS */
-  .header { /* ... */ }
-  .hero { /* ... */ }
+  body { margin: 0; font-family: sans-serif; }
+  .header { height: 60px; background: #fff; }
 </style>
 
 // 2. 预加载关键资源
-<link rel="preload" href="font.woff2" as="font" crossorigin>
+<link rel="preload" href="critical.css" as="style">
+<link rel="preload" href="critical.js" as="script">
 <link rel="preload" href="hero.jpg" as="image">
 
-// 3. 骨架屏
+// 3. 延迟加载非关键资源
+<link rel="stylesheet" href="non-critical.css" media="print" onload="this.media='all'">
+
+// 4. 使用骨架屏
 const SkeletonScreen = () => {
   return (
     <div className="skeleton">
@@ -601,303 +896,133 @@ const SkeletonScreen = () => {
   )
 }
 
-// 4. 代码分割
+// CSS
+.skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// 5. 代码分割
 // React
 const LazyComponent = React.lazy(() => import('./Component'))
 
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LazyComponent />
+    </Suspense>
+  )
+}
+
 // Vue
-const LazyComponent = () => import('./Component.vue')
+const AsyncComponent = () => import('./Component.vue')
 
-// 5. 路由懒加载
-// React Router
-const Home = lazy(() => import('./pages/Home'))
-const About = lazy(() => import('./pages/About'))
-
-// Vue Router
-const routes = [
-  {
-    path: '/',
-    component: () => import('./pages/Home.vue')
-  },
-  {
-    path: '/about',
-    component: () => import('./pages/About.vue')
+export default {
+  components: {
+    AsyncComponent
   }
-]
+}
 ```
 
-### 2. 滚动性能优化
-
-```css
-/* 1. 使用 will-change */
-.scroll-container {
-  will-change: transform;
-}
-
-/* 2. 使用 transform 代替 top/left */
-/* ❌ 不好 */
-.element {
-  position: absolute;
-  top: 100px;
-  left: 100px;
-}
-
-/* ✅ 好 */
-.element {
-  transform: translate(100px, 100px);
-}
-
-/* 3. 使用 CSS containment */
-.card {
-  contain: layout style paint;
-}
-
-/* 4. 虚拟滚动 */
-```
+### 2. 图片优化
 
 ```javascript
-// 虚拟滚动实现
-class VirtualScroll {
-  constructor(options) {
-    this.container = options.container
-    this.items = options.items
-    this.itemHeight = options.itemHeight
-    this.renderItem = options.renderItem
-    
-    this.visibleCount = Math.ceil(this.container.clientHeight / this.itemHeight)
-    this.startIndex = 0
-    
-    this.init()
-  }
-  
-  init() {
-    // 创建容器
-    this.scrollContainer = document.createElement('div')
-    this.scrollContainer.style.height = this.items.length * this.itemHeight + 'px'
-    this.scrollContainer.style.position = 'relative'
-    
-    this.contentContainer = document.createElement('div')
-    this.contentContainer.style.position = 'absolute'
-    this.contentContainer.style.top = '0'
-    this.contentContainer.style.left = '0'
-    this.contentContainer.style.right = '0'
-    
-    this.scrollContainer.appendChild(this.contentContainer)
-    this.container.appendChild(this.scrollContainer)
-    
-    // 监听滚动
-    this.container.addEventListener('scroll', () => this.handleScroll())
-    
-    // 初始渲染
-    this.render()
-  }
-  
-  handleScroll() {
-    const scrollTop = this.container.scrollTop
-    const newStartIndex = Math.floor(scrollTop / this.itemHeight)
-    
-    if (newStartIndex !== this.startIndex) {
-      this.startIndex = newStartIndex
-      this.render()
-    }
-  }
-  
-  render() {
-    const endIndex = Math.min(
-      this.startIndex + this.visibleCount + 1,
-      this.items.length
-    )
-    
-    const visibleItems = this.items.slice(this.startIndex, endIndex)
-    
-    this.contentContainer.innerHTML = ''
-    this.contentContainer.style.transform = `translateY(${this.startIndex * this.itemHeight}px)`
-    
-    visibleItems.forEach((item, index) => {
-      const element = this.renderItem(item, this.startIndex + index)
-      element.style.height = this.itemHeight + 'px'
-      this.contentContainer.appendChild(element)
-    })
-  }
-}
+// 1. 使用 WebP 格式
+<picture>
+  <source srcset="image.webp" type="image/webp">
+  <img src="image.jpg" alt="图片">
+</picture>
 
-// 使用示例
-const virtualScroll = new VirtualScroll({
-  container: document.getElementById('list'),
-  items: Array.from({ length: 10000 }, (_, i) => ({ id: i, text: `Item ${i}` })),
-  itemHeight: 50,
-  renderItem: (item) => {
-    const div = document.createElement('div')
-    div.textContent = item.text
-    div.className = 'list-item'
-    return div
-  }
+// 2. 图片压缩
+// 使用 imagemin
+const imagemin = require('imagemin')
+const imageminWebp = require('imagemin-webp')
+
+await imagemin(['images/*.{jpg,png}'], {
+  destination: 'build/images',
+  plugins: [
+    imageminWebp({ quality: 75 })
+  ]
 })
+
+// 3. 响应式图片
+<img
+  srcset="small.jpg 400w, medium.jpg 800w, large.jpg 1200w"
+  sizes="(max-width: 600px) 400px, (max-width: 1000px) 800px, 1200px"
+  src="medium.jpg"
+  alt="图片"
+>
+
+// 4. 懒加载
+<img src="placeholder.jpg" data-src="real-image.jpg" loading="lazy">
+
+// 5. 使用 CDN
+<img src="https://cdn.example.com/image.jpg" alt="图片">
 ```
 
-### 3. 触摸优化
-
-```css
-/* 1. 禁用点击延迟 */
-* {
-  touch-action: manipulation;
-}
-
-/* 2. 平滑滚动 */
-.scroll-container {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: scroll;
-}
-
-/* 3. 禁用选择 */
-.button {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-```
+### 3. 网络优化
 
 ```javascript
-// 4. FastClick（已过时，现代浏览器不需要）
-// 现代浏览器使用 touch-action: manipulation 即可
-
-// 5. 触摸事件优化
-class TouchOptimizer {
-  constructor(element) {
-    this.element = element
-    this.startX = 0
-    this.startY = 0
-    
-    this.init()
-  }
-  
-  init() {
-    // 使用 passive 监听器提高滚动性能
-    this.element.addEventListener('touchstart', (e) => {
-      this.startX = e.touches[0].clientX
-      this.startY = e.touches[0].clientY
-    }, { passive: true })
-    
-    this.element.addEventListener('touchmove', (e) => {
-      const deltaX = e.touches[0].clientX - this.startX
-      const deltaY = e.touches[0].clientY - this.startY
-      
-      // 处理滑动
-      this.handleSwipe(deltaX, deltaY)
-    }, { passive: true })
-  }
-  
-  handleSwipe(deltaX, deltaY) {
-    // 判断滑动方向
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      // 水平滑动
-      if (deltaX > 0) {
-        console.log('向右滑动')
-      } else {
-        console.log('向左滑动')
-      }
-    } else {
-      // 垂直滑动
-      if (deltaY > 0) {
-        console.log('向下滑动')
-      } else {
-        console.log('向上滑动')
-      }
-    }
-  }
+// 1. 使用 HTTP/2
+// 服务器配置（Nginx）
+server {
+  listen 443 ssl http2;
+  # ...
 }
+
+// 2. 启用压缩
+// Gzip
+server {
+  gzip on;
+  gzip_types text/plain text/css application/json application/javascript;
+  gzip_min_length 1000;
+}
+
+// Brotli
+server {
+  brotli on;
+  brotli_types text/plain text/css application/json application/javascript;
+}
+
+// 3. 使用 Service Worker 缓存
+// sw.js
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('v1').then((cache) => {
+      return cache.addAll([
+        '/',
+        '/styles.css',
+        '/script.js',
+        '/image.jpg'
+      ])
+    })
+  )
+})
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request)
+    })
+  )
+})
+
+// 4. 预连接
+<link rel="preconnect" href="https://api.example.com">
+<link rel="dns-prefetch" href="https://cdn.example.com">
+
+// 5. 资源提示
+<link rel="prefetch" href="next-page.html">
+<link rel="prerender" href="next-page.html">
 ```
-
-
 
 ## PWA 渐进式 Web 应用
 
-### 1. Service Worker
-
-```javascript
-// 注册 Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('Service Worker 注册成功:', registration)
-      })
-      .catch(error => {
-        console.error('Service Worker 注册失败:', error)
-      })
-  })
-}
-
-// sw.js - Service Worker 文件
-const CACHE_NAME = 'my-app-v1'
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/script.js',
-  '/logo.png'
-]
-
-// 安装事件
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('缓存已打开')
-        return cache.addAll(urlsToCache)
-      })
-  )
-})
-
-// 激活事件
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('删除旧缓存:', cacheName)
-            return caches.delete(cacheName)
-          }
-        })
-      )
-    })
-  )
-})
-
-// 拦截请求
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // 缓存命中，返回缓存
-        if (response) {
-          return response
-        }
-        
-        // 缓存未命中，发起网络请求
-        return fetch(event.request).then(response => {
-          // 检查是否是有效响应
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response
-          }
-          
-          // 克隆响应
-          const responseToCache = response.clone()
-          
-          // 缓存响应
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache)
-          })
-          
-          return response
-        })
-      })
-  )
-})
-```
-
-### 2. Web App Manifest
+### 1. Manifest 配置
 
 ```json
 // manifest.json
@@ -926,263 +1051,583 @@ self.addEventListener('fetch', (event) => {
 ```
 
 ```html
-<!-- 在 HTML 中引入 -->
+<!-- HTML 引入 -->
 <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#3eaf7c">
+<link rel="apple-touch-icon" href="/icon-192.png">
+```
 
-<!-- iOS 支持 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="我的应用">
-<link rel="apple-touch-icon" href="/icon-180.png">
+### 2. Service Worker
+
+```javascript
+// 注册 Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('SW 注册成功:', registration)
+      })
+      .catch(error => {
+        console.log('SW 注册失败:', error)
+      })
+  })
+}
+
+// sw.js
+const CACHE_NAME = 'my-app-v1'
+const urlsToCache = [
+  '/',
+  '/styles.css',
+  '/script.js',
+  '/image.jpg'
+]
+
+// 安装
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(urlsToCache)
+      })
+  )
+})
+
+// 激活
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    })
+  )
+})
+
+// 拦截请求
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // 缓存命中
+        if (response) {
+          return response
+        }
+        
+        // 网络请求
+        return fetch(event.request).then((response) => {
+          // 检查是否是有效响应
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response
+          }
+          
+          // 克隆响应
+          const responseToCache = response.clone()
+          
+          // 缓存响应
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache)
+            })
+          
+          return response
+        })
+      })
+  )
+})
 ```
 
 ### 3. 离线功能
 
 ```javascript
-// 检测网络状态
-window.addEventListener('online', () => {
-  console.log('网络已连接')
-  // 同步离线数据
-  syncOfflineData()
+// 离线页面
+// sw.js
+const OFFLINE_URL = '/offline.html'
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.add(OFFLINE_URL))
+  )
 })
 
-window.addEventListener('offline', () => {
-  console.log('网络已断开')
-  // 显示离线提示
-  showOfflineNotice()
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => {
+        return caches.match(event.request)
+          .then((response) => {
+            return response || caches.match(OFFLINE_URL)
+          })
+      })
+  )
 })
 
-// 离线数据存储
-class OfflineStorage {
-  constructor() {
-    this.dbName = 'offline-db'
-    this.storeName = 'pending-requests'
-    this.db = null
+// offline.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>离线</title>
+</head>
+<body>
+  <h1>您当前处于离线状态</h1>
+  <p>请检查网络连接</p>
+</body>
+</html>
+```
+
+### 4. 推送通知
+
+```javascript
+// 请求通知权限
+Notification.requestPermission().then((permission) => {
+  if (permission === 'granted') {
+    console.log('通知权限已授予')
   }
-  
-  async init() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1)
-      
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        this.db = request.result
-        resolve()
-      }
-      
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true })
-        }
-      }
+})
+
+// 订阅推送
+navigator.serviceWorker.ready.then((registration) => {
+  registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: 'YOUR_PUBLIC_KEY'
+  }).then((subscription) => {
+    console.log('订阅成功:', subscription)
+    
+    // 发送订阅信息到服务器
+    fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subscription)
     })
+  })
+})
+
+// sw.js - 接收推送
+self.addEventListener('push', (event) => {
+  const data = event.data.json()
+  
+  const options = {
+    body: data.body,
+    icon: '/icon-192.png',
+    badge: '/badge.png',
+    data: {
+      url: data.url
+    }
   }
   
-  async add(data) {
-    const transaction = this.db.transaction([this.storeName], 'readwrite')
-    const store = transaction.objectStore(this.storeName)
-    return store.add(data)
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  )
+})
+
+// 点击通知
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url)
+  )
+})
+```
+
+## 响应式布局技巧
+
+### 1. Flexbox 布局
+
+```css
+/* 基础 Flex 布局 */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.item {
+  flex: 1 1 300px; /* flex-grow flex-shrink flex-basis */
+}
+
+/* 响应式 Flex 布局 */
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .container {
+    flex-direction: row;
+  }
+}
+
+/* 自适应卡片布局 */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.card {
+  flex: 1 1 calc(33.333% - 1rem);
+  min-width: 250px;
+}
+
+@media (max-width: 768px) {
+  .card {
+    flex: 1 1 calc(50% - 1rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    flex: 1 1 100%;
+  }
+}
+```
+
+### 2. Grid 布局
+
+```css
+/* 基础 Grid 布局 */
+.container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* 响应式 Grid 布局 */
+.container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 自适应 Grid 布局 */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* auto-fit vs auto-fill */
+/* auto-fit: 拉伸列以填充空间 */
+/* auto-fill: 保持列宽，留空 */
+
+/* Grid 区域布局 */
+.container {
+  display: grid;
+  grid-template-areas:
+    "header header header"
+    "sidebar main main"
+    "footer footer footer";
+  grid-template-columns: 200px 1fr 1fr;
+  gap: 1rem;
+}
+
+.header { grid-area: header; }
+.sidebar { grid-area: sidebar; }
+.main { grid-area: main; }
+.footer { grid-area: footer; }
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-areas:
+      "header"
+      "main"
+      "sidebar"
+      "footer";
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+### 3. 多列布局
+
+```css
+/* CSS 多列布局 */
+.container {
+  column-count: 3;
+  column-gap: 2rem;
+  column-rule: 1px solid #ddd;
+}
+
+/* 响应式多列 */
+.container {
+  column-count: 1;
+}
+
+@media (min-width: 768px) {
+  .container {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    column-count: 3;
+  }
+}
+
+/* 或使用 column-width */
+.container {
+  column-width: 250px;
+  column-gap: 2rem;
+}
+
+/* 防止元素被分割 */
+.item {
+  break-inside: avoid;
+}
+```
+
+## 触摸优化
+
+### 1. 触摸事件
+
+```javascript
+// 基础触摸事件
+element.addEventListener('touchstart', (e) => {
+  console.log('触摸开始', e.touches)
+})
+
+element.addEventListener('touchmove', (e) => {
+  console.log('触摸移动', e.touches)
+})
+
+element.addEventListener('touchend', (e) => {
+  console.log('触摸结束', e.changedTouches)
+})
+
+element.addEventListener('touchcancel', (e) => {
+  console.log('触摸取消')
+})
+
+// 滑动检测
+class SwipeDetector {
+  constructor(element) {
+    this.element = element
+    this.startX = 0
+    this.startY = 0
+    this.threshold = 50 // 最小滑动距离
+    
+    this.element.addEventListener('touchstart', this.handleTouchStart.bind(this))
+    this.element.addEventListener('touchend', this.handleTouchEnd.bind(this))
   }
   
-  async getAll() {
-    const transaction = this.db.transaction([this.storeName], 'readonly')
-    const store = transaction.objectStore(this.storeName)
-    return new Promise((resolve, reject) => {
-      const request = store.getAll()
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
-    })
+  handleTouchStart(e) {
+    this.startX = e.touches[0].clientX
+    this.startY = e.touches[0].clientY
   }
   
-  async delete(id) {
-    const transaction = this.db.transaction([this.storeName], 'readwrite')
-    const store = transaction.objectStore(this.storeName)
-    return store.delete(id)
+  handleTouchEnd(e) {
+    const endX = e.changedTouches[0].clientX
+    const endY = e.changedTouches[0].clientY
+    
+    const deltaX = endX - this.startX
+    const deltaY = endY - this.startY
+    
+    // 水平滑动
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.threshold) {
+      if (deltaX > 0) {
+        this.onSwipeRight?.()
+      } else {
+        this.onSwipeLeft?.()
+      }
+    }
+    
+    // 垂直滑动
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > this.threshold) {
+      if (deltaY > 0) {
+        this.onSwipeDown?.()
+      } else {
+        this.onSwipeUp?.()
+      }
+    }
   }
 }
 
 // 使用示例
-const storage = new OfflineStorage()
-await storage.init()
+const detector = new SwipeDetector(document.querySelector('.swipeable'))
 
-// 离线时保存请求
-if (!navigator.onLine) {
-  await storage.add({
-    url: '/api/data',
-    method: 'POST',
-    body: { name: '张三' },
-    timestamp: Date.now()
-  })
-}
-
-// 在线时同步数据
-async function syncOfflineData() {
-  const pendingRequests = await storage.getAll()
-  
-  for (const request of pendingRequests) {
-    try {
-      await fetch(request.url, {
-        method: request.method,
-        body: JSON.stringify(request.body),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      
-      await storage.delete(request.id)
-      console.log('同步成功:', request)
-    } catch (error) {
-      console.error('同步失败:', error)
-    }
-  }
-}
+detector.onSwipeLeft = () => console.log('向左滑动')
+detector.onSwipeRight = () => console.log('向右滑动')
+detector.onSwipeUp = () => console.log('向上滑动')
+detector.onSwipeDown = () => console.log('向下滑动')
 ```
 
-## 响应式设计最佳实践
+### 2. 触摸优化
 
-### 1. 设计原则
-
-```javascript
-const designPrinciples = {
-  移动优先: {
-    原则: '先设计移动端，再扩展到桌面端',
-    优点: '确保核心功能在小屏幕上可用',
-    示例: `
-      /* 移动端样式（基础） */
-      .container { width: 100%; }
-      
-      /* 桌面端样式（扩展） */
-      @media (min-width: 1024px) {
-        .container { width: 1000px; }
-      }
-    `
-  },
-  
-  渐进增强: {
-    原则: '基础功能在所有设备上可用，高级功能逐步增强',
-    优点: '确保兼容性',
-    示例: `
-      /* 基础样式 */
-      .button { background: blue; }
-      
-      /* 支持 CSS Grid 的浏览器 */
-      @supports (display: grid) {
-        .container { display: grid; }
-      }
-    `
-  },
-  
-  内容优先: {
-    原则: '内容决定设计，而非设备',
-    优点: '更灵活的断点设置',
-    示例: '当内容在某个宽度下显示不佳时，添加断点'
-  }
+```css
+/* 1. 增大触摸区域 */
+.button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 12px 24px;
 }
+
+/* 2. 禁用点击延迟 */
+* {
+  touch-action: manipulation;
+}
+
+/* 3. 禁用文本选择 */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 4. 禁用长按菜单 */
+.no-context-menu {
+  -webkit-touch-callout: none;
+}
+
+/* 5. 平滑滚动 */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+}
+
+/* 6. 触摸反馈 */
+.button {
+  transition: transform 0.1s;
+}
+
+.button:active {
+  transform: scale(0.95);
+}
+
+/* 7. 禁用双击缩放 */
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 ```
 
-### 2. 性能优化清单
+### 3. 手势库
 
 ```javascript
-const performanceChecklist = {
-  图片优化: [
-    '✅ 使用 WebP/AVIF 格式',
-    '✅ 使用 srcset 提供多尺寸',
-    '✅ 使用懒加载',
-    '✅ 压缩图片',
-    '✅ 使用 CDN'
-  ],
-  
-  CSS优化: [
-    '✅ 关键 CSS 内联',
-    '✅ 非关键 CSS 异步加载',
-    '✅ 使用 CSS containment',
-    '✅ 避免复杂选择器',
-    '✅ 使用 will-change'
-  ],
-  
-  JavaScript优化: [
-    '✅ 代码分割',
-    '✅ 路由懒加载',
-    '✅ Tree Shaking',
-    '✅ 压缩代码',
-    '✅ 使用 Web Workers'
-  ],
-  
-  网络优化: [
-    '✅ 使用 HTTP/2',
-    '✅ 启用 Gzip/Brotli',
-    '✅ 使用 CDN',
-    '✅ 预加载关键资源',
-    '✅ Service Worker 缓存'
-  ]
-}
-```
+// 使用 Hammer.js
+import Hammer from 'hammerjs'
 
-### 3. 测试清单
+const element = document.querySelector('.gesture')
+const hammer = new Hammer(element)
 
-```javascript
-const testingChecklist = {
-  设备测试: [
-    '✅ iPhone（Safari）',
-    '✅ Android（Chrome）',
-    '✅ iPad（Safari）',
-    '✅ 桌面（Chrome、Firefox、Safari、Edge）'
-  ],
-  
-  屏幕尺寸: [
-    '✅ 320px（小屏手机）',
-    '✅ 375px（iPhone）',
-    '✅ 768px（平板）',
-    '✅ 1024px（小桌面）',
-    '✅ 1440px（大桌面）'
-  ],
-  
-  功能测试: [
-    '✅ 触摸操作',
-    '✅ 滚动性能',
-    '✅ 表单输入',
-    '✅ 图片加载',
-    '✅ 离线功能'
-  ],
-  
-  性能测试: [
-    '✅ Lighthouse 评分 > 90',
-    '✅ FCP < 1.8s',
-    '✅ LCP < 2.5s',
-    '✅ CLS < 0.1'
-  ]
-}
+// 滑动
+hammer.on('swipeleft', () => console.log('向左滑动'))
+hammer.on('swiperight', () => console.log('向右滑动'))
+
+// 捏合
+hammer.get('pinch').set({ enable: true })
+hammer.on('pinch', (e) => {
+  console.log('捏合', e.scale)
+})
+
+// 旋转
+hammer.get('rotate').set({ enable: true })
+hammer.on('rotate', (e) => {
+  console.log('旋转', e.rotation)
+})
+
+// 双击
+hammer.on('doubletap', () => console.log('双击'))
+
+// 长按
+hammer.on('press', () => console.log('长按'))
 ```
 
 ## 常见问题
 
-### 1. 如何选择适配方案？
+### 1. 1px 边框问题
 
-```javascript
-const adaptationComparison = {
-  rem: {
-    优点: '兼容性好、易于理解',
-    缺点: '需要 JS 动态设置',
-    适用: '大部分项目'
-  },
-  
-  'vw/vh': {
-    优点: '纯 CSS、无需 JS',
-    缺点: '兼容性稍差',
-    适用: '现代浏览器项目'
-  },
-  
-  '媒体查询': {
-    优点: '灵活、可控',
-    缺点: '断点较多时代码冗余',
-    适用: '需要精细控制的项目'
-  }
+```css
+/* 问题：在 Retina 屏幕上，1px 边框看起来很粗 */
+
+/* 解决方案 1：使用 transform */
+.border {
+  position: relative;
+}
+
+.border::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: #000;
+  transform: scaleY(0.5);
+  transform-origin: 0 0;
+}
+
+/* 解决方案 2：使用 box-shadow */
+.border {
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+/* 解决方案 3：使用 SVG */
+.border {
+  border: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='1'%3E%3Cline x1='0' y1='0' x2='100%25' y2='0' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+}
+
+/* 解决方案 4：使用 viewport + rem */
+/* 设置 viewport 的 scale 为 1/dpr */
+<meta name="viewport" content="width=device-width, initial-scale=0.5">
+
+.border {
+  border: 1px solid #000;
 }
 ```
 
-### 2. 如何处理横竖屏切换？
+### 2. 安全区域适配（刘海屏）
+
+```css
+/* iOS 11+ 安全区域 */
+body {
+  /* env() 函数获取安全区域 */
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* 或使用 constant()（iOS 11.0-11.2） */
+body {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 固定定位元素 */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* viewport-fit=cover */
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+```
+
+### 3. 横竖屏切换
 
 ```javascript
-// 监听方向变化
+// 监听屏幕方向变化
 window.addEventListener('orientationchange', () => {
   if (window.orientation === 90 || window.orientation === -90) {
     console.log('横屏')
@@ -1191,87 +1636,105 @@ window.addEventListener('orientationchange', () => {
   }
 })
 
-// 使用媒体查询
-@media (orientation: landscape) {
-  /* 横屏样式 */
-}
+// 使用 Screen Orientation API
+screen.orientation.addEventListener('change', () => {
+  console.log('屏幕方向:', screen.orientation.type)
+  // portrait-primary, portrait-secondary
+  // landscape-primary, landscape-secondary
+})
 
+// 锁定屏幕方向
+screen.orientation.lock('portrait').then(() => {
+  console.log('锁定为竖屏')
+}).catch((error) => {
+  console.error('锁定失败:', error)
+})
+
+// CSS 媒体查询
 @media (orientation: portrait) {
   /* 竖屏样式 */
 }
-```
 
-### 3. 如何优化移动端滚动？
-
-```css
-/* 1. 使用 -webkit-overflow-scrolling */
-.scroll-container {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 2. 使用 will-change */
-.scroll-container {
-  will-change: transform;
-}
-
-/* 3. 使用 transform 代替 top/left */
-.element {
-  transform: translateY(100px);
+@media (orientation: landscape) {
+  /* 横屏样式 */
 }
 ```
 
-### 4. 如何实现深色模式？
+## 最佳实践
 
-```css
-/* 使用 CSS 变量 */
-:root {
-  --bg-color: #ffffff;
-  --text-color: #000000;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-color: #000000;
-    --text-color: #ffffff;
-  }
-}
-
-body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-```
+### 1. 响应式设计清单
 
 ```javascript
-// JavaScript 切换
-class ThemeToggle {
-  constructor() {
-    this.theme = localStorage.getItem('theme') || 'auto'
-    this.apply()
-  }
+const responsiveChecklist = {
+  布局: [
+    '✅ 使用流式布局',
+    '✅ 使用 Flexbox 或 Grid',
+    '✅ 设置合理的断点',
+    '✅ 移动优先设计'
+  ],
   
-  apply() {
-    if (this.theme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else if (this.theme === 'light') {
-      document.documentElement.classList.remove('dark')
-    } else {
-      // 跟随系统
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      document.documentElement.classList.toggle('dark', isDark)
-    }
-  }
+  图片: [
+    '✅ 使用响应式图片',
+    '✅ 使用 WebP 格式',
+    '✅ 实现图片懒加载',
+    '✅ 压缩图片'
+  ],
   
-  toggle() {
-    const themes = ['light', 'dark', 'auto']
-    const currentIndex = themes.indexOf(this.theme)
-    this.theme = themes[(currentIndex + 1) % themes.length]
-    localStorage.setItem('theme', this.theme)
-    this.apply()
-  }
+  性能: [
+    '✅ 优化首屏加载',
+    '✅ 使用代码分割',
+    '✅ 启用缓存',
+    '✅ 使用 CDN'
+  ],
+  
+  交互: [
+    '✅ 增大触摸区域',
+    '✅ 优化触摸反馈',
+    '✅ 禁用点击延迟',
+    '✅ 实现手势操作'
+  ],
+  
+  兼容性: [
+    '✅ 测试多种设备',
+    '✅ 处理安全区域',
+    '✅ 解决 1px 问题',
+    '✅ 适配横竖屏'
+  ]
 }
+```
 
-const themeToggle = new ThemeToggle()
+### 2. 性能优化建议
+
+```javascript
+const performanceTips = {
+  关键渲染路径: [
+    '内联关键 CSS',
+    '延迟加载非关键 CSS',
+    '预加载关键资源',
+    '使用骨架屏'
+  ],
+  
+  资源优化: [
+    '压缩图片',
+    '使用 WebP',
+    '实现懒加载',
+    '使用 CDN'
+  ],
+  
+  代码优化: [
+    '代码分割',
+    'Tree Shaking',
+    '压缩代码',
+    '使用 HTTP/2'
+  ],
+  
+  缓存策略: [
+    'Service Worker',
+    'HTTP 缓存',
+    '本地存储',
+    'CDN 缓存'
+  ]
+}
 ```
 
 ## 面试要点
@@ -1282,55 +1745,53 @@ const themeToggle = new ThemeToggle()
    - 流式布局、弹性图片、媒体查询
 
 2. **移动端适配方案**
-   - rem、vw/vh、媒体查询
-   - 1px 边框问题
-   - 安全区域适配
+   - rem、vw/vh、flexible、媒体查询
 
-3. **PWA 核心技术**
-   - Service Worker
-   - Web App Manifest
-   - 离线功能
+3. **响应式图片**
+   - srcset、sizes、picture、懒加载
+
+4. **PWA**
+   - Manifest、Service Worker、离线功能、推送通知
 
 ### 实战经验
 
 1. **如何实现移动端适配？**
+   - 选择适配方案（rem/vw）
    - 设置 viewport
-   - 使用 rem 或 vw/vh
-   - 媒体查询
-   - 响应式图片
+   - 使用 postcss 自动转换
+   - 处理 1px 问题
 
 2. **如何优化移动端性能？**
    - 首屏优化（骨架屏、代码分割）
-   - 图片优化（懒加载、WebP）
-   - 滚动优化（虚拟滚动、will-change）
-   - 触摸优化（touch-action、passive）
+   - 图片优化（WebP、懒加载）
+   - 网络优化（HTTP/2、压缩、CDN）
+   - 使用 PWA
 
-3. **如何实现 PWA？**
-   - 注册 Service Worker
-   - 配置 Manifest
-   - 实现离线缓存
-   - 添加到主屏幕
+3. **如何处理响应式图片？**
+   - 使用 srcset 和 sizes
+   - 使用 picture 元素
+   - 实现懒加载
+   - 使用 WebP 格式
 
 ## 参考资料
 
 ### 官方文档
-- [响应式设计 - MDN](https://developer.mozilla.org/zh-CN/docs/Learn/CSS/CSS_layout/Responsive_Design)
-- [媒体查询 - MDN](https://developer.mozilla.org/zh-CN/docs/Web/CSS/Media_Queries)
+- [Responsive Web Design - MDN](https://developer.mozilla.org/zh-CN/docs/Learn/CSS/CSS_layout/Responsive_Design)
+- [Media Queries - MDN](https://developer.mozilla.org/zh-CN/docs/Web/CSS/Media_Queries)
 - [PWA - Google](https://web.dev/progressive-web-apps/)
 - [Service Worker - MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/Service_Worker_API)
 
 ### 工具库
-- [lib-flexible](https://github.com/amfe/lib-flexible) - 淘宝移动端适配方案
 - [postcss-pxtorem](https://github.com/cuth/postcss-pxtorem) - px 转 rem
 - [postcss-px-to-viewport](https://github.com/evrone/postcss-px-to-viewport) - px 转 vw
-- [Workbox](https://developers.google.com/web/tools/workbox) - Service Worker 工具库
+- [lib-flexible](https://github.com/amfe/lib-flexible) - 淘宝适配方案
+- [Hammer.js](https://hammerjs.github.io/) - 手势库
 
 ### 学习资源
-- [响应式设计模式](https://web.dev/responsive-web-design-basics/)
-- [移动端适配方案](https://juejin.cn/post/6844903845617729549)
-- [PWA 实战](https://lavas-project.github.io/pwa-book/)
+- [响应式设计指南 - Google](https://developers.google.com/web/fundamentals/design-and-ux/responsive)
+- [移动端适配方案 - 掘金](https://juejin.cn/post/6844903951012200456)
+- [PWA 实战 - Google](https://developers.google.com/web/ilt/pwa)
 
 ---
 
 > 💡 **提示**：响应式设计是现代 Web 开发的基础，掌握移动端适配和性能优化技巧可以大大提升用户体验。
-
