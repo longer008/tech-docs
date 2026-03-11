@@ -2534,3 +2534,48 @@
   - ✅ 预览环境（测试新功能）
 
 - 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
+
+
+### 2025-02-24（修复 Wrangler 配置）
+- ✅ **修复 wrangler.toml 配置错误**
+  
+  **问题**：
+  ```
+  X [ERROR] Running configuration file validation for Pages:
+  - Configuration file for Pages projects does not support "build"
+  ```
+  
+  **原因**：
+  - Cloudflare Pages 的 `wrangler.toml` 不支持 `[build]` 配置
+  - 不支持 `[env.production]` 和 `[env.preview]` 配置
+  - 这些配置是 Cloudflare Workers 专用的
+  
+  **修复内容**：
+  1. ✅ 移除 `[build]` 配置块
+  2. ✅ 移除 `[env.production]` 配置块
+  3. ✅ 移除 `[env.preview]` 配置块
+  4. ✅ 保留基本配置：
+     - `name = "tech-docs"`
+     - `compatibility_date = "2024-01-01"`
+     - `pages_build_output_dir = "docs/.vitepress/dist"`
+  
+  **正确的配置**：
+  ```toml
+  name = "tech-docs"
+  compatibility_date = "2024-01-01"
+  pages_build_output_dir = "docs/.vitepress/dist"
+  ```
+  
+  **构建方式**：
+  - 构建命令通过 `package.json` 脚本执行
+  - 部署命令：`pnpm deploy:prod`
+  - 这会先执行 `pnpm docs:build`，然后部署
+  
+  **提交信息**：
+  - Commit c2f0792: 修复 wrangler.toml 配置错误
+  
+  **现在可以正常部署**：
+  ```bash
+  pnpm wrangler login
+  pnpm deploy:prod
+  ```
