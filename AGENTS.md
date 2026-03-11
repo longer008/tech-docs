@@ -2489,3 +2489,48 @@
 - 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
   - frontend/fundamentals 目录：19/19 文件（100%）
     - ✅ web-api-deep-dive.md（Web API 深入，~1737 行，已修复）
+
+
+### 2025-02-24（Wrangler 配置）
+- ✅ **配置 Wrangler 部署**
+  
+  **新增文件**：
+  1. ✅ `wrangler.toml`：Wrangler 配置文件
+     - 项目名称：tech-docs
+     - 兼容日期：2024-01-01
+     - 构建命令：NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
+     - 输出目录：docs/.vitepress/dist
+     - 环境变量：VITE_BASE_PATH=/
+  
+  2. ✅ `WRANGLER_DEPLOYMENT.md`：Wrangler 部署指南
+     - 安装和登录说明
+     - 部署命令详解
+     - GitHub Actions 配置
+     - 故障排查指南
+     - 最佳实践建议
+  
+  **更新文件**：
+  1. ✅ `package.json`：新增部署命令
+     - `deploy`：快速部署到生产环境
+     - `deploy:prod`：部署到生产环境（main 分支）
+     - `deploy:preview`：部署到预览环境
+     - 新增依赖：`wrangler@^3.94.0`
+  
+  **部署方式**：
+  - 本地部署：`pnpm deploy:prod`
+  - 自动部署：配置 GitHub Actions（可选）
+  - 预览部署：`pnpm deploy:preview`
+  
+  **使用步骤**：
+  1. 安装依赖：`pnpm install`
+  2. 登录 Cloudflare：`pnpm wrangler login`
+  3. 部署：`pnpm deploy:prod`
+  4. 访问：`https://tech-docs.pages.dev`
+  
+  **优势**：
+  - ✅ 快速部署（本地控制）
+  - ✅ 灵活配置（wrangler.toml）
+  - ✅ 自动化支持（GitHub Actions）
+  - ✅ 预览环境（测试新功能）
+
+- 📊 **当前总进度**：86/150+ 文档已优化（约 57%）

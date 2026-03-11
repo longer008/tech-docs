@@ -8,7 +8,10 @@
     "docs:build": "vitepress build docs",
     "docs:build:cf": "NODE_OPTIONS='--max-old-space-size=3072' vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 docs/public/favicon.svg"
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 docs/public/favicon.svg",
+    "deploy": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
+    "deploy:prod": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=main",
+    "deploy:preview": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=preview"
   },
   "devDependencies": {
     "@braintree/sanitize-url": "^6.0.4",
@@ -48,7 +51,8 @@
     "vitepress-plugin-mermaid": "^2.0.17",
     "vitepress-plugin-nprogress": "^0.1.1",
     "vitepress-plugin-tabs": "^0.5.0",
-    "vitepress-sidebar": "^1.29.0"
+    "vitepress-sidebar": "^1.29.0",
+    "wrangler": "^3.94.0"
   },
   "repository": {
     "type": "git",
