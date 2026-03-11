@@ -59,18 +59,13 @@ pnpm deploy
 ```toml
 name = "tech-docs"                              # 项目名称
 compatibility_date = "2024-01-01"               # Cloudflare Workers 兼容日期
-
 pages_build_output_dir = "docs/.vitepress/dist" # 构建输出目录
-
-[build]
-command = "NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build"  # 构建命令（3GB 内存）
-
-[env.production]
-vars = { VITE_BASE_PATH = "/" }                 # 生产环境变量
-
-[env.preview]
-vars = { VITE_BASE_PATH = "/" }                 # 预览环境变量
 ```
+
+**注意**：
+- Cloudflare Pages 的 `wrangler.toml` 不支持 `[build]` 配置
+- 构建命令应该在部署前手动执行，或通过 package.json 脚本执行
+- 环境变量通过 Cloudflare Dashboard 或命令行参数设置
 
 ### package.json 新增命令
 

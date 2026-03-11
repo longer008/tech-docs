@@ -2,12 +2,3 @@ name = "tech-docs"
 compatibility_date = "2024-01-01"
 
 pages_build_output_dir = "docs/.vitepress/dist"
-
-[build]
-command = "NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build"
-
-[env.production]
-vars = { VITE_BASE_PATH = "/" }
-
-[env.preview]
-vars = { VITE_BASE_PATH = "/" }
