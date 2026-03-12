@@ -15,7 +15,8 @@ import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-i
 // 根据环境变量动态设置 base 路径
 // GitHub Pages: /tech-docs/
 // Cloudflare Pages: /
-const base = process.env.VITE_BASE_PATH || (process.env.CF_PAGES ? '/' : '/tech-docs/')
+// 优先使用 VITE_BASE_PATH 环境变量
+const base = process.env.VITE_BASE_PATH || '/tech-docs/'
 
 // https://vitepress.dev/reference/site-config
 export default withPwa(

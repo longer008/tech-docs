@@ -24,33 +24,45 @@ pnpm wrangler login
 ### 1. 生产环境部署（推荐）
 
 ```bash
-pnpm deploy:prod
-```
-
-这会：
-1. 构建项目（使用 3GB 内存限制）
-2. 部署到 Cloudflare Pages 生产环境
-3. 部署到 `main` 分支
-4. 生成 URL：`https://tech-docs.pages.dev`
-
-### 2. 预览环境部署
-
-```bash
-pnpm deploy:preview
-```
-
-这会：
-1. 构建项目
-2. 部署到预览环境
-3. 生成预览 URL：`https://[commit-hash].tech-docs.pages.dev`
-
-### 3. 快速部署（默认）
-
-```bash
 pnpm deploy
 ```
 
-等同于 `pnpm deploy:prod`
+这会：
+1. 设置环境变量 `VITE_BASE_PATH=/`（Cloudflare Pages 使用根路径）
+2. 构建项目（使用 3GB 内存限制）
+3. 部署到 Cloudflare Pages 生产环境
+4. 生成 URL：`https://tech-docs.pages.dev`
+
+**重要**：部署命令会自动设置 `VITE_BASE_PATH=/`，确保资源路径正确。
+
+### 2. 仅部署（不重新构建）
+
+```bash
+pnpm deploy:only
+```
+
+这会：
+1. 直接部署已构建的文件（`docs/.vitepress/dist`）
+2. 不重新构建项目
+3. 适用于已经构建好的情况
+
+**注意**：使用此命令前，请确保已经使用正确的环境变量构建：
+```bash
+cross-env VITE_BASE_PATH=/ pnpm docs:build
+```
+
+### 3. Cloudflare 专用构建
+
+```bash
+pnpm docs:build:cf
+```
+
+这会：
+1. 设置环境变量 `VITE_BASE_PATH=/`
+2. 使用 3GB 内存限制构建
+3. 输出到 `docs/.vitepress/dist`
+
+构建完成后，可以使用 `pnpm deploy:only` 部署。
 
 ## 📝 配置文件说明
 

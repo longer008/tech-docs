@@ -6,12 +6,11 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:build:cf": "NODE_OPTIONS='--max-old-space-size=3072' vitepress build docs",
+    "docs:build:cf": "cross-env NODE_OPTIONS='--max-old-space-size=3072' VITE_BASE_PATH=/ vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 docs/public/favicon.svg",
-    "deploy": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
-    "deploy:prod": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=main",
-    "deploy:preview": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=preview"
+    "deploy": "cross-env VITE_BASE_PATH=/ pnpm docs:build && npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
+    "deploy:only": "cross-env VITE_BASE_PATH=/ npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs"
   },
   "devDependencies": {
     "@braintree/sanitize-url": "^6.0.4",
@@ -27,6 +26,7 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
     "busuanzi.pure.js": "^1.0.3",
+    "cross-env": "^7.0.3",
     "cytoscape": "^3.30.1",
     "cytoscape-cose-bilkent": "^4.1.0",
     "dayjs": "^1.11.13",
@@ -51,8 +51,7 @@
     "vitepress-plugin-mermaid": "^2.0.17",
     "vitepress-plugin-nprogress": "^0.1.1",
     "vitepress-plugin-tabs": "^0.5.0",
-    "vitepress-sidebar": "^1.29.0",
-    "wrangler": "^3.94.0"
+    "vitepress-sidebar": "^1.29.0"
   },
   "repository": {
     "type": "git",
