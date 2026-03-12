@@ -2611,3 +2611,60 @@
     - 4260f02: 更新 AGENTS.md：记录 wrangler.toml 修复
     - c2f0792: 修复 wrangler.toml 配置错误
     - 5bf4810: 更新 pnpm-lock.yaml 和 wrangler.toml
+
+
+### 2025-02-24（修复资源 404 问题）
+- ✅ **修复 Cloudflare Pages 资源 404 问题**
+  
+  **问题**：
+  - 部署后所有资源文件（CSS、JS、图片）返回 404
+  - 错误路径：`/tech-docs/assets/style.css`
+  - 正确路径应该是：`/assets/style.css`
+  
+  **原因**：
+  - VitePress 配置中的 `base` 路径设置错误
+  - 使用了 `process.env.CF_PAGES` 检测，但本地 Wrangler 部署时不存在
+  - 导致构建时使用了 `/tech-docs/` 路径（GitHub Pages）
+  - 而 Cloudflare Pages 需要 `/` 路径（根路径）
+  
+  **修复内容**：
+  1. ✅ 简化 `config.mts` 中的 base 路径逻辑
+     ```typescript
+     // 修改前
+     const base = process.env.VITE_BASE_PATH || (process.env.CF_PAGES ? '/' : '/tech-docs/')
+     
+     // 修改后
+     const base = process.env.VITE_BASE_PATH || '/tech-docs/'
+     ```
+  
+  2. ✅ 更新 `package.json` 部署命令
+     - 添加 `cross-env` 依赖（v7.0.3）
+     - `deploy` 命令自动设置 `VITE_BASE_PATH=/`
+     - `docs:build:cf` 命令设置正确的环境变量
+  
+  3. ✅ 创建 `CLOUDFLARE_404_FIX.md` 详细说明文档
+     - 问题原因分析
+     - 解决方案步骤
+     - 正确的部署流程
+     - 不同环境的 base 路径对比
+     - 故障排查指南
+  
+  4. ✅ 更新 `WRANGLER_DEPLOYMENT.md`
+     - 更新部署命令说明
+     - 添加环境变量说明
+  
+  **正确的部署方式**：
+  ```bash
+  # Cloudflare Pages（自动设置 VITE_BASE_PATH=/）
+  pnpm deploy
+  
+  # GitHub Pages（使用默认 /tech-docs/）
+  pnpm docs:build
+  ```
+  
+  **提交信息**：
+  - Commit 1750e9a: 修复 Cloudflare Pages 资源 404 问题
+  
+  **现在资源文件可以正常加载了**
+
+- 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
