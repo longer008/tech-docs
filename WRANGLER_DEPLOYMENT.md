@@ -1,303 +1,217 @@
 # Wrangler 部署指南
 
-## 📦 安装 Wrangler
+> 本文档说明如何通过 Wrangler CLI 将当前项目发布到 Cloudflare Pages，并与 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md) 中的统一部署说明形成互补。
 
-Wrangler 已添加到 `package.json` 的 devDependencies 中。
+## 文档定位
 
-安装依赖：
+[`WRANGLER_DEPLOYMENT.md`](WRANGLER_DEPLOYMENT.md) 适合以下场景：
+
+- 你希望在本地手动执行发布
+- 你想先构建再上传产物
+- 你需要验证 Cloudflare Pages 的实际发布结果
+- 你不想每次都依赖 Dashboard 自动构建
+
+如果你只是要了解当前项目的 Cloudflare 主流程、环境变量、路径规则与常见故障，优先阅读 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)。
+
+如果你遇到 **base 路径错误** 或 **资源 404**，再结合阅读 [`DEPLOYMENT_PATHS.md`](DEPLOYMENT_PATHS.md)。
+
+## 当前脚本基线
+
+请以 [`package.json`](package.json) 中的实际脚本为准：
+
+```json
+{
+  "scripts": {
+    "docs:build": "vitepress build docs",
+    "docs:build:cf": "cross-env NODE_OPTIONS='--max-old-space-size=3072' VITE_BASE_PATH=/ vitepress build docs",
+    "deploy": "cross-env VITE_BASE_PATH=/ pnpm docs:build && npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
+    "deploy:only": "cross-env VITE_BASE_PATH=/ npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs"
+  }
+}
+```
+
+因此，本项目当前的 Wrangler 部署核心结论是：
+
+- Cloudflare 构建使用根路径 `/`
+- 发布前必须确保构建结果与 Cloudflare 路径一致
+- 不应继续参考过时的旧脚本示例
+
+## 使用前准备
+
+### 1. 安装依赖
+
 ```bash
 pnpm install
 ```
 
-## 🔑 登录 Cloudflare
-
-首次使用需要登录 Cloudflare 账户：
+### 2. 登录 Cloudflare
 
 ```bash
 pnpm wrangler login
 ```
 
-这会打开浏览器，授权 Wrangler 访问你的 Cloudflare 账户。
+首次登录会打开浏览器，你需要在 Cloudflare 账号中授权 Wrangler。
 
-## 🚀 部署命令
+### 3. 确认项目名称
 
-### 1. 生产环境部署（推荐）
+当前部署命令默认项目名为：
+
+```text
+tech-docs
+```
+
+如果你的 Cloudflare Pages 项目名不同，需要同步修改 [`package.json`](package.json) 中的部署命令。
+
+## 推荐使用方式
+
+### 方式一：一键部署
 
 ```bash
 pnpm deploy
 ```
 
-这会：
-1. 设置环境变量 `VITE_BASE_PATH=/`（Cloudflare Pages 使用根路径）
-2. 构建项目（使用 3GB 内存限制）
-3. 部署到 Cloudflare Pages 生产环境
-4. 生成 URL：`https://tech-docs.pages.dev`
+该命令会完成以下动作：
 
-**重要**：部署命令会自动设置 `VITE_BASE_PATH=/`，确保资源路径正确。
+1. 设置 `VITE_BASE_PATH=/`
+2. 执行 `pnpm docs:build`
+3. 上传 [`docs/.vitepress/dist/`](docs/.vitepress/dist) 到 Cloudflare Pages
 
-### 2. 仅部署（不重新构建）
+适用场景：
+
+- 本地改完文档后直接发布
+- 不需要保留单独的“构建”和“上传”步骤
+
+### 方式二：分步构建与部署
 
 ```bash
+pnpm docs:build:cf
 pnpm deploy:only
 ```
 
-这会：
-1. 直接部署已构建的文件（`docs/.vitepress/dist`）
-2. 不重新构建项目
-3. 适用于已经构建好的情况
+适用场景：
 
-**注意**：使用此命令前，请确保已经使用正确的环境变量构建：
+- 你想先检查构建产物
+- 你想确认 HTML 中的资源路径是否正确
+- 你要重复上传同一份产物
+
+## 推荐工作流
+
+### 日常手动发布
+
 ```bash
-cross-env VITE_BASE_PATH=/ pnpm docs:build
+pnpm docs:build:cf
+pnpm deploy:only
 ```
 
-### 3. Cloudflare 专用构建
+### 快速发布
+
+```bash
+pnpm deploy
+```
+
+### 发布前检查
+
+建议至少检查以下内容：
+
+- 文档是否能在本地正常构建
+- Cloudflare 构建路径是否为 `/`
+- 产物目录是否为 [`docs/.vitepress/dist/`](docs/.vitepress/dist)
+- 站点资源路径是否没有携带 `/tech-docs/`
+
+## 如何验证构建产物
+
+你可以在本地构建后检查生成结果，重点关注首页 HTML 中的静态资源路径。
+
+### 预期正确结果
+
+Cloudflare Pages 构建时，资源路径应该类似：
+
+```html
+<link rel="stylesheet" href="/assets/style.css">
+<script type="module" src="/assets/app.js"></script>
+<img src="/logo.svg">
+```
+
+### 常见错误结果
+
+如果你看到类似下面的路径，说明仍然使用了 GitHub Pages 的子路径模式：
+
+```html
+<link rel="stylesheet" href="/tech-docs/assets/style.css">
+<script type="module" src="/tech-docs/assets/app.js"></script>
+<img src="/tech-docs/logo.svg">
+```
+
+这类问题通常与以下内容有关：
+
+- 没有设置 `VITE_BASE_PATH=/`
+- 使用了错误的构建命令
+- 复用了旧的构建产物
+
+## 与 Dashboard 自动部署的区别
+
+| 方式 | 优点 | 缺点 | 适用场景 |
+| --- | --- | --- | --- |
+| Dashboard 连接 GitHub | 简单、自动、维护成本低 | 对本地发布控制较弱 | 日常默认方案 |
+| Wrangler CLI | 灵活、可控、适合本地手动发布 | 需要本地执行命令 | 手动发布、临时验证 |
+| GitHub Actions 到 Cloudflare | 可接入 CI/CD | 配置复杂、维护成本高 | 团队自动化扩展 |
+
+## 常见问题
+
+### 1. `pnpm wrangler login` 无法使用
+
+先确认 Wrangler 已通过依赖安装成功，并重新执行：
+
+```bash
+pnpm install
+pnpm wrangler login
+```
+
+### 2. 发布后资源 404
+
+优先排查以下几点：
+
+1. 是否使用了 `pnpm docs:build:cf` 或 `pnpm deploy`
+2. 是否已经设置 `VITE_BASE_PATH=/`
+3. 生成的 HTML 中是否仍然包含 `/tech-docs/`
+
+相关文档：
+
+- [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)
+- [`DEPLOYMENT_PATHS.md`](DEPLOYMENT_PATHS.md)
+
+### 3. Cloudflare 项目名不匹配
+
+如果 Pages 项目不是 `tech-docs`，需要把 [`package.json`](package.json) 中这两个命令同步改掉：
+
+- `deploy`
+- `deploy:only`
+
+### 4. 构建时内存不足
+
+当前项目已经提供了 Cloudflare 构建专用命令：
 
 ```bash
 pnpm docs:build:cf
 ```
 
-这会：
-1. 设置环境变量 `VITE_BASE_PATH=/`
-2. 使用 3GB 内存限制构建
-3. 输出到 `docs/.vitepress/dist`
+如果仍然存在问题，请继续参考 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md) 中关于内存限制与构建配置的统一说明。
 
-构建完成后，可以使用 `pnpm deploy:only` 部署。
+## 维护建议
 
-## 📝 配置文件说明
+后续如果继续保留 Wrangler 方案，建议遵循下面的维护方式：
 
-### wrangler.toml
+1. 先更新 [`package.json`](package.json) 中的真实脚本
+2. 再同步更新本文档的命令示例
+3. 与 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md) 保持一致的路径与环境变量口径
+4. 不要在本文档中重复维护 Dashboard 的完整 UI 配置步骤
 
-```toml
-name = "tech-docs"                              # 项目名称
-compatibility_date = "2024-01-01"               # Cloudflare Workers 兼容日期
-pages_build_output_dir = "docs/.vitepress/dist" # 构建输出目录
-```
+## 相关文档
 
-**注意**：
-- Cloudflare Pages 的 `wrangler.toml` 不支持 `[build]` 配置
-- 构建命令应该在部署前手动执行，或通过 package.json 脚本执行
-- 环境变量通过 Cloudflare Dashboard 或命令行参数设置
+- [`README.md`](README.md)
+- [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)
+- [`DEPLOYMENT_PATHS.md`](DEPLOYMENT_PATHS.md)
 
-### package.json 新增命令
+## 结论
 
-```json
-{
-  "scripts": {
-    "deploy": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
-    "deploy:prod": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=main",
-    "deploy:preview": "pnpm docs:build && wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=preview"
-  }
-}
-```
-
-## 🔄 自动部署（GitHub Actions）
-
-如果你想在每次推送代码时自动部署，可以创建 GitHub Actions 工作流。
-
-### 方案 1：使用 Wrangler Action（推荐）
-
-创建 `.github/workflows/deploy-wrangler.yml`：
-
-```yaml
-name: Deploy to Cloudflare Pages (Wrangler)
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.8.1
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm docs:build
-        env:
-          NODE_OPTIONS: --max_old_space_size=3072
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy docs/.vitepress/dist --project-name=tech-docs --branch=main
-```
-
-### 配置 GitHub Secrets
-
-1. 获取 Cloudflare API Token：
-   - 登录 https://dash.cloudflare.com/
-   - 点击右上角头像 → **My Profile** → **API Tokens**
-   - 点击 **Create Token**
-   - 使用 **Edit Cloudflare Workers** 模板
-   - 权限：Account → Cloudflare Pages → Edit
-   - 复制生成的 Token
-
-2. 获取 Account ID：
-   - 登录 Cloudflare Dashboard
-   - 点击任意域名
-   - 右侧栏显示 **Account ID**
-
-3. 添加到 GitHub Secrets：
-   - 进入 `https://github.com/longer008/tech-docs/settings/secrets/actions`
-   - 添加 `CLOUDFLARE_API_TOKEN`
-   - 添加 `CLOUDFLARE_ACCOUNT_ID`
-
-## 📊 部署验证
-
-### 查看部署状态
-
-```bash
-pnpm wrangler pages deployment list --project-name=tech-docs
-```
-
-### 查看项目信息
-
-```bash
-pnpm wrangler pages project list
-```
-
-### 查看部署日志
-
-```bash
-pnpm wrangler pages deployment tail --project-name=tech-docs
-```
-
-## 🔍 故障排查
-
-### 1. 登录失败
-
-**错误**：`Not logged in`
-
-**解决**：
-```bash
-pnpm wrangler login
-```
-
-### 2. 项目不存在
-
-**错误**：`Project not found`
-
-**解决**：
-首次部署会自动创建项目。如果仍然失败，手动创建：
-```bash
-pnpm wrangler pages project create tech-docs
-```
-
-### 3. 内存溢出
-
-**错误**：`JavaScript heap out of memory`
-
-**解决**：
-确保使用 `pnpm deploy:prod` 命令，它会自动设置 3GB 内存限制。
-
-或者手动设置：
-```bash
-NODE_OPTIONS='--max-old-space-size=4096' pnpm docs:build
-pnpm wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs
-```
-
-### 4. 资源文件 404
-
-**错误**：`/tech-docs/assets/style.css 404`
-
-**解决**：
-确认 `wrangler.toml` 中的环境变量设置正确：
-```toml
-[env.production]
-vars = { VITE_BASE_PATH = "/" }
-```
-
-## 🆚 Wrangler vs GitHub Actions vs Dashboard
-
-| 方式 | 优点 | 缺点 | 推荐度 |
-|------|------|------|--------|
-| **Wrangler CLI** | 快速、灵活、本地控制 | 需要手动执行 | ⭐⭐⭐⭐⭐ |
-| **GitHub Actions** | 自动化、CI/CD 集成 | 配置复杂、需要 Secrets | ⭐⭐⭐⭐ |
-| **Dashboard** | 最简单、自动部署 | 功能有限、依赖 UI | ⭐⭐⭐ |
-
-## 💡 最佳实践
-
-1. **本地开发**：使用 `pnpm docs:dev`
-2. **本地预览**：使用 `pnpm docs:preview`
-3. **手动部署**：使用 `pnpm deploy:prod`
-4. **自动部署**：配置 GitHub Actions
-5. **预览部署**：使用 `pnpm deploy:preview` 测试新功能
-
-## 📚 相关命令
-
-```bash
-# 开发
-pnpm docs:dev              # 启动开发服务器
-
-# 构建
-pnpm docs:build            # 标准构建
-pnpm docs:build:cf         # Cloudflare 构建（3GB 内存）
-
-# 预览
-pnpm docs:preview          # 本地预览构建结果
-
-# 部署
-pnpm deploy                # 部署到生产环境
-pnpm deploy:prod           # 部署到生产环境（明确）
-pnpm deploy:preview        # 部署到预览环境
-
-# Wrangler 命令
-pnpm wrangler login        # 登录 Cloudflare
-pnpm wrangler logout       # 登出
-pnpm wrangler whoami       # 查看当前用户
-pnpm wrangler pages project list              # 列出所有项目
-pnpm wrangler pages deployment list           # 列出部署历史
-pnpm wrangler pages deployment tail           # 查看部署日志
-```
-
-## 🎯 快速开始
-
-1. **安装依赖**
-   ```bash
-   pnpm install
-   ```
-
-2. **登录 Cloudflare**
-   ```bash
-   pnpm wrangler login
-   ```
-
-3. **部署**
-   ```bash
-   pnpm deploy:prod
-   ```
-
-4. **访问网站**
-   ```
-   https://tech-docs.pages.dev
-   ```
-
-完成！🎉
-
-## 📖 参考资料
-
-- [Wrangler 官方文档](https://developers.cloudflare.com/workers/wrangler/)
-- [Cloudflare Pages 文档](https://developers.cloudflare.com/pages/)
-- [VitePress 部署指南](https://vitepress.dev/guide/deploy)
-
----
-
-> 💡 **提示**：推荐使用 Wrangler CLI 进行手动部署，配合 GitHub Actions 实现自动化部署。
+Wrangler CLI 在当前项目中是一个**补充型部署方案**：适合手动发布、快速验证和本地控制；如果没有特殊需求，Cloudflare Dashboard 自动部署仍然是默认优先选择。

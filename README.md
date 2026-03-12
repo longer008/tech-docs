@@ -2,52 +2,55 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![VitePress](https://img.shields.io/badge/Built%20with-VitePress-646CFF.svg)](https://vitepress.dev/)
-[![GitHub Stars](https://img.shields.io/github/stars/yourusername/tech-docs.svg)](https://github.com/yourusername/tech-docs/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/longer008/tech-docs.svg)](https://github.com/longer008/tech-docs/stargazers)
 
-> 全栈开发技术面试准备与实战文档 - 涵盖前端、后端、数据库、DevOps 的完整面试指南
+> 一个面向前端、后端、数据库、DevOps、AI 面试准备的系统化知识库，兼顾八股整理、原理梳理、实战示例与学习路线。
 
-## 📖 项目介绍
+## 项目定位
 
-**技术面试知识库** 是一个全面的技术面试准备平台，专为准备技术面试的开发者打造。本项目提供系统化的面试题库、深度解析、最佳实践和完整的学习路径。
+**技术面试知识库** 用于帮助开发者围绕“面试准备 + 知识复盘 + 日常速查”三个场景建立统一资料库。
 
-### 🎯 设计理念
+项目当前基于 VitePress 构建，核心内容集中在 [`docs/`](docs) 目录，根目录文档主要承担以下职责：
 
-- **实战导向**: 基于真实面试场景，提供高频考点和深度解析
-- **全栈覆盖**: 涵盖前端、后端、数据库、DevOps 等完整技术栈
-- **分层学习**: 从基础概念到高级实战，适合不同水平的开发者
-- **持续更新**: 跟随技术发展趋势，定期更新内容
+- 项目介绍与快速上手
+- 部署方案说明
+- 路径、环境变量、Cloudflare 相关问题排查
+- 插件与自定义组件说明
+- 项目级开发记录
 
-## ✨ 核心特性
+## 核心特点
 
-### 📚 内容丰富
-- **150+ 技术文档**: 涵盖主流技术栈的面试要点
-- **8大技术分类**: 前端、后端、数据库、DevOps、算法等
-- **双重模式**: 面试八股文 + 实用速查表
+### 内容覆盖完整
 
-### 🎯 学习路径
-- **10天冲刺计划**: 系统化面试准备，每天聚焦一个核心主题
-- **技术栈路线图**: 清晰的学习进阶路径
-- **面试准备清单**: 完整的面试前准备事项
+- **多技术栈覆盖**：前端、后端、数据库、DevOps、AI 面试与全栈主题
+- **多种阅读形态**：概览文档、深度专题、速查表、题库、学习计划
+- **兼顾原理与实践**：不仅整理概念，也提供运行思路、配置示例和实战经验
 
-### 🛠️ 技术亮点
-- **VitePress 构建**: 现代化的静态站点生成器
-- **响应式设计**: 完美适配桌面和移动设备
-- **全文搜索**: 快速定位所需内容
-- **Mermaid 图表**: 可视化的技术架构图
-- **数学公式支持**: KaTeX 渲染数学表达式
+### 适合面试准备
 
-## 🚀 快速开始
+- **冲刺式学习**：提供 10 天冲刺计划与快速准备清单
+- **结构化复习**：按技术方向、主题层级拆分文档
+- **可持续维护**：文档长期累积，适合作为个人知识库持续迭代
+
+### 工程化文档站点
+
+- **VitePress 驱动**：支持静态构建、主题扩展与导航配置
+- **组件与插件扩展**：支持 Mermaid、KaTeX、图片缩放、进度条等增强能力
+- **双部署场景**：兼容 GitHub Pages 与 Cloudflare Pages
+
+## 快速开始
 
 ### 环境要求
 
-- Node.js >= 16.0.0
-- pnpm >= 8.0.0 (推荐)
+- Node.js >= 16
+- pnpm >= 8
+- Windows / macOS / Linux 均可
 
 ### 安装依赖
 
 ```bash
-# 克隆项目
-git clone https://github.com/yourusername/tech-docs.git
+# 克隆仓库
+git clone https://github.com/longer008/tech-docs.git
 cd tech-docs
 
 # 安装依赖
@@ -57,174 +60,158 @@ pnpm install
 ### 本地开发
 
 ```bash
-# 启动开发服务器
+# 启动开发环境
 pnpm docs:dev
 
-# 构建生产版本
+# 构建站点
 pnpm docs:build
 
-# 预览构建结果
+# 本地预览构建结果
 pnpm docs:preview
 ```
 
-访问 `http://localhost:5173` 查看本地文档。
+默认开发地址通常为 `http://localhost:5173`。
 
-## 📁 项目结构
+## 目录结构
 
-```
+```text
 tech-docs/
-├── docs/                          # 文档源文件
-│   ├── .vitepress/                # VitePress 配置
-│   │   ├── config.mts            # 主配置文件
-│   │   └── theme/                # 主题定制
-│   ├── quick-start/              # 快速开始
-│   ├── sprint-plan/              # 10天冲刺计划
-│   ├── frontend/                 # 前端技术
-│   │   ├── fundamentals/         # 前端基础
-│   │   ├── vue/                  # Vue.js
-│   │   ├── react/                # React
-│   │   └── cross-platform/       # 跨端开发
-│   ├── backend/                  # 后端技术
-│   │   ├── java/                 # Java 生态
-│   │   ├── nodejs/               # Node.js 生态
-│   │   └── python/               # Python 生态
-│   ├── database/                 # 数据库技术
-│   │   ├── mysql/                # MySQL
-│   │   ├── redis/                # Redis
-│   │   └── mq/                   # 消息队列
-│   ├── devops/                   # DevOps
-│   ├── ai-interview/             # AI 面试指南
-│   ├── diagrams/                 # 架构图
-│   └── appendix/                 # 附录资料
-├── package.json                   # 项目配置
-└── README.md                     # 项目说明
+├── docs/                      # 文档内容与 VitePress 站点源码
+├── README.md                  # 项目总览与使用入口
+├── AGENTS.md                  # 项目开发记录与维护约束
+├── CLOUDFLARE_DEPLOYMENT.md   # Cloudflare 统一部署说明主入口
+├── DEPLOYMENT_PATHS.md        # GitHub / Cloudflare 路径差异说明
+├── WRANGLER_DEPLOYMENT.md     # Wrangler CLI 部署说明
+├── CUSTOM_COMPONENTS_GUIDE.md # 自定义组件说明
+└── PLUGIN_RECOMMENDATIONS.md  # VitePress 插件建议
 ```
 
-## 🛠️ 技术栈
+## 文档主入口
 
-### 核心框架
-- **[VitePress](https://vitepress.dev/)**: 基于 Vite 的静态站点生成器
-- **[Vue 3](https://vuejs.org/)**: 现代化的前端框架
+如果你是首次进入项目，建议按下面顺序阅读：
 
-### 功能增强
-- **[Mermaid](https://mermaid.js.org/)**: 图表绘制
-- **[KaTeX](https://katex.org/)**: 数学公式渲染
-- **[UnoCSS](https://unocss.dev/)**: 原子化 CSS 引擎
-- **[Medium Zoom](https://github.com/francoischalifour/medium-zoom)**: 图片缩放
+1. [`README.md`](README.md)：了解项目定位、结构与常用命令
+2. [`docs/index.md`](docs/index.md)：进入知识库首页
+3. [`docs/quick-start/`](docs/quick-start)：查看快速准备与学习规划
+4. [`docs/frontend/`](docs/frontend) / [`docs/backend/`](docs/backend) / [`docs/database/`](docs/database) / [`docs/devops/`](docs/devops)：按方向深入
 
-### 开发工具
-- **TypeScript**: 类型安全的 JavaScript
-- **ESLint + Prettier**: 代码规范和格式化
+## 根目录文档索引
 
-## 🌐 内容分类
+### 项目与维护说明
 
-### 前端开发
-- **基础技术**: HTML5, CSS3, JavaScript, TypeScript
-- **主流框架**: Vue.js, React, Angular
-- **工程化**: Webpack, Vite, 性能优化
-- **跨端开发**: Uniapp, 微信小程序
+- [`README.md`](README.md)：项目总览、快速开始、目录说明
+- [`AGENTS.md`](AGENTS.md)：项目开发记录、维护约束、历史优化记录
 
-### 后端开发
-- **Java 生态**: Spring Boot, Spring Cloud, MyBatis
-- **Node.js 生态**: Express, Koa, NestJS
-- **Python 生态**: Django, FastAPI
+### 部署与运维说明
 
-### 数据库技术
-- **关系型数据库**: MySQL 索引优化、事务处理
-- **缓存技术**: Redis 集群、持久化
-- **NoSQL**: MongoDB 文档数据库
-- **消息队列**: Kafka, RabbitMQ
+- [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)：Cloudflare 统一部署说明主入口，优先阅读
+- [`WRANGLER_DEPLOYMENT.md`](WRANGLER_DEPLOYMENT.md)：Wrangler CLI 手动部署补充说明
+- [`DEPLOYMENT_PATHS.md`](DEPLOYMENT_PATHS.md)：GitHub Pages 与 Cloudflare Pages 的 base 路径差异说明
 
-### DevOps & 运维
-- **版本控制**: Git 工作流
-- **容器化**: Docker, Kubernetes
-- **Web 服务器**: Nginx 配置优化
-- **网络协议**: HTTP/HTTPS, TCP/IP
+### VitePress 扩展说明
 
-## 📈 使用统计
+- [`CUSTOM_COMPONENTS_GUIDE.md`](CUSTOM_COMPONENTS_GUIDE.md)：自定义组件设计与接入说明
+- [`PLUGIN_RECOMMENDATIONS.md`](PLUGIN_RECOMMENDATIONS.md)：插件选型建议与扩展方向
 
-- **文档总数**: 150+
-- **技术覆盖**: 30+ 主流技术
-- **面试题库**: 1000+ 精选题目
-- **学习路径**: 5+ 系统化方案
+## 推荐阅读路径
 
-## 🚀 部署方式
+### 路径一：准备面试
+
+- [`docs/quick-start/interview-prep-checklist.md`](docs/quick-start/interview-prep-checklist.md)
+- [`docs/quick-start/interview-study-plan.md`](docs/quick-start/interview-study-plan.md)
+- [`docs/sprint-plan/day01-js-java-core.md`](docs/sprint-plan/day01-js-java-core.md)
+
+### 路径二：系统补基础
+
+- [`docs/frontend/index.md`](docs/frontend/index.md)
+- [`docs/backend/index.md`](docs/backend/index.md)
+- [`docs/database/README.md`](docs/database/README.md)
+- [`docs/devops/index.md`](docs/devops/index.md)
+
+### 路径三：搭建与维护站点
+
+- [`docs/.vitepress/config.mts`](docs/.vitepress/config.mts)
+- [`CUSTOM_COMPONENTS_GUIDE.md`](CUSTOM_COMPONENTS_GUIDE.md)
+- [`PLUGIN_RECOMMENDATIONS.md`](PLUGIN_RECOMMENDATIONS.md)
+- [`docs/vitepress-plugins.md`](docs/vitepress-plugins.md)
+
+## 常用命令
+
+```bash
+pnpm docs:dev          # 本地开发
+pnpm docs:build        # 标准构建（默认 GitHub Pages 路径）
+pnpm docs:build:cf     # Cloudflare 构建（根路径）
+pnpm docs:preview      # 本地预览
+pnpm deploy            # Wrangler 部署到 Cloudflare Pages
+pnpm deploy:only       # 仅部署已构建产物
+```
+
+## 部署说明概览
 
 ### GitHub Pages
 
-```bash
-# 构建项目
-pnpm docs:build
+- 默认使用 `/tech-docs/` 作为 `base`
+- 通常直接执行 `pnpm docs:build`
+- 适合仓库级静态站点托管
 
-# 部署到 GitHub Pages
-# 使用 GitHub Actions 自动部署 (推荐)
-```
+### Cloudflare Pages
 
-### Vercel / Netlify
+- 使用 `/` 作为 `base`
+- 可通过 `VITE_BASE_PATH=/` 覆盖构建路径
+- 推荐优先阅读 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)
 
-```bash
-# 设置构建命令
-Build Command: pnpm docs:build
-Output Directory: docs/.vitepress/dist
-```
+### 路径差异排查
 
-### 自托管
+若出现资源地址异常、样式 404 或图片 404，优先阅读：
 
-```bash
-# 构建并复制到服务器
-pnpm docs:build
-scp -r docs/.vitepress/dist/ user@server:/var/www/html/
-```
+- [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)
+- [`DEPLOYMENT_PATHS.md`](DEPLOYMENT_PATHS.md)
+- [`WRANGLER_DEPLOYMENT.md`](WRANGLER_DEPLOYMENT.md)
 
-## 🤝 贡献指南
+## 技术栈
 
-我们欢迎所有形式的贡献！
+### 站点与构建
 
-### 贡献方式
-1. **内容贡献**: 补充面试题、优化解析、更新技术文档
-2. **功能改进**: 优化用户体验、增加新功能
-3. **问题反馈**: 报告 bug、提出改进建议
+- [VitePress](https://vitepress.dev/)
+- [Vue 3](https://vuejs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [pnpm](https://pnpm.io/)
 
-### 贡献流程
-1. Fork 本仓库
-2. 创建特性分支: `git checkout -b feature/amazing-feature`
-3. 提交更改: `git commit -m 'Add amazing feature'`
-4. 推送分支: `git push origin feature/amazing-feature`
-5. 提交 Pull Request
+### 插件与增强能力
 
-### 内容规范
-- 使用 Markdown 格式编写文档
-- 保持内容准确性和时效性
-- 提供详细的代码示例和解析
-- 遵循项目的文档结构和命名规范
+- [Mermaid](https://mermaid.js.org/)
+- [KaTeX](https://katex.org/)
+- [UnoCSS](https://unocss.dev/)
+- [medium-zoom](https://github.com/francoischalifour/medium-zoom)
 
-## 📝 更新日志
+## 适用人群
 
-### v1.0.0 (2025-01)
-- 🎉 项目初始发布
-- ✨ 完整的面试知识体系
-- 🛠️ VitePress 技术栈搭建
-- 📚 150+ 技术文档上线
+- 准备校招、社招技术面试的开发者
+- 想建立长期知识库与复习体系的工程师
+- 正在维护 VitePress 技术文档站点的开发者
+- 希望沉淀前后端与基础设施文档的团队
 
-## 🙏 致谢
+## 贡献与维护建议
 
-感谢所有为开源社区贡献的开发者们，本项目参考了以下优秀资源：
+### 内容贡献
 
-- [VitePress 官方文档](https://vitepress.dev/)
-- [各技术官方文档](https://developer.mozilla.org/)
-- 开源社区的最佳实践分享
+- 补充遗漏知识点
+- 优化已有文档结构与表达
+- 增加更贴近真实场景的代码示例
+- 修正过期链接、配置或部署说明
 
-## 📄 许可证
+### 修改建议
 
-本项目基于 [MIT License](LICENSE) 开源协议。
+- 优先更新已有文档，而不是新增重复文档
+- 新增、删除或重命名文档后，同步更新导航配置
+- 若变更部署方式，请同步修改相关根目录说明文档
 
-## 📞 联系方式
+## 相关链接
 
-- **GitHub Issues**: [提出问题](https://github.com/yourusername/tech-docs/issues)
-- **讨论交流**: [GitHub Discussions](https://github.com/yourusername/tech-docs/discussions)
+- 仓库地址：[https://github.com/longer008/tech-docs](https://github.com/longer008/tech-docs)
+- GitHub Pages：[https://longer008.github.io/tech-docs/](https://longer008.github.io/tech-docs/)
+- Cloudflare Pages：`https://tech-docs.pages.dev`
 
----
+## 许可证
 
-⭐ 如果这个项目对你有帮助，请给我们一个 Star！
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/tech-docs&type=Date)](https://star-history.com/#yourusername/tech-docs&Date)
+本项目采用 MIT License。

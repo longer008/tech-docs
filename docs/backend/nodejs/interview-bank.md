@@ -51,9 +51,61 @@ console.log('Done')  // 先输出 'Done'，再输出文件内容
 ```
 
 **追问点**：
-- Node.js 适合什么场景？不适合什么场景？
-- 为什么 Node.js 是单线程却能处理高并发？
-- Node.js 与浏览器 JavaScript 的区别？
+
+**Q1: Node.js 适合什么场景？不适合什么场景？**
+
+A: **适合场景**：I/O 密集型应用（API 服务、实时通信、文件处理、代理服务器）、微服务架构、快速原型开发。**不适合场景**：CPU 密集型计算（图像处理、复杂算法、科学计算）、需要大量内存的应用。
+
+```javascript
+// ✅ 适合：I/O 密集型 API 服务
+app.get('/users', async (req, res) => {
+  const users = await db.query('SELECT * FROM users')
+  const profiles = await Promise.all(
+    users.map(user => fetchUserProfile(user.id))
+  )
+  res.json(profiles)
+})
+
+// ❌ 不适合：CPU 密集型计算
+function fibonacci(n) {
+  if (n <= 1) return n
+  return fibonacci(n - 1) + fibonacci(n - 2) // 阻塞事件循环
+}
+```
+
+**Q2: 为什么 Node.js 是单线程却能处理高并发？**
+
+A: Node.js 主线程是单线程，但底层 I/O 操作通过 libuv 线程池处理。事件循环机制让单线程能够高效处理多个异步操作，避免了线程切换开销和锁竞争问题。
+
+```javascript
+// 事件循环处理多个并发请求
+const server = http.createServer((req, res) => {
+  // 每个请求都是异步处理，不会阻塞其他请求
+  fs.readFile('data.json', (err, data) => {
+    res.end(data)
+  })
+})
+
+// 1000 个并发请求也能高效处理
+server.listen(3000)
+```
+
+**Q3: Node.js 与浏览器 JavaScript 的区别？**
+
+A: **运行环境**：Node.js 基于 V8 引擎，浏览器有多种引擎。**API 差异**：Node.js 有文件系统、进程管理等服务端 API，浏览器有 DOM、BOM API。**模块系统**：Node.js 支持 CommonJS 和 ES Modules，浏览器主要支持 ES Modules。**全局对象**：Node.js 是 `global`，浏览器是 `window`。
+
+```javascript
+// Node.js 特有 API
+const fs = require('fs')
+const path = require('path')
+console.log(process.env.NODE_ENV)
+console.log(__dirname, __filename)
+
+// 浏览器特有 API
+// document.getElementById('app')
+// window.location.href
+// localStorage.setItem('key', 'value')
+```
 
 **面试技巧**：
 - 强调 Node.js 适合 I/O 密集型应用（API 服务、实时通信）
@@ -127,9 +179,59 @@ console.log('6: 同步代码')
 ```
 
 **追问点**：
-- 微任务和宏任务的区别？
-- process.nextTick 和 setImmediate 的区别？
-- 浏览器事件循环和 Node.js 事件循环的区别？
+
+**Q1: 微任务和宏任务的区别？**
+
+A: **微任务**：Promise.then、process.nextTick、queueMicrotask，在每个事件循环阶段结束后立即执行，优先级高。**宏任务**：setTimeout、setInterval、setImmediate、I/O 回调，按事件循环阶段顺序执行。
+
+```javascript
+// 微任务优先级演示
+console.log('1: 同步')
+
+setTimeout(() => console.log('2: 宏任务'), 0)
+
+Promise.resolve().then(() => console.log('3: 微任务'))
+
+process.nextTick(() => console.log('4: nextTick'))
+
+console.log('5: 同步')
+
+// 输出：1 → 5 → 4 → 3 → 2
+// nextTick > Promise > setTimeout
+```
+
+**Q2: 浏览器事件循环和 Node.js 事件循环的区别？**
+
+A: **浏览器**：只有宏任务队列和微任务队列，每执行一个宏任务后清空所有微任务。**Node.js**：有 6 个阶段的事件循环，每个阶段结束后执行微任务，process.nextTick 优先级最高。
+
+```javascript
+// 浏览器中
+setTimeout(() => console.log('timer1'), 0)
+setTimeout(() => console.log('timer2'), 0)
+setImmediate(() => console.log('immediate'))
+
+// 浏览器：timer1 → timer2 → immediate（如果支持）
+// Node.js：根据阶段可能 immediate → timer1 → timer2
+```
+
+**Q3: 如何监控事件循环性能？**
+
+A: 使用 `process.hrtime()` 测量事件循环延迟，或使用 `perf_hooks` 模块监控性能。事件循环延迟超过 100ms 表示可能有阻塞。
+
+```javascript
+const { performance, PerformanceObserver } = require('perf_hooks')
+
+// 监控事件循环延迟
+function measureEventLoopLag() {
+  const start = process.hrtime.bigint()
+  setImmediate(() => {
+    const lag = Number(process.hrtime.bigint() - start) / 1e6
+    console.log(`Event loop lag: ${lag.toFixed(2)}ms`)
+  })
+}
+
+setInterval(measureEventLoopLag, 1000)
+```
 
 **加分项**：
 - 能画出事件循环的流程图

@@ -158,7 +158,6 @@ export default withPwa(
       // 导航栏
       nav: [
         { text: '首页', link: '/' },
-        { text: '快速开始', link: '/quick-start/interview-prep-checklist' },
         { text: '10天冲刺', link: '/sprint-plan/day01-js-java-core' },
         {
           text: '前端',
@@ -204,7 +203,6 @@ export default withPwa(
             { text: '系统设计', link: '/appendix/system-design-templates' },
           ]
         },
-        { text: '架构图', link: '/diagrams/' },
         { text: '插件文档', link: '/vitepress-plugins' },
       ],
 

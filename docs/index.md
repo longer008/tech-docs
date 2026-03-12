@@ -43,9 +43,9 @@ features:
     details: 系统化的面试准备计划，每天聚焦一个主题，包含完整答案
     link: /sprint-plan/day01-js-java-core
   - icon: 🎯
-    title: 架构图解
-    details: 使用 Mermaid 绘制的技术架构图，可视化理解系统设计
-    link: /diagrams/
+    title: 快速开始
+    details: 面试准备清单、自我介绍模板、独立前端面试指南等实用工具
+    link: /quick-start/interview-prep-checklist
 ---
 
 <style>

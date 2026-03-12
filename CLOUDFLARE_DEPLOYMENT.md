@@ -1,391 +1,308 @@
-# Cloudflare Pages 自动部署配置指南
+# Cloudflare Pages 部署总说明
 
-本文档详细介绍如何将技术面试知识库项目配置为推送代码到 GitHub 后自动部署到 Cloudflare Pages。
+> [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md) 现在作为根目录中 Cloudflare 相关说明的统一入口，整合原先分散在快速开始、完整配置、环境变量、404 排查、构建优化、路径差异和 Wrangler 部署中的核心内容。
 
-## 📋 前置条件
+## 文档目标
 
-### 必需账户
-- ✅ GitHub 账户
-- ✅ Cloudflare 账户（免费版即可）
+本文档统一回答以下问题：
 
-### 本地环境
-- ✅ Node.js >= 16.0.0
-- ✅ pnpm >= 8.0.0
-- ✅ Git
+1. 当前项目应如何部署到 Cloudflare Pages
+2. Cloudflare 与 GitHub Pages 的路径差异如何处理
+3. 构建命令、环境变量、内存限制应如何设置
+4. 资源 404、构建失败、项目名不匹配时该如何排查
+5. 什么时候适合用 Cloudflare Dashboard，什么时候适合用 Wrangler CLI
 
-## 🚀 第一步：准备 GitHub 仓库
+如果你只需要一个结论：
 
-### 1.1 创建 GitHub 仓库
+- **默认推荐**：使用 Cloudflare Dashboard 直接连接 GitHub
+- **本地手动发布**：使用 [`package.json`](package.json) 中的 Wrangler 相关脚本
+- **路径核心原则**：Cloudflare Pages 使用 `/`，GitHub Pages 使用 `/tech-docs/`
 
-```bash
-# 方式一：GitHub 网页创建后克隆
-git clone https://github.com/yourusername/tech-docs.git
-cd tech-docs
+## 当前推荐方案
 
-# 方式二：本地项目推送到新仓库
-git remote add origin https://github.com/yourusername/tech-docs.git
-git branch -M main
-git push -u origin main
+### 方案一：Cloudflare Dashboard 连接 GitHub（默认推荐）
+
+这是当前项目最推荐的方式，原因如下：
+
+- 配置链路最短，适合 VitePress 静态文档站点
+- 能被 Cloudflare 正确识别为 Pages 项目
+- 推送到 `main` 分支后可自动构建与发布
+- 支持 PR 预览部署
+- 不需要额外维护 GitHub Secrets 与 Cloudflare Action 配置
+
+### 推荐配置
+
+在 Cloudflare Pages 项目中建议使用以下设置：
+
+```yaml
+项目名称: tech-docs
+生产分支: main
+框架预设: None
+构建命令: NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
+构建输出目录: docs/.vitepress/dist
+根目录: / (留空)
 ```
 
-### 1.2 配置 .gitignore
+推荐环境变量：
 
 ```bash
-# 确保 .gitignore 包含以下内容
-node_modules/
-.temp/
-.cache/
-dist/
-docs/.vitepress/cache/
-docs/.vitepress/dist/
-.env.local
-.env.*.local
-npm-debug.log*
-pnpm-debug.log*
+NODE_VERSION=20
+NODE_OPTIONS=--max-old-space-size=3072
+VITE_BASE_PATH=/
 ```
 
-### 1.3 优化构建配置
+这些设置分别解决以下问题：
 
-检查并确保 `package.json` 中的构建脚本正确：
+- `NODE_VERSION=20`：统一 Cloudflare 构建环境版本
+- `NODE_OPTIONS=--max-old-space-size=3072`：缓解大型文档构建时的内存不足
+- `VITE_BASE_PATH=/`：确保生成的静态资源路径是 `/assets/...`，而不是 `/tech-docs/assets/...`
+
+## 当前项目中的真实脚本基线
+
+所有 Cloudflare 相关说明都应以 [`package.json`](package.json) 中的现有脚本为准：
 
 ```json
 {
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:build:cf": "cross-env NODE_OPTIONS='--max-old-space-size=3072' VITE_BASE_PATH=/ vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "deploy": "cross-env VITE_BASE_PATH=/ pnpm docs:build && npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
+    "deploy:only": "cross-env VITE_BASE_PATH=/ npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs"
   }
 }
 ```
 
-## ⚙️ 第二步：配置 Cloudflare Pages
+从这些脚本可以得到当前项目的四个关键结论：
 
-### 2.1 连接 GitHub 仓库
+1. 标准构建 [`package.json`](package.json) 中的 `docs:build` 默认服务于 GitHub Pages
+2. Cloudflare 构建需要显式设置 `VITE_BASE_PATH=/`
+3. Cloudflare 手动部署依赖 Wrangler CLI，但构建产物仍然来自 [`docs/.vitepress/dist/`](docs/.vitepress/dist)
+4. 后续若脚本变更，应优先修改 [`package.json`](package.json)，再同步修改本文档
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. 点击左侧菜单 **Pages**
-3. 点击 **Create a project**
-4. 选择 **Connect to Git**
-5. 授权 Cloudflare 访问你的 GitHub 账户
-6. 选择 `tech-docs` 仓库
+## 快速开始
 
-### 2.2 配置构建设置
+### 最短路径部署流程
 
-在 Cloudflare Pages 的项目配置页面设置：
+如果你第一次部署当前项目到 Cloudflare Pages，按下面流程即可：
+
+1. 登录 Cloudflare Dashboard
+2. 进入 **Workers & Pages**
+3. 选择 **Create application** → **Pages** → **Connect to Git**
+4. 选择当前仓库 `tech-docs`
+5. 配置构建命令与输出目录
+6. 配置环境变量 `NODE_VERSION`、`NODE_OPTIONS`、`VITE_BASE_PATH`
+7. 保存并开始首次部署
+
+### 最小可用配置
 
 ```yaml
-项目名称: tech-docs
-生产分支: main
-构建命令: pnpm docs:build
+构建命令: NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
 构建输出目录: docs/.vitepress/dist
-根目录: / (留空)
+环境变量:
+  NODE_VERSION: 20
+  NODE_OPTIONS: --max-old-space-size=3072
+  VITE_BASE_PATH: /
 ```
 
-### 2.3 配置环境变量
+### 自动部署结果
 
-点击 **Environment variables** 添加以下变量：
+配置完成后，Cloudflare 会在以下场景自动部署：
+
+- 向 `main` 分支推送新提交
+- 创建或更新 Pull Request 预览
+
+## 路径与环境变量说明
+
+### 为什么 Cloudflare Pages 必须使用 `/`
+
+当前项目需要同时兼容两个部署目标：
+
+- GitHub Pages：部署在子路径 [`/tech-docs/`](README.md:163)
+- Cloudflare Pages：部署在根路径 `/`
+
+因此两者不能共用同一个 `base` 值。
+
+### 当前项目的 base 规则
+
+- GitHub Pages 构建：默认使用 `/tech-docs/`
+- Cloudflare Pages 构建：通过 `VITE_BASE_PATH=/` 覆盖为 `/`
+
+### 正确结果示例
+
+Cloudflare Pages 构建后的 HTML 中，资源路径应类似：
+
+```html
+<link rel="stylesheet" href="/assets/style.css">
+<script type="module" src="/assets/app.js"></script>
+<img src="/logo.svg">
+```
+
+如果你看到下面这种结果，就说明构建路径仍然错误：
+
+```html
+<link rel="stylesheet" href="/tech-docs/assets/style.css">
+<script type="module" src="/tech-docs/assets/app.js"></script>
+```
+
+### 环境变量的作用链路
+
+```text
+推送代码
+  ↓
+Cloudflare 开始构建
+  ↓
+读取环境变量
+  - NODE_VERSION=20
+  - NODE_OPTIONS=--max-old-space-size=3072
+  - VITE_BASE_PATH=/
+  ↓
+执行构建命令
+  NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
+  ↓
+VitePress 根据 VITE_BASE_PATH 生成资源路径
+  ↓
+产物输出到 docs/.vitepress/dist
+  ↓
+Cloudflare 发布静态资源
+```
+
+## 构建与发布方式
+
+### 方式一：Cloudflare Dashboard 自动部署
+
+这是日常默认方式，适合：
+
+- 文档改动主要通过 Git 提交触发发布
+- 希望使用 Cloudflare 提供的自动预览能力
+- 不想在本地维护复杂部署步骤
+
+### 方式二：Wrangler CLI 手动部署
+
+适合以下场景：
+
+- 你希望在本地手动控制发布时间
+- 你需要先构建，再单独上传产物
+- 你要验证本地构建后的实际 Pages 发布结果
+
+常用命令：
 
 ```bash
-# Node.js 版本
-NODE_VERSION=18
-
-# 包管理器（可选，Cloudflare 会自动检测）
-NPM_FLAGS=--version
-
-# Google Analytics ID（如果需要）
-GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+pnpm deploy
 ```
 
-### 2.4 高级构建配置
-
-如果需要更精确的控制，创建 `wrangler.toml` 文件：
-
-```toml
-name = "tech-docs"
-compatibility_date = "2023-12-01"
-
-[env.production]
-compatibility_date = "2023-12-01"
-
-# Pages 构建配置
-[build]
-command = "pnpm docs:build"
-cwd = "."
-publish = "docs/.vitepress/dist"
-
-# 页面规则配置
-[[redirects]]
-from = "/old-path"
-to = "/new-path"
-status = 301
-
-# 自定义头部（SEO 优化）
-[[headers]]
-for = "/*"
-[headers.values]
-X-Frame-Options = "DENY"
-X-Content-Type-Options = "nosniff"
-```
-
-## 🔧 第三步：优化构建性能
-
-### 3.1 添加构建缓存
-
-创建 `.github/workflows/deploy.yml`（可选，用于 GitHub Actions 预构建）：
-
-```yaml
-name: Deploy to Cloudflare Pages
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build site
-        run: pnpm docs:build
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tech-docs
-          directory: docs/.vitepress/dist
-          wranglerVersion: '3'
-```
-
-### 3.2 添加依赖优化
-
-在 `docs/.vitepress/config.mts` 中添加构建优化：
-
-```typescript
-export default defineConfig({
-  // ... 其他配置
-
-  vite: {
-    plugins: [
-      // 现有插件...
-    ],
-    build: {
-      // 分块策略优化
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['vue', 'vitepress'],
-            ui: ['medium-zoom']
-          }
-        }
-      },
-      // 构建目标优化
-      target: 'esnext',
-      minify: 'terser'
-    },
-    // 依赖优化
-    optimizeDeps: {
-      exclude: ['@ai-sdk/provider-utils'],
-      include: ['medium-zoom', 'mermaid']
-    }
-  }
-})
-```
-
-## 🌐 第四步：自定义域名配置
-
-### 4.1 添加自定义域名
-
-1. 在 Cloudflare Pages 项目中点击 **Custom domains**
-2. 点击 **Set up a custom domain**
-3. 输入你的域名（如：`tech-docs.example.com`）
-4. 按照提示配置 DNS 记录
-
-### 4.2 DNS 配置示例
-
-如果你的域名也托管在 Cloudflare：
-
-```
-类型: CNAME
-名称: tech-docs
-目标: your-project.pages.dev
-代理: 开启 (橙色云朵)
-```
-
-如果域名在其他服务商：
-
-```
-类型: CNAME
-主机: tech-docs
-值: your-project.pages.dev
-TTL: 自动或 300
-```
-
-## 🔍 第五步：部署验证与监控
-
-### 5.1 验证部署
-
-1. **检查构建日志**：在 Cloudflare Pages 查看构建状态
-2. **测试访问**：访问 `your-project.pages.dev`
-3. **功能验证**：测试搜索、导航、主题切换等功能
-
-### 5.2 性能监控
-
-配置 Cloudflare Analytics：
-
-```typescript
-// 在 config.mts 中添加
-head: [
-  // 现有配置...
-  ['script', {
-    src: 'https://static.cloudflareinsights.com/beacon.min.js',
-    'data-cf-beacon': '{"token": "YOUR_CF_TOKEN"}'
-  }]
-]
-```
-
-### 5.3 SEO 优化
-
-添加 sitemap 和 robots.txt：
-
-```typescript
-// config.mts
-export default defineConfig({
-  sitemap: {
-    hostname: 'https://your-domain.com'
-  },
-
-  head: [
-    ['meta', { name: 'robots', content: 'index,follow' }],
-    ['meta', { name: 'googlebot', content: 'index,follow' }]
-  ]
-})
-```
-
-## 🛠️ 自动化工作流程
-
-### 完整的部署流程
-
-```mermaid
-graph LR
-    A[本地开发] --> B[提交代码]
-    B --> C[推送到 GitHub]
-    C --> D[Cloudflare Pages 检测]
-    D --> E[自动构建]
-    E --> F[部署到全球 CDN]
-    F --> G[更新完成]
-
-    G --> H[通知机制]
-    H --> I[Slack/Email]
-
-    E --> J[构建失败]
-    J --> K[错误通知]
-```
-
-### 部署通知配置
-
-创建 `.github/workflows/notify.yml`：
-
-```yaml
-name: Deployment Notification
-on:
-  workflow_run:
-    workflows: ["Deploy to Cloudflare Pages"]
-    types:
-      - completed
-
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - name: Send success notification
-        run: |
-          echo "✅ 部署成功！"
-          echo "🌐 站点地址: https://your-project.pages.dev"
-```
-
-## 📊 部署优化建议
-
-### 性能优化
-- ✅ 启用 Cloudflare 的 **Auto Minify**
-- ✅ 开启 **Brotli 压缩**
-- ✅ 配置 **Browser Cache TTL**
-- ✅ 使用 **Image Optimization**
-
-### 安全配置
-- ✅ 启用 **HTTPS** 重定向
-- ✅ 配置 **Security Headers**
-- ✅ 设置 **WAF 规则**（如需要）
-
-### 监控报警
-- ✅ 配置 **Uptime Monitor**
-- ✅ 设置 **Error Tracking**
-- ✅ 启用 **Real User Monitoring**
-
-## 🔧 故障排除
-
-### 常见问题
-
-#### 构建失败
+或者分步执行：
 
 ```bash
-# 检查本地构建
-pnpm docs:build
+pnpm docs:build:cf
+pnpm deploy:only
+```
 
-# 检查依赖版本
-pnpm list --depth=0
+Wrangler 模式下的关键注意点：
 
-# 清理缓存
-pnpm store prune
-rm -rf node_modules docs/.vitepress/cache
+- 发布前必须确认构建使用的是 `VITE_BASE_PATH=/`
+- 当前默认 Pages 项目名是 `tech-docs`
+- 如果 Cloudflare 项目名变化，需要同步修改 [`package.json`](package.json) 中的 `deploy` 与 `deploy:only`
+
+## 常见问题排查
+
+### 1. 资源文件 404
+
+这是当前项目里最常见的问题。优先检查以下三点：
+
+1. 是否使用了 Cloudflare 对应的构建方式，如 `pnpm docs:build:cf` 或 `pnpm deploy`
+2. 是否已经设置 `VITE_BASE_PATH=/`
+3. 生成的 HTML 中是否仍然包含 `/tech-docs/`
+
+快速检查方法：打开 [`docs/.vitepress/dist/index.html`](docs/.vitepress/dist/index.html) 并确认资源引用是否为 `/assets/...`
+
+### 2. Cloudflare 构建内存不足
+
+如果构建日志中出现内存溢出、heap out of memory 或构建被中断，优先检查：
+
+- 是否设置了 `NODE_OPTIONS=--max-old-space-size=3072`
+- Cloudflare 构建命令是否仍然包含该参数
+- Node 版本是否统一到 20
+
+推荐构建命令：
+
+```bash
+NODE_OPTIONS='--max-old-space-size=3072' pnpm docs:build
+```
+
+### 3. `A compatibility_date is required when publishing`
+
+这通常说明流程被误判成 Worker 发布而不是 Pages 发布。优先使用 Cloudflare Dashboard 连接 GitHub，可以避免把静态站点误走 Worker 流程。
+
+### 4. Cloudflare 项目名不匹配
+
+如果命令行部署时报项目不存在或项目名不匹配，检查 [`package.json`](package.json) 中以下脚本是否仍然指向正确项目：
+
+- `deploy`
+- `deploy:only`
+
+### 5. `cross-env` 命令不存在
+
+说明本地依赖没有安装完整。先执行：
+
+```bash
 pnpm install
 ```
 
-#### 404 错误
+然后再执行 Cloudflare 构建或部署命令。
 
-```typescript
-// 检查 base 配置
-export default defineConfig({
-  base: '/', // 确保为正确路径
-  cleanUrls: true // 启用简洁 URL
-})
+## 验证清单
+
+### 构建成功应满足
+
+- 构建输出目录是 [`docs/.vitepress/dist/`](docs/.vitepress/dist)
+- HTML 中资源地址是 `/assets/...`
+- 图片与静态资源路径不包含 `/tech-docs/`
+- Cloudflare 构建环境中已设置 `VITE_BASE_PATH=/`
+
+### 本地验证命令
+
+```bash
+pnpm docs:build:cf
+pnpm deploy:only
 ```
 
-#### 静态资源加载失败
+如果只想检查产物而不立即发布，也至少应确认 [`docs/.vitepress/dist/index.html`](docs/.vitepress/dist/index.html) 中的路径是否正确。
 
-```typescript
-// 确保正确的资源路径配置
-export default defineConfig({
-  head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }], // 使用绝对路径
-  ]
-})
-```
+## 历史方案与边界说明
 
-## 📚 相关资源
+### GitHub Actions 自动部署到 Cloudflare Pages
 
-- [Cloudflare Pages 官方文档](https://developers.cloudflare.com/pages/)
-- [VitePress 部署指南](https://vitepress.dev/guide/deploy)
-- [GitHub Actions 文档](https://docs.github.com/en/actions)
+该方案不是不能用，而是对当前项目来说不是首选。原因包括：
 
----
+- 配置复杂度更高
+- 需要维护 Secrets、权限与工作流
+- 历史上更容易出现项目识别、Wrangler 参数和路径配置不一致的问题
 
-**完成上述配置后，每次推送代码到 main 分支，Cloudflare Pages 都会自动检测变更并重新部署网站。整个过程通常在 2-5 分钟内完成。**
+如果后续项目确实需要统一 CI/CD，再单独评估是否恢复该方案。
+
+### `wrangler.toml` 配置
+
+它只在特定 CLI 或自动化方案中才有意义，不是当前项目的默认入口。对于当前仓库，更重要的是保证 [`package.json`](package.json) 中的脚本、Cloudflare Dashboard 的构建命令以及环境变量保持一致。
+
+## 建议的维护方式
+
+后续如再调整 Cloudflare 发布方式，建议按这个顺序维护：
+
+1. 先更新 [`package.json`](package.json) 中的真实脚本
+2. 再更新 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md) 作为统一入口
+3. 如果保留其他 Cloudflare 文档，应把它们降级为补充说明，而不是继续各自维护完整主流程
+4. 所有 Cloudflare 相关结论都以当前有效脚本和当前有效部署方式为准
+
+## 结论
+
+对于当前项目：
+
+- **默认推荐**：Cloudflare Dashboard 连接 GitHub
+- **补充手段**：Wrangler CLI 手动部署
+- **关键变量**：`VITE_BASE_PATH=/`
+- **关键优化**：`NODE_OPTIONS=--max-old-space-size=3072`
+- **关键差异**：GitHub Pages 使用 `/tech-docs/`，Cloudflare Pages 使用 `/`
+
+如果根目录只保留一个 Cloudflare 主说明文件，应优先保留 [`CLOUDFLARE_DEPLOYMENT.md`](CLOUDFLARE_DEPLOYMENT.md)。

@@ -167,12 +167,49 @@ export default {
 ```
 
 **追问点**：
-- Q: Options API 会被废弃吗？
-  - A: 不会，Vue 3 完全支持 Options API，可以根据项目需求选择
-- Q: 什么时候使用 Composition API？
-  - A: 大型项目、需要复用逻辑、TypeScript 项目推荐使用
-- Q: 可以混用两种 API 吗？
-  - A: 可以，但建议在同一组件中保持一致
+
+**Q1: Options API 会被废弃吗？**
+
+A: 不会被废弃。Vue 3 完全支持 Options API，官方承诺长期维护。两种 API 可以根据项目需求和团队偏好选择，小项目或初学者可以继续使用 Options API。
+
+**Q2: Composition API 的性能优势在哪里？**
+
+A: 主要体现在三个方面：
+- **Tree-shaking 友好**：未使用的 API 可以被打包工具移除
+- **更好的压缩**：函数名可以被压缩，而 Options API 的选项名不能压缩
+- **减少实例创建开销**：setup() 只执行一次，而 Options API 每次都要创建实例
+
+```javascript
+// Composition API - 支持 Tree-shaking
+import { ref, computed } from 'vue' // 只导入需要的 API
+
+// Options API - 无法 Tree-shake
+export default {
+  data() { /* 所有选项都会被包含 */ },
+  computed: { /* ... */ },
+  methods: { /* ... */ }
+}
+```
+
+**Q3: 如何在 Composition API 中处理 this 的问题？**
+
+A: Composition API 不使用 this，所有状态和方法都通过变量和函数定义：
+- **状态管理**：使用 ref/reactive 替代 data
+- **方法定义**：使用普通函数替代 methods
+- **计算属性**：使用 computed() 函数
+- **避免 this 绑定问题**：箭头函数和普通函数都可以正常使用
+
+```javascript
+// 不需要担心 this 绑定
+const handleClick = () => {
+  count.value++ // 直接访问响应式变量
+}
+
+const handleAsync = async () => {
+  const result = await api.getData()
+  data.value = result // this 绑定不会丢失
+}
+```
 
 ---
 
@@ -274,12 +311,75 @@ form.value.username = 'admin' // 繁琐
 ```
 
 **追问点**：
-- Q: shallowRef 和 shallowReactive 的区别？
-  - A: shallow 版本只有根级别是响应式的，嵌套对象不是响应式
-- Q: 如何判断一个值是 ref 还是 reactive？
-  - A: 使用 isRef() 和 isReactive() 函数
-- Q: ref 的自动解包规则？
-  - A: 在模板中自动解包，在 reactive 对象中自动解包，在数组/Map 中不解包
+
+**Q1: shallowRef 和 shallowReactive 的区别？**
+
+A: shallow 版本只有根级别是响应式的，嵌套对象不是响应式：
+- **shallowRef**：只有 .value 的赋值是响应式的，.value 内部的属性变化不会触发更新
+- **shallowReactive**：只有根级别属性是响应式的，嵌套对象的属性变化不会触发更新
+- **使用场景**：大型数据结构的性能优化，只关心根级别变化时
+
+```javascript
+import { shallowRef, shallowReactive } from 'vue'
+
+// shallowRef 示例
+const user = shallowRef({ name: 'John', profile: { age: 25 } })
+user.value.name = 'Jane' // ❌ 不会触发更新
+user.value.profile.age = 30 // ❌ 不会触发更新
+user.value = { name: 'Jane', profile: { age: 30 } } // ✅ 会触发更新
+
+// shallowReactive 示例
+const state = shallowReactive({ 
+  count: 0, 
+  user: { name: 'John' } 
+})
+state.count = 1 // ✅ 会触发更新
+state.user.name = 'Jane' // ❌ 不会触发更新
+state.user = { name: 'Jane' } // ✅ 会触发更新
+```
+
+**Q2: ref 的自动解包规则是什么？**
+
+A: ref 的自动解包有特定的规则：
+- **模板中**：总是自动解包，无需 .value
+- **reactive 对象中**：作为属性时自动解包
+- **数组和 Map 中**：不会自动解包，仍需 .value
+- **顶层属性**：在 reactive 中作为顶层属性时解包
+
+```javascript
+const count = ref(0)
+const obj = reactive({
+  count, // 自动解包，obj.count === 0
+  nested: {
+    count // 嵌套时也会解包
+  }
+})
+
+// 数组中不解包
+const arr = reactive([count])
+console.log(arr[0].value) // 需要 .value
+
+// Map 中不解包
+const map = reactive(new Map([['count', count]]))
+console.log(map.get('count').value) // 需要 .value
+```
+
+**Q3: 如何选择 ref 还是 reactive？**
+
+A: 选择原则基于数据类型和使用方式：
+- **基本类型**：必须使用 ref（reactive 不支持）
+- **需要整体替换**：使用 ref（reactive 整体替换会丢失响应式）
+- **需要解构**：使用 ref 或配合 toRefs
+- **复杂对象且不需要解构**：使用 reactive
+- **API 返回的数据**：通常使用 ref，便于整体替换
+
+```javascript
+// 选择指南
+const primitives = ref(0) // 基本类型 → ref
+const apiData = ref(null) // API 数据 → ref（便于替换）
+const formData = reactive({}) // 表单数据 → reactive（不需要替换）
+const config = readonly(reactive({})) // 配置数据 → reactive + readonly
+```
 
 ---
 
@@ -414,10 +514,94 @@ watchEffect((onCleanup) => {
 ```
 
 **追问点**：
-- Q: flush 选项的作用？
-  - A: 控制回调执行时机，'pre'（默认）在 DOM 更新前，'post' 在 DOM 更新后，'sync' 同步执行
-- Q: 如何监听深层对象的变化？
-  - A: 使用 deep: true 选项，或监听 getter 函数
+
+**Q1: flush 选项的作用和使用场景？**
+
+A: flush 控制回调执行时机，有三个选项：
+- **'pre'（默认）**：在组件更新前执行，适合大多数场景
+- **'post'**：在 DOM 更新后执行，适合需要访问更新后 DOM 的场景
+- **'sync'**：同步执行，可能影响性能，谨慎使用
+
+```javascript
+// 需要访问更新后的 DOM
+watch(count, (newVal) => {
+  // 此时 DOM 可能还没更新
+  console.log(document.querySelector('#count').textContent)
+}, { flush: 'post' })
+
+// 或使用 watchPostEffect
+watchPostEffect(() => {
+  // 保证 DOM 已更新
+  console.log(document.querySelector('#count').textContent)
+})
+```
+
+**Q2: 如何正确监听深层对象的变化？**
+
+A: 有多种方式监听深层对象：
+- **deep: true**：监听整个对象的深层变化（性能开销大）
+- **监听特定属性**：使用 getter 函数监听具体属性
+- **使用 JSON.stringify**：监听对象序列化后的变化
+
+```javascript
+const state = reactive({
+  user: { name: 'John', profile: { age: 25 } }
+})
+
+// 方式1：深度监听（性能开销大）
+watch(state, (newVal) => {
+  console.log('Deep change detected')
+}, { deep: true })
+
+// 方式2：监听特定属性（推荐）
+watch(() => state.user.name, (newName) => {
+  console.log('Name changed:', newName)
+})
+
+// 方式3：监听多个属性
+watch(
+  () => [state.user.name, state.user.profile.age],
+  ([newName, newAge]) => {
+    console.log('Name or age changed')
+  }
+)
+```
+
+**Q3: watchEffect 的清理机制如何工作？**
+
+A: watchEffect 提供了清理机制来处理副作用：
+- **onCleanup 回调**：在副作用重新执行前或组件卸载时调用
+- **自动清理**：组件卸载时自动停止监听
+- **手动停止**：返回停止函数，可手动停止监听
+
+```javascript
+watchEffect((onCleanup) => {
+  // 设置副作用
+  const timer = setInterval(() => {
+    console.log('Timer tick')
+  }, 1000)
+  
+  const controller = new AbortController()
+  fetch('/api/data', { signal: controller.signal })
+  
+  // 清理函数：在重新执行前或组件卸载时调用
+  onCleanup(() => {
+    clearInterval(timer)
+    controller.abort()
+    console.log('Cleanup executed')
+  })
+})
+
+// 手动停止
+const stop = watchEffect(() => {
+  console.log(count.value)
+})
+
+// 在某个时机停止监听
+onUnmounted(() => {
+  stop()
+})
+```
 - Q: watchEffect 如何获取旧值？
   - A: 无法获取，需要使用 watch
 
@@ -543,12 +727,18 @@ onRenderTriggered((e) => {
 ```
 
 **追问点**：
-- Q: setup() 中可以使用 this 吗？
-  - A: 不可以，setup() 中 this 是 undefined
-- Q: 生命周期钩子可以多次调用吗？
-  - A: 可以，会按顺序执行
-- Q: onRenderTracked 和 onRenderTriggered 的区别？
-  - A: onRenderTracked 追踪所有依赖，onRenderTriggered 只在依赖变化时触发
+
+**Q1: setup() 中为什么不能使用 this？**
+
+A: setup() 在组件实例创建之前执行，此时组件实例还未创建，this 为 undefined。设计理念是 Composition API 不依赖 this，通过参数和返回值传递数据。
+
+**Q2: 生命周期钩子可以在条件语句中使用吗？**
+
+A: 不可以，生命周期钩子必须在 setup() 的顶层同步调用，不能在异步回调、条件语句、循环中调用。解决方案是在钩子内部使用条件逻辑。
+
+**Q3: onRenderTracked 和 onRenderTriggered 的实际用途？**
+
+A: 主要用于性能调试和优化。onRenderTracked 在组件首次渲染时追踪所有响应式依赖，onRenderTriggered 在依赖变化触发重新渲染时调用，提供详细的调试信息。
 
 ---
 
@@ -961,12 +1151,18 @@ function handleLogin(data) {
 ```
 
 **追问点**：
-- Q: provide/inject 如何实现响应式？
-  - A: 提供 ref 或 reactive 对象，后代组件会自动响应变化
-- Q: $attrs 包含哪些内容？
-  - A: 未被 props 声明的属性，包括 class、style、事件监听器
-- Q: 如何选择通信方式？
-  - A: 父子用 props/emits，跨级用 provide/inject，全局用 Pinia
+
+**Q1: provide/inject 如何实现响应式？**
+
+A: 通过提供响应式对象实现：祖先组件提供 ref 或 reactive 对象，后代组件会自动响应数据变化。使用 InjectionKey 可以提供类型支持。
+
+**Q2: $attrs 包含哪些内容？**
+
+A: $attrs 包含父组件传递但未在 props 中声明的属性，包括 class、style、事件监听器等。可以通过 inheritAttrs: false 禁用自动透传。
+
+**Q3: 如何选择合适的通信方式？**
+
+A: 根据组件关系选择：父子组件用 props/emits（性能最好），跨级组件用 provide/inject（避免 prop drilling），全局状态用 Pinia（复杂状态管理）。
 
 ---
 
@@ -1179,12 +1375,18 @@ onErrorCaptured((err) => {
 ```
 
 **追问点**：
-- Q: Suspense 和 v-if 的区别？
-  - A: Suspense 专门处理异步加载，v-if 只是条件渲染
-- Q: Suspense 的 pending 事件？
-  - A: 可以监听 @pending、@resolve、@fallback 事件
-- Q: 如何实现骨架屏？
-  - A: 在 fallback 插槽中放置骨架屏组件
+
+**Q1: Suspense 和 v-if 的区别？**
+
+A: Suspense 专门处理异步加载状态，自动检测异步组件的加载状态；v-if 只是基于布尔值的条件渲染，需要手动管理加载状态。
+
+**Q2: Teleport 如何影响事件冒泡？**
+
+A: Teleport 不影响事件冒泡机制，事件仍然按照组件树冒泡，而不是 DOM 树。这保持了组件的逻辑关系不变。
+
+**Q3: 如何实现复杂的异步加载状态？**
+
+A: 可以监听 Suspense 的 @pending、@resolve、@fallback 事件，在 fallback 插槽中实现骨架屏、进度条等复杂的加载状态展示。
 
 ---
 
@@ -1446,12 +1648,18 @@ function getFilteredItems() {
 | KeepAlive | 频繁切换的组件 | 避免重复渲染 |
 
 **追问点**：
-- Q: v-once 和 v-memo 的区别？
-  - A: v-once 只渲染一次，v-memo 可以根据依赖重新渲染
-- Q: 虚拟列表的局限性？
-  - A: 需要固定或可预测的高度，不支持复杂布局
-- Q: 如何监控性能？
-  - A: 使用 Vue DevTools 的 Performance 面板
+
+**Q1: v-once 和 v-memo 的区别？**
+
+A: v-once 只渲染一次后永不更新，适合静态内容；v-memo 根据依赖数组决定是否重新渲染，适合昂贵的计算。v-memo 更灵活，v-once 性能更极致。
+
+**Q2: 虚拟列表的局限性？**
+
+A: 需要固定或可预测的高度，不支持复杂布局。对于高度不一致的列表项，需要额外的高度计算和缓存机制。
+
+**Q3: 如何监控 Vue 应用的性能？**
+
+A: 使用 Vue DevTools 的 Performance 面板监控组件渲染时间，使用浏览器的 Performance API 监控页面性能，结合 Lighthouse 进行综合性能评估。
 
 ---
 
@@ -1705,12 +1913,18 @@ const { isOnline } = useOnline()
 6. **单一职责**：每个 composable 只做一件事
 
 **追问点**：
-- Q: Composables 和 Mixins 的区别？
-  - A: Composables 更灵活、无命名冲突、类型推断更好
-- Q: 如何测试 Composables？
-  - A: 使用 @vue/test-utils 的 renderless 组件测试
-- Q: Composables 可以嵌套使用吗？
-  - A: 可以，一个 composable 可以调用其他 composables
+
+**Q1: Composables 和 Mixins 的区别？**
+
+A: Composables 更灵活、无命名冲突、类型推断更好。通过解构避免属性覆盖，明确数据来源，支持参数化和完整的 TypeScript 类型推断。
+
+**Q2: 如何测试 Composables？**
+
+A: 使用 @vue/test-utils 创建测试组件，或者直接在测试环境中调用 composable 函数。可以独立测试逻辑，不依赖具体的组件实例。
+
+**Q3: Composables 可以嵌套使用吗？**
+
+A: 可以，一个 composable 可以调用其他 composables，形成组合式的逻辑复用。这种组合方式比 Mixins 更清晰和可维护。
 
 ---
 
@@ -1843,12 +2057,18 @@ set.add(1) // ✅ 响应式
 ```
 
 **追问点**：
-- Q: Proxy 的性能开销？
-  - A: 初始化更快（惰性代理），但访问时有轻微开销
-- Q: 如何处理 Proxy 不支持的浏览器？
-  - A: Vue 3 不支持 IE11，需要使用 Vue 2
-- Q: ref 的实现原理？
-  - A: 使用 getter/setter 包装对象，在模板中自动解包
+
+**Q1: Proxy 相比 Object.defineProperty 的性能优势？**
+
+A: Proxy 初始化更快（惰性代理），可以拦截动态属性和数组操作，但访问时有轻微开销。整体性能优于 Vue 2 的递归遍历方式。
+
+**Q2: 如何处理 Proxy 不支持的浏览器？**
+
+A: Vue 3 完全放弃了 IE11 支持，因为 Proxy 无法被 polyfill。如需支持旧浏览器，只能继续使用 Vue 2。
+
+**Q3: ref 的实现原理？**
+
+A: ref 使用 getter/setter 包装对象，通过 .value 访问值。在模板中会自动解包，在 reactive 对象中也会自动解包。
 
 ---
 
@@ -1959,12 +2179,59 @@ _cache[0] = _ctx.handleClick
 - 事件缓存：避免重复创建函数
 
 **追问点**：
-- Q: 如何查看编译结果？
-  - A: 使用 Vue SFC Playground 或 @vue/compiler-sfc
-- Q: v-once 和静态提升的区别？
-  - A: v-once 运行时跳过更新，静态提升是编译时优化
-- Q: 如何禁用编译优化？
-  - A: 使用 compilerOptions.hoistStatic: false
+
+**Q1: 如何查看和分析编译结果？**
+
+A: 有多种方式查看 Vue 编译结果：
+- **Vue SFC Playground**：在线查看编译结果和优化效果
+- **@vue/compiler-sfc**：本地编译分析，可以看到详细的编译选项
+- **Vite 插件**：使用 vite-plugin-vue 的调试选项
+- **编译器选项**：通过 compilerOptions 控制编译行为
+
+```javascript
+// 本地分析编译结果
+import { compileTemplate } from '@vue/compiler-sfc'
+
+const result = compileTemplate({
+  source: '<div>{{ count }}</div>',
+  filename: 'test.vue'
+})
+console.log(result.code) // 查看编译后的代码
+```
+
+**Q2: v-once 和静态提升的区别？**
+
+A: 两者都是性能优化，但机制不同：
+- **v-once**：运行时优化，首次渲染后跳过后续更新
+- **静态提升**：编译时优化，将静态元素提升到渲染函数外部
+- **使用场景**：v-once 适合动态变静态的内容，静态提升适合完全静态的内容
+- **性能影响**：静态提升避免重复创建，v-once 避免重复渲染
+
+**Q3: 如何控制编译优化的行为？**
+
+A: 通过 compilerOptions 精确控制：
+- **hoistStatic**：控制静态提升
+- **cacheHandlers**：控制事件处理器缓存
+- **prefixIdentifiers**：控制标识符前缀
+- **optimizeImports**：控制导入优化
+
+```javascript
+// Vue CLI 配置
+module.exports = {
+  chainWebpack: config => {
+    config.module
+      .rule('vue')
+      .use('vue-loader')
+      .tap(options => {
+        options.compilerOptions = {
+          hoistStatic: false,     // 禁用静态提升
+          cacheHandlers: false,  // 禁用事件缓存
+        }
+        return options
+      })
+  }
+}
+```
 
 ---
 
@@ -2064,12 +2331,71 @@ function updateTodo(id, updates) {
 ```
 
 **追问点**：
-- Q: 什么时候需要重置组件状态？
-  - A: key 改变时，Vue 会卸载旧组件，挂载新组件
-- Q: 如何生成唯一 ID？
-  - A: 使用 UUID 库、nanoid，或服务端返回的 ID
-- Q: 虚拟列表如何处理 key？
-  - A: 使用 itemKey 函数指定 key 生成规则
+
+**Q1: 什么时候需要重置组件状态？**
+
+A: 当组件的 key 改变时，Vue 会卸载旧组件并挂载新组件：
+- **数据变化**：当列表项的唯一标识发生变化时
+- **强制重置**：需要清空组件内部状态时
+- **路由切换**：相同组件但需要重置状态时
+- **条件渲染**：v-if 切换时也会重置状态
+
+```javascript
+// 强制重置组件状态
+const resetKey = ref(0)
+const forceReset = () => {
+  resetKey.value++
+}
+
+// 模板中使用
+<MyComponent :key="resetKey" />
+```
+
+**Q2: 如何选择合适的 key 值？**
+
+A: key 的选择原则：
+- **唯一性**：在同一列表中必须唯一
+- **稳定性**：相同数据应该有相同的 key
+- **简单性**：避免复杂的计算，影响性能
+- **避免索引**：数组索引不适合作为 key（除非列表不会变化）
+
+```javascript
+// ✅ 好的 key 选择
+items.map(item => ({
+  key: item.id,           // 数据库 ID
+  key: item.uuid,         // UUID
+  key: `${item.type}-${item.id}` // 组合 key
+}))
+
+// ❌ 不好的 key 选择
+items.map((item, index) => ({
+  key: index,             // 数组索引
+  key: Math.random(),     // 随机数
+  key: new Date().getTime() // 时间戳
+}))
+```
+
+**Q3: 虚拟列表如何处理 key 和状态？**
+
+A: 虚拟列表的特殊处理：
+- **itemKey 函数**：指定如何从数据生成 key
+- **状态外置**：将组件状态提升到父组件或全局状态
+- **缓存策略**：缓存组件实例或状态数据
+- **滚动位置**：保持滚动位置和选中状态
+
+```javascript
+// 虚拟列表 key 处理
+const virtualListProps = {
+  itemKey: (item) => item.id,
+  itemSize: 50,
+  items: list.value
+}
+
+// 状态外置到父组件
+const itemStates = reactive(new Map())
+const getItemState = (id) => itemStates.get(id) || {}
+const setItemState = (id, state) => itemStates.set(id, state)
+```
 
 ---
 
@@ -2217,12 +2543,92 @@ watch(someValue, () => {
    - 查看 JS Heap Size
 
 **追问点**：
-- Q: 如何检测内存泄漏？
-  - A: 重复挂载/卸载组件，观察内存是否持续增长
-- Q: WeakMap 和 Map 的区别？
-  - A: WeakMap 的 key 是弱引用，可以被垃圾回收
-- Q: 如何避免闭包陷阱？
-  - A: 使用 computed 或在 watch 中只引用需要的数据
+
+**Q1: 如何系统性地检测内存泄漏？**
+
+A: 使用多种工具和方法检测：
+- **Chrome DevTools**：Memory 面板录制堆快照，对比前后差异
+- **重复测试**：重复挂载/卸载组件，观察内存是否持续增长
+- **Performance 面板**：查看 JS Heap Size 变化趋势
+- **自动化测试**：编写测试脚本自动检测内存泄漏
+
+```javascript
+// 内存泄漏检测脚本
+async function detectMemoryLeak() {
+  const initialMemory = performance.memory.usedJSHeapSize
+  
+  // 重复挂载/卸载组件 100 次
+  for (let i = 0; i < 100; i++) {
+    const app = createApp(TestComponent)
+    const container = document.createElement('div')
+    app.mount(container)
+    app.unmount()
+    
+    // 强制垃圾回收（仅在开发环境）
+    if (window.gc) window.gc()
+  }
+  
+  const finalMemory = performance.memory.usedJSHeapSize
+  const leakSize = finalMemory - initialMemory
+  
+  if (leakSize > 1024 * 1024) { // 超过 1MB
+    console.warn(`Potential memory leak: ${leakSize} bytes`)
+  }
+}
+```
+
+**Q2: WeakMap 和 Map 在内存管理上的区别？**
+
+A: WeakMap 提供更好的内存管理：
+- **弱引用**：WeakMap 的 key 是弱引用，不阻止垃圾回收
+- **自动清理**：当 key 对象被回收时，对应的条目自动删除
+- **无法遍历**：WeakMap 不可遍历，没有 size 属性
+- **使用场景**：适合存储对象的私有数据或缓存
+
+```javascript
+// Map - 强引用，可能导致内存泄漏
+const cache = new Map()
+function processData(obj) {
+  cache.set(obj, expensiveComputation(obj))
+  // obj 永远不会被垃圾回收
+}
+
+// WeakMap - 弱引用，自动清理
+const cache = new WeakMap()
+function processData(obj) {
+  cache.set(obj, expensiveComputation(obj))
+  // obj 可以被垃圾回收，缓存自动清理
+}
+```
+
+**Q3: 如何避免 Vue 组件中的闭包陷阱？**
+
+A: 闭包陷阱的预防策略：
+- **最小化引用**：在 watch/computed 中只引用必要的数据
+- **使用 toRef**：避免引用整个响应式对象
+- **及时清理**：在 onUnmounted 中清理引用
+- **避免循环引用**：注意父子组件间的相互引用
+
+```javascript
+// ❌ 闭包陷阱：引用了整个对象
+const largeData = reactive({ /* 大量数据 */ })
+watch(() => largeData.someProperty, () => {
+  // 整个 largeData 被闭包捕获
+})
+
+// ✅ 正确做法：只引用需要的属性
+const someProperty = toRef(largeData, 'someProperty')
+watch(someProperty, () => {
+  // 只捕获需要的数据
+})
+
+// ✅ 或者使用 getter 函数
+watch(
+  () => largeData.someProperty,
+  () => { /* ... */ },
+  { flush: 'post' }
+)
+```
 
 ---
 
@@ -2357,12 +2763,75 @@ onMounted(async () => {
 ```
 
 **追问点**：
-- Q: 什么是水合（Hydration）？
-  - A: 客户端接管服务端渲染的 HTML，添加事件监听器和响应式
-- Q: 如何调试水合不匹配？
-  - A: 查看控制台警告，对比服务端和客户端的 HTML
-- Q: 水合失败会怎样？
-  - A: Vue 会销毁服务端 HTML，重新渲染，失去 SSR 的优势
+
+**Q1: 什么是水合（Hydration）过程？**
+
+A: 水合是 SSR 的关键步骤：
+- **接管 HTML**：客户端 JavaScript 接管服务端渲染的静态 HTML
+- **添加交互**：为 DOM 元素添加事件监听器和响应式数据绑定
+- **状态同步**：确保客户端状态与服务端渲染时的状态一致
+- **激活组件**：将静态 HTML 转换为可交互的 Vue 组件
+
+```javascript
+// SSR 水合过程
+// 1. 服务端渲染生成 HTML
+const html = renderToString(app)
+
+// 2. 客户端水合
+import { createSSRApp } from 'vue'
+const app = createSSRApp(App)
+app.mount('#app') // 水合现有的 HTML，而不是替换
+```
+
+**Q2: 如何系统性地调试水合不匹配？**
+
+A: 调试水合不匹配的方法：
+- **开启详细警告**：设置 `__VUE_PROD_HYDRATION_MISMATCH_DETAILS__` 为 true
+- **对比 HTML**：使用浏览器开发工具对比服务端和客户端的 HTML 结构
+- **分段调试**：逐步注释组件，定位问题组件
+- **日志记录**：在服务端和客户端记录关键数据的值
+
+```javascript
+// 开启详细的水合错误信息
+app.config.warnHandler = (msg, instance, trace) => {
+  if (msg.includes('Hydration')) {
+    console.error('Hydration error:', msg)
+    console.error('Component:', instance)
+    console.error('Trace:', trace)
+  }
+}
+
+// 调试特定数据
+const debugData = (data, label) => {
+  console.log(`[${typeof window === 'undefined' ? 'Server' : 'Client'}] ${label}:`, data)
+}
+```
+
+**Q3: 水合失败的后果和预防措施？**
+
+A: 水合失败的影响和预防：
+- **性能损失**：Vue 会销毁服务端 HTML 并重新渲染，失去 SSR 的首屏优势
+- **用户体验**：可能出现页面闪烁或内容跳动
+- **SEO 影响**：搜索引擎看到的内容与用户最终看到的可能不一致
+
+**预防措施**：
+```javascript
+// 1. 使用 ClientOnly 组件包装客户端特有内容
+<ClientOnly>
+  <UserAgent />
+</ClientOnly>
+
+// 2. 延迟初始化客户端特有数据
+const isClient = ref(false)
+onMounted(() => {
+  isClient.value = true
+})
+
+// 3. 使用环境变量区分服务端和客户端逻辑
+const timestamp = import.meta.env.SSR 
+  ? '2024-01-01' 
+  : new Date().toISOString()
+```
 
 ---
 
@@ -2430,12 +2899,18 @@ const message = defineModel<string>()
 ```
 
 **追问点**：
-- Q: defineModel 和传统方式的区别？
-  - A: defineModel 自动处理 props 和 emits，代码更简洁
-- Q: defineModel 支持修饰符吗？
-  - A: 支持，可以通过第二个参数获取修饰符
-- Q: 如何在 defineModel 中自定义 getter/setter？
-  - A: 使用 get 和 set 选项
+
+**Q1: defineModel 相比传统方式的优势？**
+
+A: defineModel 显著简化了 v-model 的实现，从 10+ 行代码减少到 1 行，自动处理 props 和 emits，提供完整的 TypeScript 支持。
+
+**Q2: defineModel 如何处理修饰符？**
+
+A: 支持通过第二个参数获取修饰符，可以在 get/set 中处理修饰符逻辑，如 trim、number 等内置修饰符。
+
+**Q3: 如何在 defineModel 中自定义逻辑？**
+
+A: 使用 get 和 set 选项自定义 getter/setter，可以实现数据转换、验证、格式化等复杂逻辑。
 
 ---
 
@@ -2519,12 +2994,18 @@ defineProps<{
 ```
 
 **追问点**：
-- Q: 泛型组件和普通组件的区别？
-  - A: 泛型组件可以保持类型信息，提供更好的类型安全
-- Q: 如何在泛型组件中使用 defineModel？
-  - A: 可以结合使用，defineModel 也支持泛型
-- Q: 泛型组件的性能影响？
-  - A: 仅在编译时有影响，运行时无性能损失
+
+**Q1: 泛型组件相比普通组件的优势？**
+
+A: 泛型组件可以保持类型信息，提供更好的类型安全、智能提示和编译时检查，一个组件可以处理多种类型的数据。
+
+**Q2: 如何在泛型组件中使用其他 Vue 3.3+ 特性？**
+
+A: 可以结合使用 defineModel、defineSlots、defineEmits 等，都支持泛型，提供完整的类型安全体验。
+
+**Q3: 泛型组件的性能影响？**
+
+A: 仅在编译时有影响，运行时无性能损失。泛型信息在编译后会被擦除，不会增加运行时开销。
 
 ---
 
