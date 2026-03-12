@@ -2579,3 +2579,35 @@
   pnpm wrangler login
   pnpm deploy:prod
   ```
+
+
+### 2025-02-24（更新依赖锁文件）
+- ✅ **更新 pnpm-lock.yaml 和 wrangler.toml**
+  
+  **问题**：
+  ```
+  ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with "frozen-lockfile" 
+  because pnpm-lock.yaml is not up to date with package.json
+  ```
+  
+  **原因**：
+  - 添加了 `wrangler` 依赖到 `package.json`
+  - 但没有运行 `pnpm install` 更新 `pnpm-lock.yaml`
+  - GitHub Actions CI 环境默认使用 `--frozen-lockfile` 模式
+  
+  **修复内容**：
+  1. ✅ 运行 `pnpm install` 更新 `pnpm-lock.yaml`
+  2. ✅ 添加 wrangler 依赖到锁文件
+  3. ✅ wrangler.toml 的 `compatibility_date` 自动更新为 `2026-03-10`
+  
+  **提交信息**：
+  - Commit 5bf4810: 更新 pnpm-lock.yaml 和 wrangler.toml
+  
+  **现在 GitHub Actions 可以正常构建了**
+
+- 📊 **Git 状态**：
+  - 本地领先远程 3 个提交
+  - 待推送的提交：
+    - 4260f02: 更新 AGENTS.md：记录 wrangler.toml 修复
+    - c2f0792: 修复 wrangler.toml 配置错误
+    - 5bf4810: 更新 pnpm-lock.yaml 和 wrangler.toml
