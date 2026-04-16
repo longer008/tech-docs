@@ -1796,6 +1796,1224 @@ function getCurrentPrompt(category) {
 - 文档化：记录设计思路和优化过程
 - 团队协作：分享最佳实践和经验
 
+### 高级面试问题
+
+**Q5：如何将一个复杂的项目需求转化成清晰、逻辑性强、切中要害的提示词？**
+
+**核心方法**：使用"需求分解 + 结构化表达 + 迭代优化"三步法
+
+**答题框架**：
+
+**第一步：需求分解**
+- 识别核心目标（What）：项目要解决什么问题？
+- 明确约束条件（Constraint）：技术栈、时间、资源限制
+- 列出关键功能（Feature）：必须实现的功能点
+- 确定输出格式（Output）：代码、文档、架构图等
+
+**第二步：结构化表达（使用 CO-STAR 框架）**
+
+```markdown
+# Context（上下文）
+我正在开发一个电商平台的商品推荐系统，需要实现个性化推荐功能。
+技术栈：Vue 3 + TypeScript + Pinia + Vite
+用户规模：预计 10 万日活
+
+# Objective（目标）
+设计并实现一个高性能的商品推荐算法，能够根据用户浏览历史、购买记录、
+搜索关键词等数据，实时推荐相关商品。
+
+# Style（风格）
+请以资深前端架构师的角度，提供完整的技术方案，包括：
+- 数据结构设计
+- 算法实现（协同过滤 + 内容推荐）
+- 性能优化策略
+- 缓存方案
+
+# Tone（语气）
+专业、详细、可落地，包含代码示例和最佳实践
+
+# Audience（受众）
+中高级前端开发工程师，熟悉 Vue 3 和 TypeScript
+
+# Response（响应格式）
+请按以下结构输出：
+1. 技术方案概述（200 字）
+2. 数据结构设计（TS 接口定义）
+3. 核心算法实现（完整代码 + 注释）
+4. 性能优化方案（3-5 个具体措施）
+5. 缓存策略（Redis + 本地缓存）
+6. 测试方案（单元测试 + 性能测试）
+```
+
+**第三步：迭代优化**
+
+**初始版本**（模糊）：
+```
+帮我写一个商品推荐功能
+```
+
+**优化版本 1**（添加上下文）：
+```
+我在做一个电商网站，需要实现商品推荐功能，
+用户浏览商品后，在页面底部显示相关推荐。
+```
+
+**优化版本 2**（添加约束和格式）：
+```
+技术栈：Vue 3 + TypeScript
+需求：根据用户浏览历史推荐商品
+输出：完整的 Vue 组件代码，包含：
+- 推荐算法（协同过滤）
+- 组件实现（Composition API）
+- 性能优化（虚拟滚动）
+```
+
+**最终版本**（使用 CO-STAR 框架）：
+```
+见上面的完整示例
+```
+
+**实战技巧**：
+
+1. **使用清单法**：
+```markdown
+需求清单：
+- [ ] 用户画像数据结构
+- [ ] 推荐算法选型（协同过滤 vs 内容推荐）
+- [ ] 实时计算 vs 离线计算
+- [ ] 缓存策略（Redis + 本地缓存）
+- [ ] 性能指标（推荐响应时间 < 100ms）
+- [ ] A/B 测试方案
+```
+
+2. **分层描述**：
+```markdown
+# 第一层：业务需求
+实现个性化商品推荐，提升用户购买转化率
+
+# 第二层：功能需求
+- 根据浏览历史推荐（权重 40%）
+- 根据购买记录推荐（权重 30%）
+- 根据搜索关键词推荐（权重 20%）
+- 热门商品推荐（权重 10%）
+
+# 第三层：技术需求
+- 推荐算法：协同过滤 + 内容推荐
+- 数据存储：Redis 缓存 + MySQL 持久化
+- 性能要求：推荐响应时间 < 100ms
+- 可扩展性：支持 10 万日活
+```
+
+3. **提供反例**：
+```markdown
+# 正确示例
+推荐商品应该基于用户的真实行为数据，包括浏览、搜索、购买记录
+
+# 错误示例（避免）
+❌ 不要推荐用户已购买的商品
+❌ 不要推荐价格远超用户消费能力的商品
+❌ 不要推荐库存为 0 的商品
+```
+
+**验证方法**：
+
+1. **5W1H 检查法**：
+   - What：要做什么？（商品推荐系统）
+   - Why：为什么做？（提升转化率）
+   - Who：给谁用？（电商用户）
+   - When：什么时候用？（用户浏览商品时）
+   - Where：在哪里用？（商品详情页底部）
+   - How：怎么做？（协同过滤算法）
+
+2. **SMART 原则**：
+   - Specific（具体）：推荐算法、数据结构、性能指标都明确
+   - Measurable（可衡量）：响应时间 < 100ms，转化率提升 20%
+   - Achievable（可实现）：技术栈成熟，有参考案例
+   - Relevant（相关）：与业务目标一致
+   - Time-bound（有时限）：2 周完成开发，1 周测试
+
+**追问点**：
+- Q1：如何处理需求变更？（版本控制 + 增量优化）
+- Q2：如何验证提示词质量？（A/B 测试 + 人工评估）
+- Q3：如何建立提示词模板库？（分类管理 + 版本迭代）
+
+**Q6：描述一个需要使用 Skill 和 MCP 的场景，并阐述它们的工作原理和构建方法**
+
+**场景描述**：构建一个智能代码审查助手
+
+**业务需求**：
+- 自动审查 Pull Request 中的代码
+- 检查代码规范、安全漏洞、性能问题
+- 提供修改建议和最佳实践
+- 生成审查报告
+
+**为什么需要 Skill 和 MCP**：
+- **Skill**：封装代码审查的专业知识和规则
+- **MCP**：连接 GitHub API、代码分析工具、数据库
+
+---
+
+### Skill（技能）详解
+
+**什么是 Skill**：
+- Skill 是 AI Agent 的"专业能力包"
+- 封装了特定领域的知识、规则、最佳实践
+- 可以被多个 Agent 复用
+
+**工作原理**：
+```
+用户请求 → Agent 加载 Skill → 应用规则和知识 → 生成结果
+```
+
+**代码审查 Skill 示例**：
+
+```typescript
+// skills/code-review.skill.ts
+export const CodeReviewSkill = {
+  name: 'code-review',
+  version: '1.0.0',
+  description: '代码审查专家技能',
+  
+  // 知识库
+  knowledge: {
+    // 代码规范规则
+    codingStandards: {
+      javascript: [
+        '使用 const/let 代替 var',
+        '函数命名使用驼峰命名法',
+        '避免使用 any 类型',
+        '使用 async/await 代替 Promise.then',
+      ],
+      typescript: [
+        '为函数参数和返回值添加类型注解',
+        '使用接口定义对象结构',
+        '避免使用 as 类型断言',
+      ],
+    },
+    
+    // 安全规则
+    securityRules: [
+      '检查 SQL 注入风险',
+      '检查 XSS 攻击风险',
+      '检查敏感信息泄露',
+      '检查不安全的依赖',
+    ],
+    
+    // 性能规则
+    performanceRules: [
+      '避免在循环中进行 DOM 操作',
+      '使用防抖和节流优化高频事件',
+      '避免不必要的重渲染',
+      '使用虚拟滚动处理长列表',
+    ],
+  },
+  
+  // 审查方法
+  methods: {
+    // 检查代码规范
+    checkCodingStandards(code: string, language: string): Issue[] {
+      const issues: Issue[] = [];
+      const rules = this.knowledge.codingStandards[language] || [];
+      
+      // 示例：检查 var 使用
+      if (code.includes('var ')) {
+        issues.push({
+          type: 'style',
+          severity: 'warning',
+          message: '建议使用 const 或 let 代替 var',
+          line: this.findLineNumber(code, 'var '),
+          suggestion: '使用 const（不可变）或 let（可变）',
+        });
+      }
+      
+      // 示例：检查 any 类型
+      if (code.includes(': any')) {
+        issues.push({
+          type: 'type',
+          severity: 'warning',
+          message: '避免使用 any 类型，会失去类型检查',
+          line: this.findLineNumber(code, ': any'),
+          suggestion: '使用具体的类型或泛型',
+        });
+      }
+      
+      return issues;
+    },
+    
+    // 检查安全问题
+    checkSecurity(code: string): Issue[] {
+      const issues: Issue[] = [];
+      
+      // 检查 SQL 注入
+      if (code.includes('SELECT') && code.includes('${')) {
+        issues.push({
+          type: 'security',
+          severity: 'error',
+          message: '可能存在 SQL 注入风险',
+          suggestion: '使用参数化查询或 ORM',
+        });
+      }
+      
+      // 检查 XSS
+      if (code.includes('innerHTML') || code.includes('dangerouslySetInnerHTML')) {
+        issues.push({
+          type: 'security',
+          severity: 'error',
+          message: '可能存在 XSS 攻击风险',
+          suggestion: '使用 textContent 或对内容进行转义',
+        });
+      }
+      
+      return issues;
+    },
+    
+    // 检查性能问题
+    checkPerformance(code: string): Issue[] {
+      const issues: Issue[] = [];
+      
+      // 检查循环中的 DOM 操作
+      if (code.match(/for.*\{[\s\S]*?document\./)) {
+        issues.push({
+          type: 'performance',
+          severity: 'warning',
+          message: '避免在循环中进行 DOM 操作',
+          suggestion: '使用 DocumentFragment 或批量更新',
+        });
+      }
+      
+      return issues;
+    },
+    
+    // 生成审查报告
+    generateReport(issues: Issue[]): string {
+      const grouped = this.groupByType(issues);
+      
+      return `
+# 代码审查报告
+
+## 概览
+- 总问题数：${issues.length}
+- 错误：${grouped.error?.length || 0}
+- 警告：${grouped.warning?.length || 0}
+- 建议：${grouped.info?.length || 0}
+
+## 详细问题
+
+${this.formatIssues(issues)}
+
+## 建议
+${this.generateSuggestions(issues)}
+      `.trim();
+    },
+  },
+};
+
+interface Issue {
+  type: 'style' | 'type' | 'security' | 'performance';
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  line?: number;
+  suggestion: string;
+}
+```
+
+**Skill 构建方法**：
+
+1. **定义 Skill 结构**：
+```typescript
+// skill.schema.ts
+interface Skill {
+  name: string;           // 技能名称
+  version: string;        // 版本号
+  description: string;    // 描述
+  knowledge: object;      // 知识库
+  methods: object;        // 方法集合
+  dependencies?: string[]; // 依赖的其他 Skill
+}
+```
+
+2. **组织知识库**：
+```typescript
+knowledge: {
+  // 规则库
+  rules: Rule[],
+  
+  // 模式库
+  patterns: Pattern[],
+  
+  // 最佳实践
+  bestPractices: BestPractice[],
+  
+  // 示例库
+  examples: Example[],
+}
+```
+
+3. **实现方法**：
+```typescript
+methods: {
+  // 分析方法
+  analyze(input: any): Result,
+  
+  // 验证方法
+  validate(input: any): boolean,
+  
+  // 生成方法
+  generate(config: any): Output,
+}
+```
+
+---
+
+### MCP（Model Context Protocol）详解
+
+**什么是 MCP**：
+- MCP 是 AI Agent 与外部系统通信的"桥梁"
+- 提供标准化的接口，连接 API、数据库、工具
+- 支持双向通信（Agent → 外部系统，外部系统 → Agent）
+
+**工作原理**：
+```
+Agent → MCP Client → MCP Server → 外部系统（GitHub API、数据库等）
+                                      ↓
+Agent ← MCP Client ← MCP Server ← 返回数据
+```
+
+**MCP Server 示例（GitHub 集成）**：
+
+```typescript
+// mcp-servers/github.server.ts
+import { MCPServer } from '@modelcontextprotocol/sdk';
+
+export class GitHubMCPServer extends MCPServer {
+  name = 'github';
+  version = '1.0.0';
+  
+  // 定义工具（Tools）
+  tools = [
+    {
+      name: 'get_pull_request',
+      description: '获取 Pull Request 信息',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          owner: { type: 'string', description: '仓库所有者' },
+          repo: { type: 'string', description: '仓库名称' },
+          pull_number: { type: 'number', description: 'PR 编号' },
+        },
+        required: ['owner', 'repo', 'pull_number'],
+      },
+    },
+    {
+      name: 'get_pr_files',
+      description: '获取 PR 中修改的文件',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          owner: { type: 'string' },
+          repo: { type: 'string' },
+          pull_number: { type: 'number' },
+        },
+        required: ['owner', 'repo', 'pull_number'],
+      },
+    },
+    {
+      name: 'create_review_comment',
+      description: '创建代码审查评论',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          owner: { type: 'string' },
+          repo: { type: 'string' },
+          pull_number: { type: 'number' },
+          body: { type: 'string', description: '评论内容' },
+          path: { type: 'string', description: '文件路径' },
+          line: { type: 'number', description: '行号' },
+        },
+        required: ['owner', 'repo', 'pull_number', 'body', 'path', 'line'],
+      },
+    },
+  ];
+  
+  // 实现工具方法
+  async callTool(name: string, args: any): Promise<any> {
+    switch (name) {
+      case 'get_pull_request':
+        return this.getPullRequest(args);
+      
+      case 'get_pr_files':
+        return this.getPRFiles(args);
+      
+      case 'create_review_comment':
+        return this.createReviewComment(args);
+      
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  }
+  
+  // 获取 PR 信息
+  private async getPullRequest(args: any) {
+    const { owner, repo, pull_number } = args;
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${pull_number}`,
+      {
+        headers: {
+          'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      }
+    );
+    return response.json();
+  }
+  
+  // 获取 PR 文件
+  private async getPRFiles(args: any) {
+    const { owner, repo, pull_number } = args;
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${pull_number}/files`,
+      {
+        headers: {
+          'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      }
+    );
+    return response.json();
+  }
+  
+  // 创建审查评论
+  private async createReviewComment(args: any) {
+    const { owner, repo, pull_number, body, path, line } = args;
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${pull_number}/comments`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          body,
+          path,
+          line,
+          side: 'RIGHT',
+        }),
+      }
+    );
+    return response.json();
+  }
+}
+```
+
+**MCP 配置文件**：
+
+```json
+// mcp.json
+{
+  "mcpServers": {
+    "github": {
+      "command": "node",
+      "args": ["./mcp-servers/github.server.js"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "code-analysis": {
+      "command": "node",
+      "args": ["./mcp-servers/code-analysis.server.js"]
+    }
+  }
+}
+```
+
+**MCP 构建方法**：
+
+1. **定义 MCP Server**：
+```typescript
+class MyMCPServer extends MCPServer {
+  name = 'my-server';
+  version = '1.0.0';
+  
+  // 定义工具
+  tools = [...];
+  
+  // 实现工具调用
+  async callTool(name: string, args: any) {
+    // 实现逻辑
+  }
+}
+```
+
+2. **注册工具**：
+```typescript
+tools = [
+  {
+    name: 'tool_name',
+    description: '工具描述',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        param1: { type: 'string' },
+        param2: { type: 'number' },
+      },
+      required: ['param1'],
+    },
+  },
+];
+```
+
+3. **实现工具逻辑**：
+```typescript
+async callTool(name: string, args: any) {
+  // 1. 参数验证
+  this.validateArgs(name, args);
+  
+  // 2. 调用外部 API
+  const result = await this.callExternalAPI(args);
+  
+  // 3. 数据转换
+  return this.transformResult(result);
+}
+```
+
+---
+
+### 完整工作流程
+
+```typescript
+// agent.ts
+import { CodeReviewSkill } from './skills/code-review.skill';
+import { GitHubMCPServer } from './mcp-servers/github.server';
+
+class CodeReviewAgent {
+  private skill = CodeReviewSkill;
+  private github = new GitHubMCPServer();
+  
+  async reviewPullRequest(owner: string, repo: string, prNumber: number) {
+    // 1. 通过 MCP 获取 PR 信息
+    const pr = await this.github.callTool('get_pull_request', {
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+    
+    // 2. 通过 MCP 获取修改的文件
+    const files = await this.github.callTool('get_pr_files', {
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+    
+    // 3. 使用 Skill 审查每个文件
+    const allIssues: Issue[] = [];
+    for (const file of files) {
+      const code = file.patch; // 文件内容
+      const language = this.detectLanguage(file.filename);
+      
+      // 应用 Skill 的审查方法
+      const styleIssues = this.skill.methods.checkCodingStandards(code, language);
+      const securityIssues = this.skill.methods.checkSecurity(code);
+      const performanceIssues = this.skill.methods.checkPerformance(code);
+      
+      allIssues.push(...styleIssues, ...securityIssues, ...performanceIssues);
+    }
+    
+    // 4. 生成审查报告
+    const report = this.skill.methods.generateReport(allIssues);
+    
+    // 5. 通过 MCP 发布评论
+    for (const issue of allIssues) {
+      if (issue.severity === 'error') {
+        await this.github.callTool('create_review_comment', {
+          owner,
+          repo,
+          pull_number: prNumber,
+          body: `**${issue.type}**: ${issue.message}\n\n建议：${issue.suggestion}`,
+          path: issue.file,
+          line: issue.line,
+        });
+      }
+    }
+    
+    return report;
+  }
+}
+```
+
+**追问点**：
+- Q1：Skill 和 MCP 的区别是什么？（Skill 是知识，MCP 是工具）
+- Q2：如何测试 MCP Server？（单元测试 + 集成测试 + Mock 外部 API）
+- Q3：如何处理 MCP 调用失败？（重试机制 + 降级策略 + 错误日志）
+
+**Q7：如何将一个大项目分解，设计出一个多 Agent 协同工作的机制**
+
+**核心方法**：使用"分层分解 + 角色设计 + 协同机制"三步法
+
+---
+
+### 第一步：项目分解
+
+**示例项目**：构建一个智能客服系统
+
+**业务需求**：
+- 用户咨询问题（文本/语音）
+- 自动回答常见问题
+- 复杂问题转人工客服
+- 生成对话报告和分析
+
+**分解维度**：
+
+**1. 按功能模块分解**：
+```
+智能客服系统
+├── 用户交互模块（接收输入、展示回复）
+├── 意图识别模块（理解用户问题）
+├── 知识检索模块（查找答案）
+├── 对话管理模块（维护上下文）
+├── 人工转接模块（复杂问题处理）
+└── 数据分析模块（生成报告）
+```
+
+**2. 按处理流程分解**：
+```
+用户输入 → 预处理 → 意图识别 → 知识检索 → 答案生成 → 质量检查 → 返回用户
+```
+
+**3. 按数据流分解**：
+```
+输入数据（文本/语音）
+  ↓
+结构化数据（意图、实体、上下文）
+  ↓
+检索结果（候选答案）
+  ↓
+生成结果（最终回复）
+  ↓
+分析数据（对话日志、满意度）
+```
+
+---
+
+### 第二步：Agent 角色设计
+
+**设计原则**：
+- 单一职责：每个 Agent 只负责一个明确的任务
+- 松耦合：Agent 之间通过消息通信，不直接依赖
+- 可扩展：可以动态添加或移除 Agent
+- 容错性：单个 Agent 失败不影响整体系统
+
+**Agent 角色定义**：
+
+```typescript
+// agents/types.ts
+interface Agent {
+  id: string;              // Agent 唯一标识
+  name: string;            // Agent 名称
+  role: string;            // Agent 角色
+  capabilities: string[];  // Agent 能力列表
+  dependencies: string[];  // 依赖的其他 Agent
+  priority: number;        // 优先级（1-10）
+}
+
+// 1. 输入处理 Agent
+const InputAgent: Agent = {
+  id: 'input-agent',
+  name: '输入处理器',
+  role: 'preprocessor',
+  capabilities: [
+    '文本清洗',
+    '语音转文字',
+    '敏感词过滤',
+    '格式标准化',
+  ],
+  dependencies: [],
+  priority: 10, // 最高优先级
+};
+
+// 2. 意图识别 Agent
+const IntentAgent: Agent = {
+  id: 'intent-agent',
+  name: '意图识别器',
+  role: 'classifier',
+  capabilities: [
+    '意图分类（咨询、投诉、建议等）',
+    '实体提取（产品名、订单号等）',
+    '情感分析（正面、负面、中性）',
+  ],
+  dependencies: ['input-agent'],
+  priority: 9,
+};
+
+// 3. 知识检索 Agent
+const RetrievalAgent: Agent = {
+  id: 'retrieval-agent',
+  name: '知识检索器',
+  role: 'retriever',
+  capabilities: [
+    '向量检索（语义相似度）',
+    '关键词检索（精确匹配）',
+    '混合检索（向量 + 关键词）',
+    '结果排序和过滤',
+  ],
+  dependencies: ['intent-agent'],
+  priority: 8,
+};
+
+// 4. 答案生成 Agent
+const GenerationAgent: Agent = {
+  id: 'generation-agent',
+  name: '答案生成器',
+  role: 'generator',
+  capabilities: [
+    '基于检索结果生成回复',
+    '多轮对话管理',
+    '个性化回复（根据用户画像）',
+    '多语言支持',
+  ],
+  dependencies: ['retrieval-agent'],
+  priority: 7,
+};
+
+// 5. 质量检查 Agent
+const QualityAgent: Agent = {
+  id: 'quality-agent',
+  name: '质量检查器',
+  role: 'validator',
+  capabilities: [
+    '答案准确性检查',
+    '敏感信息检查',
+    '语法和拼写检查',
+    '置信度评估',
+  ],
+  dependencies: ['generation-agent'],
+  priority: 6,
+};
+
+// 6. 人工转接 Agent
+const EscalationAgent: Agent = {
+  id: 'escalation-agent',
+  name: '人工转接器',
+  role: 'escalator',
+  capabilities: [
+    '判断是否需要人工介入',
+    '分配合适的客服人员',
+    '传递对话上下文',
+  ],
+  dependencies: ['quality-agent'],
+  priority: 5,
+};
+
+// 7. 数据分析 Agent
+const AnalyticsAgent: Agent = {
+  id: 'analytics-agent',
+  name: '数据分析器',
+  role: 'analyzer',
+  capabilities: [
+    '对话日志记录',
+    '用户满意度分析',
+    '常见问题统计',
+    '性能指标监控',
+  ],
+  dependencies: [],
+  priority: 1, // 后台运行，优先级最低
+};
+```
+
+---
+
+### 第三步：协同机制设计
+
+**1. 消息总线（Message Bus）**：
+
+```typescript
+// message-bus.ts
+interface Message {
+  id: string;              // 消息 ID
+  from: string;            // 发送者 Agent ID
+  to: string | string[];   // 接收者 Agent ID（支持广播）
+  type: string;            // 消息类型
+  payload: any;            // 消息内容
+  timestamp: number;       // 时间戳
+  priority: number;        // 优先级
+}
+
+class MessageBus {
+  private subscribers = new Map<string, Set<(msg: Message) => void>>();
+  private messageQueue: Message[] = [];
+  
+  // 订阅消息
+  subscribe(agentId: string, handler: (msg: Message) => void) {
+    if (!this.subscribers.has(agentId)) {
+      this.subscribers.set(agentId, new Set());
+    }
+    this.subscribers.get(agentId)!.add(handler);
+  }
+  
+  // 发布消息
+  publish(message: Message) {
+    // 添加到队列
+    this.messageQueue.push(message);
+    
+    // 按优先级排序
+    this.messageQueue.sort((a, b) => b.priority - a.priority);
+    
+    // 分发消息
+    this.dispatch();
+  }
+  
+  // 分发消息
+  private dispatch() {
+    while (this.messageQueue.length > 0) {
+      const message = this.messageQueue.shift()!;
+      
+      // 单播
+      if (typeof message.to === 'string') {
+        const handlers = this.subscribers.get(message.to);
+        if (handlers) {
+          handlers.forEach(handler => handler(message));
+        }
+      }
+      // 广播
+      else {
+        message.to.forEach(agentId => {
+          const handlers = this.subscribers.get(agentId);
+          if (handlers) {
+            handlers.forEach(handler => handler(message));
+          }
+        });
+      }
+    }
+  }
+}
+```
+
+**2. 工作流编排（Workflow Orchestration）**：
+
+```typescript
+// workflow.ts
+interface WorkflowStep {
+  agent: string;           // Agent ID
+  action: string;          // 执行的动作
+  input: any;              // 输入数据
+  condition?: (result: any) => boolean; // 条件判断
+  onSuccess?: string;      // 成功后的下一步
+  onFailure?: string;      // 失败后的下一步
+}
+
+class Workflow {
+  private steps: WorkflowStep[] = [];
+  private currentStep = 0;
+  private context = new Map<string, any>();
+  
+  // 添加步骤
+  addStep(step: WorkflowStep) {
+    this.steps.push(step);
+  }
+  
+  // 执行工作流
+  async execute(initialInput: any) {
+    this.context.set('input', initialInput);
+    
+    while (this.currentStep < this.steps.length) {
+      const step = this.steps[this.currentStep];
+      
+      try {
+        // 执行 Agent 动作
+        const result = await this.executeAgent(step);
+        
+        // 保存结果到上下文
+        this.context.set(step.agent, result);
+        
+        // 条件判断
+        if (step.condition && !step.condition(result)) {
+          // 跳转到失败分支
+          if (step.onFailure) {
+            this.currentStep = this.findStep(step.onFailure);
+            continue;
+          }
+        }
+        
+        // 跳转到成功分支
+        if (step.onSuccess) {
+          this.currentStep = this.findStep(step.onSuccess);
+        } else {
+          this.currentStep++;
+        }
+      } catch (error) {
+        console.error(`Agent ${step.agent} failed:`, error);
+        
+        // 跳转到失败分支
+        if (step.onFailure) {
+          this.currentStep = this.findStep(step.onFailure);
+        } else {
+          throw error;
+        }
+      }
+    }
+    
+    return this.context.get('output');
+  }
+  
+  private async executeAgent(step: WorkflowStep): Promise<any> {
+    // 调用 Agent 的方法
+    const agent = AgentRegistry.get(step.agent);
+    return agent[step.action](step.input, this.context);
+  }
+  
+  private findStep(agentId: string): number {
+    return this.steps.findIndex(s => s.agent === agentId);
+  }
+}
+```
+
+**3. 完整示例**：
+
+```typescript
+// main.ts
+import { MessageBus } from './message-bus';
+import { Workflow } from './workflow';
+
+// 创建消息总线
+const messageBus = new MessageBus();
+
+// 创建工作流
+const workflow = new Workflow();
+
+// 定义工作流步骤
+workflow.addStep({
+  agent: 'input-agent',
+  action: 'preprocess',
+  input: { text: '用户输入' },
+  onSuccess: 'intent-agent',
+});
+
+workflow.addStep({
+  agent: 'intent-agent',
+  action: 'classify',
+  input: { text: '预处理后的文本' },
+  condition: (result) => result.confidence > 0.8,
+  onSuccess: 'retrieval-agent',
+  onFailure: 'escalation-agent', // 置信度低，转人工
+});
+
+workflow.addStep({
+  agent: 'retrieval-agent',
+  action: 'search',
+  input: { intent: '意图', entities: '实体' },
+  onSuccess: 'generation-agent',
+});
+
+workflow.addStep({
+  agent: 'generation-agent',
+  action: 'generate',
+  input: { context: '检索结果' },
+  onSuccess: 'quality-agent',
+});
+
+workflow.addStep({
+  agent: 'quality-agent',
+  action: 'validate',
+  input: { answer: '生成的答案' },
+  condition: (result) => result.isValid,
+  onSuccess: 'output',
+  onFailure: 'escalation-agent', // 质量不合格，转人工
+});
+
+workflow.addStep({
+  agent: 'escalation-agent',
+  action: 'escalate',
+  input: { reason: '需要人工介入' },
+  onSuccess: 'output',
+});
+
+// 执行工作流
+const result = await workflow.execute({
+  text: '我的订单什么时候发货？',
+  userId: '12345',
+});
+
+console.log('最终回复:', result);
+```
+
+**4. 通信协议**：
+
+```typescript
+// protocol.ts
+enum MessageType {
+  REQUEST = 'request',      // 请求
+  RESPONSE = 'response',    // 响应
+  EVENT = 'event',          // 事件
+  COMMAND = 'command',      // 命令
+}
+
+interface RequestMessage extends Message {
+  type: MessageType.REQUEST;
+  payload: {
+    action: string;         // 请求的动作
+    params: any;            // 参数
+    timeout?: number;       // 超时时间
+  };
+}
+
+interface ResponseMessage extends Message {
+  type: MessageType.RESPONSE;
+  payload: {
+    success: boolean;       // 是否成功
+    data?: any;             // 返回数据
+    error?: string;         // 错误信息
+  };
+}
+
+interface EventMessage extends Message {
+  type: MessageType.EVENT;
+  payload: {
+    event: string;          // 事件名称
+    data: any;              // 事件数据
+  };
+}
+```
+
+---
+
+### 实战技巧
+
+**1. 错误处理和重试**：
+
+```typescript
+class ResilientAgent {
+  async execute(action: string, input: any, retries = 3): Promise<any> {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await this[action](input);
+      } catch (error) {
+        console.error(`Attempt ${i + 1} failed:`, error);
+        
+        if (i === retries - 1) {
+          // 最后一次重试失败，降级处理
+          return this.fallback(action, input);
+        }
+        
+        // 指数退避
+        await this.sleep(Math.pow(2, i) * 1000);
+      }
+    }
+  }
+  
+  private async fallback(action: string, input: any): Promise<any> {
+    // 降级策略：返回默认回复或转人工
+    return {
+      success: false,
+      message: '抱歉，系统繁忙，请稍后再试或联系人工客服',
+    };
+  }
+  
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+```
+
+**2. 性能监控**：
+
+```typescript
+class MonitoredAgent {
+  private metrics = {
+    totalRequests: 0,
+    successRequests: 0,
+    failedRequests: 0,
+    avgResponseTime: 0,
+  };
+  
+  async execute(action: string, input: any): Promise<any> {
+    const startTime = Date.now();
+    this.metrics.totalRequests++;
+    
+    try {
+      const result = await this[action](input);
+      this.metrics.successRequests++;
+      return result;
+    } catch (error) {
+      this.metrics.failedRequests++;
+      throw error;
+    } finally {
+      const duration = Date.now() - startTime;
+      this.updateAvgResponseTime(duration);
+      
+      // 发送监控数据
+      this.sendMetrics();
+    }
+  }
+  
+  private updateAvgResponseTime(duration: number) {
+    const total = this.metrics.avgResponseTime * (this.metrics.totalRequests - 1);
+    this.metrics.avgResponseTime = (total + duration) / this.metrics.totalRequests;
+  }
+}
+```
+
+**3. 动态扩展**：
+
+```typescript
+class AgentRegistry {
+  private static agents = new Map<string, any>();
+  
+  // 注册 Agent
+  static register(agent: Agent) {
+    this.agents.set(agent.id, agent);
+  }
+  
+  // 注销 Agent
+  static unregister(agentId: string) {
+    this.agents.delete(agentId);
+  }
+  
+  // 获取 Agent
+  static get(agentId: string): any {
+    return this.agents.get(agentId);
+  }
+  
+  // 列出所有 Agent
+  static list(): Agent[] {
+    return Array.from(this.agents.values());
+  }
+}
+```
+
+---
+
+### 架构图
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        消息总线 (Message Bus)                 │
+└─────────────────────────────────────────────────────────────┘
+         ↑                ↑                ↑                ↑
+         │                │                │                │
+    ┌────┴────┐      ┌────┴────┐      ┌────┴────┐      ┌────┴────┐
+    │ Input   │      │ Intent  │      │Retrieval│      │Generation│
+    │ Agent   │─────→│ Agent   │─────→│ Agent   │─────→│ Agent   │
+    └─────────┘      └─────────┘      └─────────┘      └─────────┘
+         │                                                    │
+         ↓                                                    ↓
+    ┌─────────┐                                          ┌─────────┐
+    │Analytics│                                          │ Quality │
+    │ Agent   │                                          │ Agent   │
+    └─────────┘                                          └─────────┘
+                                                              │
+                                                              ↓
+                                                         ┌─────────┐
+                                                         │Escalation│
+                                                         │ Agent   │
+                                                         └─────────┘
+```
+
+**追问点**：
+- Q1：如何处理 Agent 之间的循环依赖？（依赖注入 + 延迟加载）
+- Q2：如何保证消息的顺序性？（消息队列 + 优先级 + 时间戳）
+- Q3：如何实现 Agent 的热更新？（动态加载 + 版本管理 + 灰度发布）
+
 ---
 
 > 本文档基于 OpenAI、Anthropic、Google 官方指南编写，包含 150+ 实战示例。  

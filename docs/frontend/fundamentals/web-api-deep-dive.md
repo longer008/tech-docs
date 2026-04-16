@@ -1243,133 +1243,1166 @@ downloadWithProgress('/api/download/large-file', (progress) => {
 
 ## Drag and Drop API
 
+### API 概述
+
+Drag and Drop API 是 HTML5 提供的原生拖放功能，支持元素拖放、文件拖放、文本拖放等操作。
+
+**核心特性：**
+- 通过 `dataTransfer` 对象传递数据
+- 支持自定义拖放效果和拖放图像
+- 支持文件和文件夹拖放
+- 可与触摸事件结合实现移动端拖放
+
+### 拖放事件
+
+| 事件 | 触发时机 | 触发对象 | 是否需要 preventDefault | 说明 |
+|------|---------|---------|----------------------|------|
+| `dragstart` | 开始拖动元素时 | 被拖动元素 | 否 | 设置拖放数据、效果、图像 |
+| `drag` | 拖动过程中（持续触发） | 被拖动元素 | 否 | 可获取鼠标位置，频繁触发 |
+| `dragend` | 拖动结束时 | 被拖动元素 | 否 | 清理状态、检查拖放结果 |
+| `dragenter` | 拖动元素进入目标时 | 放置目标 | 是 | 添加视觉反馈 |
+| `dragover` | 拖动元素在目标上方（持续触发） | 放置目标 | 是（必须） | 设置 dropEffect，允许放置 |
+| `dragleave` | 拖动元素离开目标时 | 放置目标 | 否 | 移除视觉反馈 |
+| `drop` | 在目标上放置元素时 | 放置目标 | 是（必须） | 获取数据、执行放置操作 |
+
+### DataTransfer 对象
+
+| 属性/方法 | 类型 | 说明 |
+|----------|------|------|
+| `effectAllowed` | 属性 | 设置允许的拖放效果：`'copy'` `'move'` `'link'` `'copyMove'` `'copyLink'` `'linkMove'` `'all'` `'none'` |
+| `dropEffect` | 属性 | 设置实际的拖放效果（在 `dragover` 中设置）：`'copy'` `'move'` `'link'` `'none'` |
+| `files` | 属性 | 拖放的文件列表（FileList 对象） |
+| `items` | 属性 | DataTransferItemList 对象，用于访问拖放项 |
+| `types` | 属性 | 拖放数据的 MIME 类型数组 |
+| `setData(format, data)` | 方法 | 设置拖放数据，format 为 MIME 类型（如 `'text/plain'`、`'text/html'`） |
+| `getData(format)` | 方法 | 获取拖放数据 |
+| `clearData([format])` | 方法 | 清除拖放数据，不传参数则清除所有 |
+| `setDragImage(img, x, y)` | 方法 | 设置自定义拖放图像，x/y 为鼠标相对图像的偏移量 |
+
 ### 1. 拖放基础
 
 ```javascript
-// 可拖放元素
+// Drag and Drop API 完整示例
+// 演示所有核心事件和方法的使用
+
+// 拖放事件流程
+const dragEvents = {
+  拖动元素: ['dragstart', 'drag', 'dragend'],
+  放置目标: ['dragenter', 'dragover', 'dragleave', 'drop']
+}
+
+// 1. 基础拖放示例
 const draggable = document.querySelector('.draggable')
 
+// 设置元素可拖放（必须设置 draggable 属性为 true）
 draggable.draggable = true
 
-// 拖放事件
+// ========== 拖动元素事件 ==========
+
+// dragstart - 开始拖放时触发（只触发一次）
+// 作用：设置拖放数据、拖放效果、自定义拖放图像
 draggable.addEventListener('dragstart', (e) => {
   console.log('开始拖放')
   
-  // 设置拖放数据
+  // setData() - 设置拖放数据（必须调用，否则拖放无效）
+  // 参数1：MIME 类型（'text/plain'、'text/html'、'text/uri-list' 等）
+  // 参数2：数据内容
   e.dataTransfer.setData('text/plain', e.target.id)
+  e.dataTransfer.setData('text/html', e.target.outerHTML)
   
-  // 设置拖放效果
+  // effectAllowed - 设置允许的拖放效果
+  // 可选值：'copy'（复制）、'move'（移动）、'link'（链接）
+  //        'copyMove'、'copyLink'、'linkMove'、'all'、'none'
   e.dataTransfer.effectAllowed = 'move'
   
-  // 设置拖放图像
+  // setDragImage() - 设置自定义拖放图像
+  // 参数1：图像元素（Image、Canvas 或任何 DOM 元素）
+  // 参数2：鼠标相对图像的 X 偏移量
+  // 参数3：鼠标相对图像的 Y 偏移量
   const img = new Image()
   img.src = 'drag-image.png'
-  e.dataTransfer.setDragImage(img, 0, 0)
+  e.dataTransfer.setDragImage(img, 10, 10)
+  
+  // 添加拖放样式（视觉反馈）
+  e.target.classList.add('dragging')
 })
 
+// drag - 拖放过程中持续触发（类似 mousemove）
+// 作用：跟踪拖放位置、实时更新 UI
+// 注意：频繁触发，避免在此执行耗时操作
 draggable.addEventListener('drag', (e) => {
-  console.log('拖放中')
+  // 可以获取当前鼠标位置
+  console.log('拖放中:', e.clientX, e.clientY)
+  
+  // 注意：在某些浏览器中，拖放到窗口外时 clientX/clientY 可能为 0
 })
 
+// dragend - 拖放结束时触发（无论成功或失败）
+// 作用：清理状态、检查拖放结果、恢复 UI
 draggable.addEventListener('dragend', (e) => {
   console.log('拖放结束')
+  
+  // 移除拖放样式
+  e.target.classList.remove('dragging')
+  
+  // dropEffect - 检查实际的拖放效果
+  // 可能值：'copy'、'move'、'link'、'none'（拖放失败）
+  if (e.dataTransfer.dropEffect === 'move') {
+    console.log('移动成功')
+    // 可以在这里删除原元素（如果是移动操作）
+  } else if (e.dataTransfer.dropEffect === 'none') {
+    console.log('拖放取消或失败')
+  }
 })
 
-// 放置目标
+// ========== 放置目标事件 ==========
+
 const dropzone = document.querySelector('.dropzone')
 
+// dragenter - 拖动元素进入放置区域时触发
+// 作用：添加视觉反馈、验证是否允许放置
+// 注意：必须调用 preventDefault()，否则无法触发 drop 事件
 dropzone.addEventListener('dragenter', (e) => {
-  e.preventDefault()
+  e.preventDefault() // ⚠️ 必须阻止默认行为
   console.log('进入放置区域')
+  
+  // 添加视觉反馈（高亮显示放置区域）
   dropzone.classList.add('drag-over')
+  
+  // 可以根据拖放数据类型决定是否允许放置
+  const types = e.dataTransfer.types
+  if (!types.includes('text/plain')) {
+    e.dataTransfer.dropEffect = 'none' // 不允许放置
+  }
 })
 
+// dragover - 拖动元素在放置区域上方时持续触发
+// 作用：设置 dropEffect、持续验证放置条件
+// 注意：⚠️ 必须调用 preventDefault()，否则无法触发 drop 事件
+//      这是最重要的事件，不阻止默认行为会导致拖放失败
 dropzone.addEventListener('dragover', (e) => {
-  e.preventDefault()
+  e.preventDefault() // ⚠️ 必须阻止默认行为（允许放置）
+  
+  // dropEffect - 设置放置效果（会显示对应的鼠标光标）
+  // 必须是 effectAllowed 允许的值之一
   e.dataTransfer.dropEffect = 'move'
+  
+  // 可以根据鼠标位置动态调整放置位置
+  // const rect = dropzone.getBoundingClientRect()
+  // const y = e.clientY - rect.top
 })
 
+// dragleave - 拖动元素离开放置区域时触发
+// 作用：移除视觉反馈
+// 注意：子元素也会触发此事件，需要判断是否真正离开
 dropzone.addEventListener('dragleave', (e) => {
-  console.log('离开放置区域')
-  dropzone.classList.remove('drag-over')
+  // 检查是否真正离开放置区域（不是进入子元素）
+  if (e.target === dropzone) {
+    console.log('离开放置区域')
+    
+    // 移除视觉反馈
+    dropzone.classList.remove('drag-over')
+  }
 })
 
+// drop - 在放置区域释放鼠标时触发
+// 作用：获取拖放数据、执行放置操作
+// 注意：必须调用 preventDefault()，否则浏览器会执行默认操作（如打开文件）
 dropzone.addEventListener('drop', (e) => {
-  e.preventDefault()
+  e.preventDefault() // ⚠️ 必须阻止默认行为（如打开拖放的文件）
   console.log('放置')
   
+  // 移除视觉反馈
   dropzone.classList.remove('drag-over')
   
-  // 获取拖放数据
-  const data = e.dataTransfer.getData('text/plain')
-  const element = document.getElementById(data)
+  // getData() - 获取拖放数据
+  // 参数：MIME 类型（必须与 setData 中的类型匹配）
+  const id = e.dataTransfer.getData('text/plain')
+  const html = e.dataTransfer.getData('text/html')
   
-  // 移动元素
-  dropzone.appendChild(element)
+  console.log('拖放数据:', { id, html })
+  
+  // types - 获取所有可用的数据类型
+  console.log('可用数据类型:', e.dataTransfer.types)
+  
+  // 执行放置操作（移动元素）
+  const element = document.getElementById(id)
+  if (element) {
+    dropzone.appendChild(element)
+  }
 })
 ```
 
-### 2. 文件拖放
+### 2. 文件拖放上传
 
 ```javascript
-// 文件拖放上传
-const dropzone = document.querySelector('.dropzone')
+// 文件拖放上传（支持多文件）
+// 演示如何处理文件拖放、验证文件类型和大小、上传文件
 
-dropzone.addEventListener('dragover', (e) => {
-  e.preventDefault()
-  e.dataTransfer.dropEffect = 'copy'
+const dropzone = document.querySelector('.file-dropzone')
+
+// 阻止浏览器默认打开文件行为
+// 必须在所有拖放事件中阻止默认行为
+;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropzone.addEventListener(eventName, (e) => {
+    e.preventDefault()    // 阻止默认行为（打开文件）
+    e.stopPropagation()   // 阻止事件冒泡
+  })
 })
 
+// 视觉反馈：进入和悬停时高亮显示
+;['dragenter', 'dragover'].forEach(eventName => {
+  dropzone.addEventListener(eventName, () => {
+    dropzone.classList.add('highlight')
+  })
+})
+
+// 视觉反馈：离开和放置时移除高亮
+;['dragleave', 'drop'].forEach(eventName => {
+  dropzone.addEventListener(eventName, () => {
+    dropzone.classList.remove('highlight')
+  })
+})
+
+// 处理文件拖放
 dropzone.addEventListener('drop', async (e) => {
-  e.preventDefault()
-  
+  // files - 获取拖放的文件列表（FileList 对象）
+  // 注意：只有拖放文件时才有值，拖放元素时为空
   const files = Array.from(e.dataTransfer.files)
   
   console.log('拖放文件:', files)
   
-  // 上传文件
-  for (const file of files) {
+  // 文件类型验证
+  // file.type 返回 MIME 类型（如 'image/jpeg'、'application/pdf'）
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+  const validFiles = files.filter(file => allowedTypes.includes(file.type))
+  
+  if (validFiles.length !== files.length) {
+    alert('只支持 JPG、PNG、GIF 格式的图片')
+  }
+  
+  // 文件大小验证（5MB = 5 * 1024 * 1024 字节）
+  // file.size 返回文件大小（字节）
+  const maxSize = 5 * 1024 * 1024
+  const oversizedFiles = validFiles.filter(file => file.size > maxSize)
+  
+  if (oversizedFiles.length > 0) {
+    alert('文件大小不能超过 5MB')
+    return
+  }
+  
+  // 上传所有有效文件
+  for (const file of validFiles) {
     await uploadFile(file)
   }
 })
 
-// 拖放文件夹
+// 上传文件函数
+async function uploadFile(file) {
+  // 使用 FormData 上传文件
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  // 可以添加额外的字段
+  formData.append('filename', file.name)
+  formData.append('filesize', file.size)
+  
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+      // 注意：不要设置 Content-Type，浏览器会自动设置为 multipart/form-data
+    })
+    
+    const result = await response.json()
+    console.log('上传成功:', result)
+    
+    // 显示预览
+    displayPreview(file, result.url)
+  } catch (error) {
+    console.error('上传失败:', error)
+  }
+}
+
+// 显示文件预览
+function displayPreview(file, url) {
+  // 使用 FileReader 读取文件内容
+  const reader = new FileReader()
+  
+  // onload - 文件读取完成时触发
+  reader.onload = (e) => {
+    // e.target.result 包含文件的 Data URL
+    const preview = document.createElement('div')
+    preview.className = 'preview'
+    preview.innerHTML = `
+      <img src="${e.target.result}" alt="${file.name}">
+      <p>${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>
+    `
+    
+    dropzone.appendChild(preview)
+  }
+  
+  // readAsDataURL() - 将文件读取为 Data URL（base64 编码）
+  // 其他方法：readAsText()、readAsArrayBuffer()、readAsBinaryString()
+  reader.readAsDataURL(file)
+}
+```
+
+### 3. 文件夹拖放（递归读取）
+
+```javascript
+// 拖放文件夹并递归读取所有文件
+// 使用 DataTransferItemList API 和 File System Access API
+
 dropzone.addEventListener('drop', async (e) => {
   e.preventDefault()
   
+  // items - DataTransferItemList 对象，提供更强大的文件访问能力
+  // 与 files 的区别：
+  // - files: 只能获取文件，不能获取文件夹结构
+  // - items: 可以获取文件和文件夹，支持递归读取
   const items = Array.from(e.dataTransfer.items)
   
   for (const item of items) {
+    // kind - 数据类型：'file'（文件）或 'string'（文本数据）
     if (item.kind === 'file') {
+      // webkitGetAsEntry() - 获取文件系统入口（FileSystemEntry）
+      // 注意：这是 webkit 前缀的非标准 API，但被广泛支持
+      // 返回 FileSystemFileEntry（文件）或 FileSystemDirectoryEntry（目录）
       const entry = item.webkitGetAsEntry()
       
-      if (entry.isDirectory) {
-        await readDirectory(entry)
-      } else {
-        const file = item.getAsFile()
-        await uploadFile(file)
+      if (entry) {
+        await processEntry(entry)
       }
     }
   }
 })
 
-async function readDirectory(directoryEntry) {
-  const reader = directoryEntry.createReader()
-  
-  const entries = await new Promise((resolve, reject) => {
-    reader.readEntries(resolve, reject)
+// 递归处理文件系统入口
+async function processEntry(entry, path = '') {
+  // isFile - 判断是否为文件
+  if (entry.isFile) {
+    // 处理文件
+    const file = await getFile(entry)
+    console.log('文件:', path + file.name)
+    
+    // 可以访问文件的所有属性
+    console.log('文件信息:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: new Date(file.lastModified)
+    })
+    
+    await uploadFile(file)
+  } 
+  // isDirectory - 判断是否为目录
+  else if (entry.isDirectory) {
+    // 处理目录
+    console.log('目录:', path + entry.name)
+    
+    // 读取目录内容
+    const entries = await readDirectory(entry)
+    
+    // 递归处理子项
+    for (const childEntry of entries) {
+      await processEntry(childEntry, path + entry.name + '/')
+    }
+  }
+}
+
+// 读取目录内容
+function readDirectory(directoryEntry) {
+  return new Promise((resolve, reject) => {
+    // createReader() - 创建目录读取器（DirectoryReader）
+    const reader = directoryEntry.createReader()
+    const entries = []
+    
+    // readEntries() - 读取目录项
+    // 注意：一次调用可能无法读取所有项（浏览器限制），需要递归调用
+    // 当返回空数组时表示读取完成
+    function readEntries() {
+      reader.readEntries((results) => {
+        if (results.length === 0) {
+          // 读取完成
+          resolve(entries)
+        } else {
+          // 还有更多项，继续读取
+          entries.push(...results)
+          readEntries() // 递归调用
+        }
+      }, reject)
+    }
+    
+    readEntries()
   })
+}
+
+// 获取文件对象
+function getFile(fileEntry) {
+  return new Promise((resolve, reject) => {
+    // file() - 从 FileSystemFileEntry 获取 File 对象
+    // 回调函数接收 File 对象
+    fileEntry.file(resolve, reject)
+  })
+}
+```
+
+### 4. 拖放排序列表
+
+```javascript
+// 可拖放排序的列表
+// 演示如何实现列表项的拖放排序功能
+
+class DraggableList {
+  constructor(container) {
+    this.container = container
+    this.draggedElement = null  // 当前被拖动的元素
+    this.init()
+  }
   
-  for (const entry of entries) {
-    if (entry.isDirectory) {
-      await readDirectory(entry)
-    } else {
-      const file = await new Promise((resolve, reject) => {
-        entry.file(resolve, reject)
+  init() {
+    // 为所有列表项添加拖放功能
+    const items = this.container.querySelectorAll('.list-item')
+    
+    items.forEach(item => {
+      // 设置元素可拖放
+      item.draggable = true
+      
+      // 绑定所有拖放事件
+      item.addEventListener('dragstart', this.handleDragStart.bind(this))
+      item.addEventListener('dragenter', this.handleDragEnter.bind(this))
+      item.addEventListener('dragover', this.handleDragOver.bind(this))
+      item.addEventListener('dragleave', this.handleDragLeave.bind(this))
+      item.addEventListener('drop', this.handleDrop.bind(this))
+      item.addEventListener('dragend', this.handleDragEnd.bind(this))
+    })
+  }
+  
+  // 开始拖动
+  handleDragStart(e) {
+    // 保存被拖动的元素引用
+    this.draggedElement = e.target
+    
+    // 添加拖动样式
+    e.target.classList.add('dragging')
+    
+    // 设置拖放数据和效果
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', e.target.innerHTML)
+  }
+  
+  // 拖动元素进入目标
+  handleDragEnter(e) {
+    // 只在列表项上添加样式，且不是被拖动的元素本身
+    if (e.target.classList.contains('list-item') && e.target !== this.draggedElement) {
+      e.target.classList.add('drag-over')
+    }
+  }
+  
+  // 拖动元素在目标上方
+  handleDragOver(e) {
+    e.preventDefault()  // 必须阻止默认行为
+    e.dataTransfer.dropEffect = 'move'
+    return false
+  }
+  
+  // 拖动元素离开目标
+  handleDragLeave(e) {
+    // 移除高亮样式
+    e.target.classList.remove('drag-over')
+  }
+  
+  // 放置元素
+  handleDrop(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    // 只在列表项上执行放置，且不是被拖动的元素本身
+    if (e.target.classList.contains('list-item') && e.target !== this.draggedElement) {
+      // 计算拖放位置，交换元素位置
+      const allItems = Array.from(this.container.querySelectorAll('.list-item'))
+      const draggedIndex = allItems.indexOf(this.draggedElement)
+      const targetIndex = allItems.indexOf(e.target)
+      
+      // 根据拖放方向插入元素
+      if (draggedIndex < targetIndex) {
+        // 向下拖动：插入到目标元素之后
+        e.target.parentNode.insertBefore(this.draggedElement, e.target.nextSibling)
+      } else {
+        // 向上拖动：插入到目标元素之前
+        e.target.parentNode.insertBefore(this.draggedElement, e.target)
+      }
+      
+      // 移除高亮样式
+      e.target.classList.remove('drag-over')
+    }
+    
+    return false
+  }
+  
+  // 拖动结束
+  handleDragEnd(e) {
+    // 移除拖动样式
+    e.target.classList.remove('dragging')
+    
+    // 清理所有列表项的高亮样式
+    const items = this.container.querySelectorAll('.list-item')
+    items.forEach(item => {
+      item.classList.remove('drag-over')
+    })
+    
+    // 清空拖动元素引用
+    this.draggedElement = null
+  }
+}
+
+// 使用示例
+const list = document.querySelector('.sortable-list')
+new DraggableList(list)
+```
+
+### 5. 拖放到不同容器
+
+```javascript
+// 多个容器之间拖放
+class DragDropManager {
+  constructor() {
+    this.containers = document.querySelectorAll('.drag-container')
+    this.init()
+  }
+  
+  init() {
+    this.containers.forEach(container => {
+      // 拖动元素
+      const items = container.querySelectorAll('.drag-item')
+      items.forEach(item => {
+        item.draggable = true
+        item.addEventListener('dragstart', this.handleDragStart.bind(this))
+        item.addEventListener('dragend', this.handleDragEnd.bind(this))
       })
       
-      await uploadFile(file)
+      // 放置容器
+      container.addEventListener('dragenter', this.handleDragEnter.bind(this))
+      container.addEventListener('dragover', this.handleDragOver.bind(this))
+      container.addEventListener('dragleave', this.handleDragLeave.bind(this))
+      container.addEventListener('drop', this.handleDrop.bind(this))
+    })
+  }
+  
+  handleDragStart(e) {
+    e.target.classList.add('dragging')
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', e.target.dataset.id)
+  }
+  
+  handleDragEnd(e) {
+    e.target.classList.remove('dragging')
+  }
+  
+  handleDragEnter(e) {
+    if (e.target.classList.contains('drag-container')) {
+      e.target.classList.add('drag-over')
     }
+  }
+  
+  handleDragOver(e) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+  
+  handleDragLeave(e) {
+    if (e.target.classList.contains('drag-container')) {
+      e.target.classList.remove('drag-over')
+    }
+  }
+  
+  handleDrop(e) {
+    e.preventDefault()
+    
+    if (e.target.classList.contains('drag-container')) {
+      e.target.classList.remove('drag-over')
+      
+      const id = e.dataTransfer.getData('text/plain')
+      const draggedElement = document.querySelector(`[data-id="${id}"]`)
+      
+      if (draggedElement) {
+        e.target.appendChild(draggedElement)
+        
+        // 触发自定义事件
+        const event = new CustomEvent('itemMoved', {
+          detail: {
+            item: draggedElement,
+            from: draggedElement.parentElement,
+            to: e.target
+          }
+        })
+        document.dispatchEvent(event)
+      }
+    }
+  }
+}
+
+// 使用
+const manager = new DragDropManager()
+
+// 监听移动事件
+document.addEventListener('itemMoved', (e) => {
+  console.log('元素移动:', e.detail)
+})
+```
+
+### 6. 拖放与触摸事件兼容
+
+```javascript
+// 同时支持鼠标拖放和触摸拖放
+class TouchDragDrop {
+  constructor(element) {
+    this.element = element
+    this.isDragging = false
+    this.currentX = 0
+    this.currentY = 0
+    this.initialX = 0
+    this.initialY = 0
+    this.xOffset = 0
+    this.yOffset = 0
+    
+    this.init()
+  }
+  
+  init() {
+    // 鼠标事件
+    this.element.addEventListener('dragstart', this.dragStart.bind(this))
+    this.element.addEventListener('dragend', this.dragEnd.bind(this))
+    
+    // 触摸事件
+    this.element.addEventListener('touchstart', this.touchStart.bind(this), { passive: false })
+    this.element.addEventListener('touchmove', this.touchMove.bind(this), { passive: false })
+    this.element.addEventListener('touchend', this.touchEnd.bind(this))
+  }
+  
+  // 鼠标拖放
+  dragStart(e) {
+    this.isDragging = true
+    this.element.classList.add('dragging')
+  }
+  
+  dragEnd(e) {
+    this.isDragging = false
+    this.element.classList.remove('dragging')
+  }
+  
+  // 触摸拖放
+  touchStart(e) {
+    e.preventDefault()
+    
+    this.initialX = e.touches[0].clientX - this.xOffset
+    this.initialY = e.touches[0].clientY - this.yOffset
+    
+    this.isDragging = true
+    this.element.classList.add('dragging')
+  }
+  
+  touchMove(e) {
+    if (this.isDragging) {
+      e.preventDefault()
+      
+      this.currentX = e.touches[0].clientX - this.initialX
+      this.currentY = e.touches[0].clientY - this.initialY
+      
+      this.xOffset = this.currentX
+      this.yOffset = this.currentY
+      
+      this.setTranslate(this.currentX, this.currentY)
+    }
+  }
+  
+  touchEnd(e) {
+    this.isDragging = false
+    this.element.classList.remove('dragging')
+    
+    // 检查是否放置在目标区域
+    const dropzone = document.elementFromPoint(
+      e.changedTouches[0].clientX,
+      e.changedTouches[0].clientY
+    )
+    
+    if (dropzone && dropzone.classList.contains('dropzone')) {
+      dropzone.appendChild(this.element)
+      this.xOffset = 0
+      this.yOffset = 0
+      this.setTranslate(0, 0)
+    }
+  }
+  
+  setTranslate(xPos, yPos) {
+    this.element.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`
+  }
+}
+
+// 使用
+const draggables = document.querySelectorAll('.touch-draggable')
+draggables.forEach(el => new TouchDragDrop(el))
+```
+
+### 7. 完整示例：看板拖放
+
+```javascript
+// Kanban 看板拖放系统
+class KanbanBoard {
+  constructor(boardElement) {
+    this.board = boardElement
+    this.columns = this.board.querySelectorAll('.kanban-column')
+    this.init()
+  }
+  
+  init() {
+    // 初始化所有卡片
+    this.columns.forEach(column => {
+      this.initColumn(column)
+    })
+  }
+  
+  initColumn(column) {
+    const cards = column.querySelectorAll('.kanban-card')
+    
+    // 卡片可拖放
+    cards.forEach(card => {
+      card.draggable = true
+      card.addEventListener('dragstart', this.handleCardDragStart.bind(this))
+      card.addEventListener('dragend', this.handleCardDragEnd.bind(this))
+    })
+    
+    // 列可接收拖放
+    column.addEventListener('dragenter', this.handleColumnDragEnter.bind(this))
+    column.addEventListener('dragover', this.handleColumnDragOver.bind(this))
+    column.addEventListener('dragleave', this.handleColumnDragLeave.bind(this))
+    column.addEventListener('drop', this.handleColumnDrop.bind(this))
+  }
+  
+  handleCardDragStart(e) {
+    e.target.classList.add('dragging')
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', e.target.dataset.cardId)
+    
+    // 设置拖放图像
+    const ghost = e.target.cloneNode(true)
+    ghost.style.opacity = '0.5'
+    document.body.appendChild(ghost)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
+    setTimeout(() => ghost.remove(), 0)
+  }
+  
+  handleCardDragEnd(e) {
+    e.target.classList.remove('dragging')
+  }
+  
+  handleColumnDragEnter(e) {
+    e.preventDefault()
+    
+    if (e.target.classList.contains('kanban-column')) {
+      e.target.classList.add('drag-over')
+    }
+  }
+  
+  handleColumnDragOver(e) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    
+    // 获取拖放位置
+    const column = e.target.closest('.kanban-column')
+    if (!column) return
+    
+    const afterElement = this.getDragAfterElement(column, e.clientY)
+    const draggable = document.querySelector('.dragging')
+    
+    if (afterElement == null) {
+      column.appendChild(draggable)
+    } else {
+      column.insertBefore(draggable, afterElement)
+    }
+  }
+  
+  handleColumnDragLeave(e) {
+    if (e.target.classList.contains('kanban-column')) {
+      e.target.classList.remove('drag-over')
+    }
+  }
+  
+  handleColumnDrop(e) {
+    e.preventDefault()
+    
+    const column = e.target.closest('.kanban-column')
+    if (!column) return
+    
+    column.classList.remove('drag-over')
+    
+    const cardId = e.dataTransfer.getData('text/plain')
+    const card = document.querySelector(`[data-card-id="${cardId}"]`)
+    
+    if (card) {
+      // 更新后端
+      this.updateCardStatus(cardId, column.dataset.status)
+    }
+  }
+  
+  getDragAfterElement(column, y) {
+    const draggableElements = [
+      ...column.querySelectorAll('.kanban-card:not(.dragging)')
+    ]
+    
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect()
+      const offset = y - box.top - box.height / 2
+      
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child }
+      } else {
+        return closest
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element
+  }
+  
+  async updateCardStatus(cardId, status) {
+    try {
+      await fetch(`/api/cards/${cardId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      
+      console.log('卡片状态已更新')
+    } catch (error) {
+      console.error('更新失败:', error)
+    }
+  }
+}
+
+// 使用
+const board = document.querySelector('.kanban-board')
+new KanbanBoard(board)
+```
+
+### 9. 面试要点
+
+**Q1: dragover 事件为什么必须调用 preventDefault()？**
+
+A: 因为浏览器默认不允许在元素上放置拖动的内容。如果不调用 `preventDefault()`，`drop` 事件不会触发，拖放操作会失败。这是 Drag and Drop API 最容易出错的地方。
+
+```javascript
+// ❌ 错误：不阻止默认行为，drop 事件不会触发
+dropzone.addEventListener('dragover', (e) => {
+  e.dataTransfer.dropEffect = 'move'
+})
+
+// ✅ 正确：必须阻止默认行为
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault()  // 允许放置
+  e.dataTransfer.dropEffect = 'move'
+})
+```
+
+**Q2: effectAllowed 和 dropEffect 有什么区别？**
+
+A: 
+- `effectAllowed`：在 `dragstart` 中设置，定义允许的拖放效果（如 'copy'、'move'、'link'）
+- `dropEffect`：在 `dragover` 中设置，定义实际的拖放效果，必须是 `effectAllowed` 允许的值之一
+- `dropEffect` 会影响鼠标光标的显示
+
+```javascript
+// dragstart 中设置允许的效果
+draggable.addEventListener('dragstart', (e) => {
+  e.dataTransfer.effectAllowed = 'copyMove'  // 允许复制或移动
+})
+
+// dragover 中设置实际效果
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'copy'  // 实际使用复制效果
+})
+```
+
+**Q3: 如何区分拖放元素和拖放文件？**
+
+A: 通过检查 `dataTransfer.files` 和 `dataTransfer.types`：
+
+```javascript
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault()
+  
+  // 检查是否拖放了文件
+  if (e.dataTransfer.files.length > 0) {
+    console.log('拖放文件:', e.dataTransfer.files)
+    // 处理文件
+  } else {
+    // 检查数据类型
+    console.log('数据类型:', e.dataTransfer.types)
+    // 处理元素拖放
+    const data = e.dataTransfer.getData('text/plain')
+  }
+})
+```
+
+**Q4: 如何实现拖放时的自定义预览图像？**
+
+A: 使用 `setDragImage()` 方法：
+
+```javascript
+draggable.addEventListener('dragstart', (e) => {
+  // 方法1：使用现有图片
+  const img = new Image()
+  img.src = 'preview.png'
+  e.dataTransfer.setDragImage(img, 0, 0)
+  
+  // 方法2：使用 Canvas
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  canvas.width = 100
+  canvas.height = 100
+  ctx.fillStyle = '#3498db'
+  ctx.fillRect(0, 0, 100, 100)
+  e.dataTransfer.setDragImage(canvas, 50, 50)
+  
+  // 方法3：克隆当前元素
+  const clone = e.target.cloneNode(true)
+  clone.style.opacity = '0.5'
+  document.body.appendChild(clone)
+  e.dataTransfer.setDragImage(clone, 0, 0)
+  setTimeout(() => clone.remove(), 0)
+})
+```
+
+**Q5: 如何处理拖放时的数据安全问题？**
+
+A: 
+1. 验证数据来源和类型
+2. 对拖放数据进行清理和验证
+3. 使用白名单验证文件类型
+4. 限制文件大小
+5. 在服务端再次验证
+
+```javascript
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault()
+  
+  // 1. 验证数据类型
+  const allowedTypes = ['text/plain', 'text/html']
+  const hasValidType = e.dataTransfer.types.some(type => 
+    allowedTypes.includes(type)
+  )
+  
+  if (!hasValidType) {
+    console.error('不支持的数据类型')
+    return
+  }
+  
+  // 2. 清理 HTML 数据（防止 XSS）
+  const html = e.dataTransfer.getData('text/html')
+  const sanitized = DOMPurify.sanitize(html)  // 使用 DOMPurify 库
+  
+  // 3. 验证文件
+  if (e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0]
+    
+    // 验证文件类型（MIME type 可以伪造，需要服务端再次验证）
+    const allowedFileTypes = ['image/jpeg', 'image/png']
+    if (!allowedFileTypes.includes(file.type)) {
+      console.error('不支持的文件类型')
+      return
+    }
+    
+    // 验证文件大小
+    const maxSize = 5 * 1024 * 1024  // 5MB
+    if (file.size > maxSize) {
+      console.error('文件过大')
+      return
+    }
+    
+    // 验证文件扩展名
+    const ext = file.name.split('.').pop().toLowerCase()
+    if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+      console.error('不支持的文件扩展名')
+      return
+    }
+  }
+})
+```
+
+**Q6: 如何实现跨窗口拖放？**
+
+A: 使用 `dataTransfer` 传递数据，但有限制：
+
+```javascript
+// 窗口 A：设置数据
+draggable.addEventListener('dragstart', (e) => {
+  // 只能传递字符串数据
+  e.dataTransfer.setData('text/plain', JSON.stringify({
+    id: 123,
+    name: 'Item'
+  }))
+  
+  // 不能传递对象引用或函数
+})
+
+// 窗口 B：接收数据
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault()
+  
+  const data = JSON.parse(e.dataTransfer.getData('text/plain'))
+  console.log('接收到数据:', data)
+})
+```
+
+**注意事项：**
+1. 跨窗口拖放只能传递字符串数据
+2. 不能传递对象引用、函数、DOM 元素
+3. 需要考虑同源策略限制
+4. 移动端支持有限，需要使用触摸事件模拟
+
+### 8. CSS 样式
+
+```css
+/* ========== 基础拖放样式 ========== */
+
+/* 可拖放元素 */
+.draggable {
+  cursor: move;              /* 鼠标悬停时显示移动光标 */
+  user-select: none;         /* 禁止文本选择 */
+  -webkit-user-drag: element; /* Safari 支持 */
+}
+
+/* 拖动中的元素 */
+.dragging {
+  opacity: 0.5;              /* 半透明效果 */
+  cursor: grabbing;          /* 抓取光标 */
+  transform: rotate(2deg);   /* 轻微旋转 */
+}
+
+/* 放置目标高亮 */
+.drag-over {
+  background-color: #e3f2fd; /* 浅蓝色背景 */
+  border: 2px dashed #2196f3; /* 虚线边框 */
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.3); /* 发光效果 */
+}
+
+/* ========== 文件拖放区域 ========== *//* ========== 文件拖放区域 ========== */
+
+.file-dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* 拖放悬停状态 */
+.file-dropzone.highlight {
+  border-color: #2196f3;
+  background-color: #e3f2fd;
+  transform: scale(1.02);    /* 轻微放大 */
+}
+
+/* ========== 列表项样式 ========== */
+
+.list-item {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: move;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* 列表项悬停 */
+.list-item:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
+}
+
+/* 拖动中的列表项 */
+.list-item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg) scale(0.95);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* 放置目标列表项 */
+.list-item.drag-over {
+  border-top: 3px solid #2196f3;
+  margin-top: 12px;          /* 增加间距 */
+}
+
+/* ========== Kanban 看板样式 ========== */
+
+.kanban-board {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #f0f0f0;
+  min-height: 100vh;
+  overflow-x: auto;
+}
+
+/* 看板列 */
+.kanban-column {
+  flex: 1;
+  min-width: 300px;
+  max-width: 350px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 500px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 列拖放悬停 */
+.kanban-column.drag-over {
+  background: #e3f2fd;
+  border: 2px dashed #2196f3;
+}
+
+/* 看板卡片 */
+.kanban-card {
+  background: white;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: move;
+  transition: all 0.2s ease;
+}
+
+/* 卡片悬停 */
+.kanban-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+/* 拖动中的卡片 */
+.kanban-card.dragging {
+  opacity: 0.5;
+  transform: rotate(3deg);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* ========== 响应式设计 ========== */
+
+@media (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
+  }
+  
+  .kanban-column {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .file-dropzone {
+    padding: 20px;
   }
 }
 ```

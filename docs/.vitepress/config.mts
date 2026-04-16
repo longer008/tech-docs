@@ -327,6 +327,7 @@ export default withPwa(
             collapsed: true,
             items: [
               { text: '概述', link: '/frontend/webpack-vite/' },
+              { text: 'Vite 进阶', link: '/frontend/webpack-vite/vite-advanced' },
               { text: '题库', link: '/frontend/webpack-vite/interview-bank' },
             ]
           },
@@ -553,6 +554,7 @@ export default withPwa(
             items: [
               { text: '概述', link: '/fullstack/' },
               { text: '全栈面试题', link: '/fullstack/fullstack-interview' },
+              { text: '全栈进阶', link: '/fullstack/advanced-topics' },
             ]
           }
         ],

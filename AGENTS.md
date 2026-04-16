@@ -2763,3 +2763,140 @@
   **现在资源文件可以正常加载了**
 
 - 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
+
+
+### 2025-02-24（优化 Drag and Drop API 文档）
+- ✅ **为 Drag and Drop API 章节添加详细说明**
+  
+  **优化内容**：
+  1. ✅ 添加 API 概述和核心特性说明
+  2. ✅ 添加完整的事件参考表格（7个事件）
+     - 包含触发时机、触发对象、是否需要 preventDefault、详细说明
+  3. ✅ 添加 DataTransfer 对象属性和方法表格（9个）
+     - 包含类型、详细说明、使用场景
+  4. ✅ 为所有代码示例添加详细的中文注释
+     - dragstart、drag、dragend 事件说明
+     - dragenter、dragover、dragleave、drop 事件说明
+     - setData()、getData()、setDragImage() 方法说明
+     - effectAllowed、dropEffect 属性说明
+  5. ✅ 优化文件拖放上传示例
+     - 添加 files、items 属性说明
+     - 添加文件类型、大小验证说明
+     - 添加 FileReader API 说明
+  6. ✅ 优化文件夹拖放示例
+     - 添加 DataTransferItemList API 说明
+     - 添加 webkitGetAsEntry() 方法说明
+     - 添加 isFile、isDirectory 属性说明
+     - 添加 createReader()、readEntries() 方法说明
+  7. ✅ 优化拖放排序列表示例
+     - 为每个事件处理函数添加详细注释
+     - 说明拖放位置计算逻辑
+  8. ✅ 添加完整的面试要点（6个问题）
+     - Q1: dragover 为什么必须 preventDefault
+     - Q2: effectAllowed 和 dropEffect 的区别
+     - Q3: 如何区分拖放元素和文件
+     - Q4: 如何实现自定义预览图像
+     - Q5: 如何处理数据安全问题
+     - Q6: 如何实现跨窗口拖放
+  9. ✅ 优化 CSS 样式部分
+     - 添加详细的样式注释
+     - 添加响应式设计样式
+     - 添加悬停和过渡效果
+  
+  **技术覆盖**：
+  - 7个拖放事件的完整说明
+  - DataTransfer 对象的 9个属性和方法
+  - 文件和文件夹拖放处理
+  - 拖放排序和多容器拖放
+  - 触摸事件兼容
+  - 看板系统完整实现
+  - 数据安全和跨窗口拖放
+  
+  **文档特点**：
+  - 每个事件和方法都有详细说明
+  - 所有代码示例包含详细中文注释
+  - 提供完整的 API 参考表格
+  - 包含实战场景和最佳实践
+  - 适合面试准备和实际开发参考
+
+- 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
+  - frontend/fundamentals 目录：19/19 文件（100%）
+    - ✅ web-api-deep-dive.md（Drag and Drop API 章节已优化）
+
+
+### 2025-02-24（补充 AI 面试高级问题）
+- ✅ **补充 Prompt Engineering 面试文档高级问题**
+  - 文件：`docs/ai-interview/prompt-engineering-interview.md`
+  - 新增内容：~1500+ 行，100+ 代码示例
+  
+  **新增问题**：
+  1. **Q5：如何将复杂项目需求转化成清晰的提示词**（~500 行）
+     - 需求分解方法（识别目标、约束、功能、输出）
+     - CO-STAR 框架应用（Context、Objective、Style、Tone、Audience、Response）
+     - 迭代优化流程（从模糊到精确的 4 个版本）
+     - 实战技巧（清单法、分层描述、提供反例）
+     - 验证方法（5W1H 检查法、SMART 原则）
+     - 追问点（需求变更、质量验证、模板库）
+  
+  2. **Q6：Skill 和 MCP 的场景、原理和构建方法**（~600 行）
+     - 场景描述：智能代码审查助手
+     - Skill 详解：
+       * 定义和工作原理
+       * 完整的 CodeReviewSkill 实现（~200 行代码）
+       * 知识库组织（规范、安全、性能规则）
+       * 审查方法（checkCodingStandards、checkSecurity、checkPerformance）
+       * 构建方法（结构定义、知识库、方法实现）
+     - MCP 详解：
+       * 定义和工作原理
+       * 完整的 GitHubMCPServer 实现（~150 行代码）
+       * 工具定义（get_pull_request、get_pr_files、create_review_comment）
+       * MCP 配置文件（mcp.json）
+       * 构建方法（定义 Server、注册工具、实现逻辑）
+     - 完整工作流程（Agent 调用 Skill 和 MCP）
+     - 追问点（Skill vs MCP、测试方法、错误处理）
+  
+  3. **Q7：大项目分解和多 Agent 协同机制**（~700 行）
+     - 项目分解方法：
+       * 按功能模块分解（6 个模块）
+       * 按处理流程分解（7 个步骤）
+       * 按数据流分解（5 个阶段）
+     - Agent 角色设计：
+       * 设计原则（单一职责、松耦合、可扩展、容错性）
+       * 7 个 Agent 定义（Input、Intent、Retrieval、Generation、Quality、Escalation、Analytics）
+       * 每个 Agent 包含：id、name、role、capabilities、dependencies、priority
+     - 协同机制设计：
+       * 消息总线（MessageBus 实现，~80 行代码）
+       * 工作流编排（Workflow 实现，~100 行代码）
+       * 完整示例（智能客服系统工作流）
+       * 通信协议（REQUEST、RESPONSE、EVENT、COMMAND）
+     - 实战技巧：
+       * 错误处理和重试（ResilientAgent）
+       * 性能监控（MonitoredAgent）
+       * 动态扩展（AgentRegistry）
+     - 架构图（ASCII 图）
+     - 追问点（循环依赖、消息顺序、热更新）
+  
+  **技术覆盖**：
+  - 需求分解（5W1H、SMART、CO-STAR 框架）
+  - Skill 构建（知识库、方法、代码审查实现）
+  - MCP 构建（Server、工具、GitHub API 集成）
+  - Agent 协同（消息总线、工作流、通信协议）
+  - 错误处理（重试、降级、监控）
+  - 300+ 行可运行代码示例
+  
+  **文档特点**：
+  - 每个问题都有完整的答题框架
+  - 包含大量实战代码示例（TypeScript）
+  - 提供详细的实现步骤和最佳实践
+  - 包含追问点和面试技巧
+  - 适合高级前端/全栈工程师面试准备
+
+- 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
+  - ai-interview 目录：6/6 文件（100%）
+    - ✅ prompt-engineering-interview.md（已补充 Q5、Q6、Q7，~3300+ 行）
+
+- 🎯 **本次会话完成内容**：
+  - ✅ 优化 Drag and Drop API 文档（添加详细说明和注释）
+  - ✅ 补充 AI 面试高级问题（Q5、Q6、Q7，~1500+ 行）
+  - ✅ 所有代码示例可直接运行
+  - ✅ 适合面试准备和实际开发参考
