@@ -31,6 +31,7 @@ const CHUNK_SIZE = 500
 // ============ 管理员认证 ============
 
 const ADMIN_KEY = 'podcast_admin_token'
+const adminVerified = ref(false)  // 响应式，控制播放器显示
 
 function getAdminToken(): string {
   if (typeof localStorage === 'undefined') return ''
@@ -50,6 +51,8 @@ function checkAndSaveAdminToken() {
     window.history.replaceState({}, '', url.toString())
     console.debug('[PodcastPlayer] 管理员 Token 已保存')
   }
+  // 更新响应式状态
+  adminVerified.value = getAdminToken().length === 32
 }
 
 function isAdmin(): boolean {
@@ -648,7 +651,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="isAdmin()" class="podcast-player" role="region" aria-label="播客播放器">
+  <div v-if="adminVerified" class="podcast-player" role="region" aria-label="播客播放器">
     <!-- 未生成：显示生成按钮 -->
     <div v-if="!audioReady && !isGenerating" class="player-idle">
       <button class="btn-generate" @click="handleGenerate" aria-label="生成并播放本页语音">
