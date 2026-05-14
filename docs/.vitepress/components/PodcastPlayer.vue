@@ -110,6 +110,13 @@ function extractPageText(): string {
     .replace(/^[⚠️✅❌🔥💡📝🎯⏳🔄📊]+\s*.{0,20}(过时|更新中|更新时间|注意|提示|警告).*$/gm, '')
     // 移除 "更新时间：xxxx" 格式
     .replace(/^.*更新时间[：:]\s*\d{4}[-/]\d{2}.*$/gm, '')
+    // 移除"参考资料"章节及其后面的内容（通常是链接列表）
+    .replace(/\n参考资料[\s\S]*$/m, '')
+    .replace(/\n参考链接[\s\S]*$/m, '')
+    .replace(/\n相关资源[\s\S]*$/m, '')
+    .replace(/\n推荐阅读[\s\S]*$/m, '')
+    // 移除 URL 链接
+    .replace(/https?:\/\/[^\s]+/g, '')
     // 移除多余空行
     .replace(/\n{3,}/g, '\n\n')
     .replace(/^\s+$/gm, '')
