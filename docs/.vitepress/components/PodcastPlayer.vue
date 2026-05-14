@@ -22,10 +22,10 @@ const route = useRoute()
 const { page } = useData()
 
 // 本地 TTS 服务地址（使用 127.0.0.1 避免代理拦截 localhost）
-// 部署 Cloudflare Worker 后改为 Worker 地址，如：
-// const TTS_SERVER = 'https://tech-docs-tts.<your-subdomain>.workers.dev'
-// const TTS_SERVER = 'http://127.0.0.1:3456'
-const TTS_SERVER = 'https://tts.fable.cc.cd'
+const TTS_SERVER = 'http://127.0.0.1:3456'
+
+// 文本分段大小（与服务端 CHUNK_SIZE 保持一致）
+const CHUNK_SIZE = 2000
 
 // 格式化时间
 const formatTime = (seconds: number): string => {
@@ -167,58 +167,62 @@ async function handleGenerate() {
   isGenerating.value = true
 
   try {
-    // 使用流式接口，边生成边播放
-    const response = await fetch(`${TTS_SERVER}/tts/stream`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.slice(0, 50000) }),
-    })
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({ error: '生成失败' }))
-      throw new Error(err.error || `HTTP ${response.status}`)
-    }
-
-    // 流式读取音频数据
-    const reader = response.body?.getReader()
-    if (!reader) throw new Error('浏览器不支持流式读取')
-
-    const audioChunks: Uint8Array[] = []
+    const truncatedText = text.slice(0, 50000)
+    const totalChunks = Math.ceil(truncatedText.length / CHUNK_SIZE)
+    const allAudioChunks: Uint8Array[] = []
     let firstChunkPlayed = false
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+    for (let i = 0; i < totalChunks; i++) {
+      const response = await fetch(`${TTS_SERVER}/tts/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: truncatedText, chunk_index: i }),
+      })
 
-      audioChunks.push(value)
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({ error: '生成失败' }))
+        throw new Error(errData.error || `HTTP ${response.status}`)
+      }
 
-      // 收到第一批数据后立即开始播放
-      if (!firstChunkPlayed && getTotalSize(audioChunks) > 8000) {
+      // 读取响应头中的实际总段数（服务端按段落切分，可能与预估不同）
+      const serverTotal = parseInt(response.headers.get('X-Total-Chunks') || '0')
+      if (serverTotal > 0 && i === 0) {
+        // 用服务端返回的实际段数
+        // 后续循环会在 i >= serverTotal 时自然结束
+      }
+
+      const arrayBuffer = await response.arrayBuffer()
+      const chunk = new Uint8Array(arrayBuffer)
+
+      if (chunk.length < 100) {
+        throw new Error(`段 ${i + 1} 返回空音频，请检查 TTS 服务`)
+      }
+
+      allAudioChunks.push(chunk)
+
+      // 收到第一段立即开始播放
+      if (!firstChunkPlayed) {
         firstChunkPlayed = true
-        const partialBlob = new Blob(audioChunks, { type: 'audio/mp3' })
+        const partialBlob = new Blob(allAudioChunks, { type: 'audio/mp3' })
         setupAudio(partialBlob)
       }
+
+      // 如果服务端返回了实际总段数，以它为准
+      if (serverTotal > 0 && i + 1 >= serverTotal) break
     }
 
-    // 全部完成，用完整音频替换
-    const fullBlob = new Blob(audioChunks, { type: 'audio/mp3' })
-
-    if (fullBlob.size < 100) {
-      throw new Error('未收到音频数据，请检查 TTS 服务是否正常运行')
-    }
-
+    // 全部完成，替换为完整音频
+    const fullBlob = new Blob(allAudioChunks, { type: 'audio/mp3' })
     const currentPos = audio ? audio.currentTime : 0
     const wasPlaying = isPlaying.value
 
     setupAudio(fullBlob)
 
-    // 恢复播放位置
     if (audio && currentPos > 0) {
       audio.currentTime = currentPos
       if (wasPlaying) audio.play().catch(() => {})
     }
 
-    // 缓存完整音频
     await setCachedAudio(cacheKey, fullBlob)
 
   } catch (e: any) {
@@ -226,10 +230,6 @@ async function handleGenerate() {
   } finally {
     isGenerating.value = false
   }
-}
-
-function getTotalSize(chunks: Uint8Array[]): number {
-  return chunks.reduce((sum, c) => sum + c.length, 0)
 }
 
 // ============ IndexedDB 缓存 ============
