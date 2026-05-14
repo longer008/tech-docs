@@ -25,7 +25,7 @@ const { page } = useData()
 const TTS_SERVER = 'http://127.0.0.1:3456'
 
 // 文本分段大小（与服务端 CHUNK_SIZE 保持一致）
-const CHUNK_SIZE = 2000
+const CHUNK_SIZE = 500
 
 // 格式化时间
 const formatTime = (seconds: number): string => {
@@ -93,6 +93,12 @@ function extractPageText(): string {
     '.custom-block',          // 所有提示块（tip/warning/danger/info/details）
     'blockquote',             // 引用块（通常是提示信息）
 
+    // [[toc]] 生成的目录
+    '.table-of-contents',     // VitePress toc 容器
+    '.vp-toc',
+    'nav.table-of-contents',
+    '[class*="toc"]',         // 任何包含 toc 的类
+
     // 播放器和组件
     '.podcast-player',
     '.reading-time',
@@ -128,6 +134,15 @@ function extractPageText(): string {
     .replace(/\n推荐阅读[\s\S]*$/m, '')
     // 移除 URL 链接
     .replace(/https?:\/\/[^\s]+/g, '')
+    // 移除 [[toc]] 标记
+    .replace(/\[\[toc\]\]/gi, '')
+    // 移除目录列表（以 - [ 开头的行，通常是 markdown 目录链接）
+    .replace(/^[-*]\s+\[.+\]\(#.+\)\s*$/gm, '')
+    // 移除难度星星，转为数字描述（⭐⭐☆☆☆ → 2颗星）
+    .replace(/[⭐★]+[☆✩]*/g, (match) => {
+      const filled = (match.match(/[⭐★]/g) || []).length
+      return `${filled}颗星`
+    })
     // 移除多余空行
     .replace(/\n{3,}/g, '\n\n')
     .replace(/^\s+$/gm, '')

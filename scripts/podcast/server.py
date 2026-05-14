@@ -21,7 +21,7 @@ DEFAULT_VOICE = "zh-CN-XiaoxiaoNeural"
 DEFAULT_RATE = "+5%"
 
 # 每段最大字符数（越小首段越快，但段间可能有停顿）
-CHUNK_SIZE = 2000
+CHUNK_SIZE = 500
 
 
 def split_text(text: str, max_chars: int = CHUNK_SIZE) -> list:
