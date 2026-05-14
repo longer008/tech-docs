@@ -41,10 +41,11 @@ export default withPwa(
       ['link', { rel: 'apple-touch-icon', href: `${base}apple-touch-icon-180x180.png` }],
       ['meta', { name: 'og:type', content: 'website' }],
       ['meta', { name: 'og:locale', content: 'zh-CN' }],
-      // KaTeX 样式
+      // KaTeX 样式 - 使用 preload 避免阻塞渲染
+      ['link', { rel: 'preload', as: 'style', href: 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css' }],
       ['link', { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css' }],
-      // 不蒜子统计
-      ['script', { async: '', src: '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js' }],
+      // 不蒜子统计（使用 HTTPS）
+      ['script', { async: '', src: 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js' }],
     ],
 
     // Vite 配置
@@ -63,9 +64,6 @@ export default withPwa(
           '@braintree/sanitize-url',
           'dayjs',
           'debug',
-          'cytoscape',
-          'cytoscape-cose-bilkent',
-          '@nolebase/vitepress-plugin-enhanced-readabilities > @nolebase/ui > @rive-app/canvas',
         ]
       },
       resolve: {
@@ -75,11 +73,22 @@ export default withPwa(
       },
       ssr: {
         noExternal: [
-          'mermaid',
           '@nolebase/vitepress-plugin-enhanced-readabilities',
           '@nolebase/ui',
           '@nolebase/vitepress-plugin-highlight-targeted-heading',
         ]
+      },
+      build: {
+        // 将大型依赖分割为独立 chunk，按需加载
+        rollupOptions: {
+          output: {
+            manualChunks(id) {
+              if (id.includes('mermaid')) return 'mermaid'
+              if (id.includes('cytoscape')) return 'cytoscape'
+              if (id.includes('katex')) return 'katex'
+            }
+          }
+        }
       }
     },
 
@@ -120,7 +129,7 @@ export default withPwa(
     // 主题配置
     themeConfig: {
       // 站点标题和 Logo
-      logo: `${base}logo.svg`,
+      logo: { src: `${base}logo.svg`, width: 24, height: 24, alt: '技术面试知识库' },
       siteTitle: '技术面试知识库',
 
       // 搜索配置 - 使用官方 Local Search

@@ -22,7 +22,10 @@ const route = useRoute()
 const { page } = useData()
 
 // 本地 TTS 服务地址（使用 127.0.0.1 避免代理拦截 localhost）
-const TTS_SERVER = 'http://127.0.0.1:3456'
+// 部署 Cloudflare Worker 后改为 Worker 地址，如：
+// const TTS_SERVER = 'https://tech-docs-tts.<your-subdomain>.workers.dev'
+// const TTS_SERVER = 'http://127.0.0.1:3456'
+const TTS_SERVER = 'https://tts.fable.cc.cd'
 
 // 格式化时间
 const formatTime = (seconds: number): string => {
@@ -371,10 +374,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="podcast-player">
+  <div class="podcast-player" role="region" aria-label="播客播放器">
     <!-- 未生成：显示生成按钮 -->
     <div v-if="!audioReady && !isGenerating" class="player-idle">
-      <button class="btn-generate" @click="handleGenerate">
+      <button class="btn-generate" @click="handleGenerate" aria-label="生成并播放本页语音">
         🎧 听播客
       </button>
       <span class="idle-hint">AI 语音朗读本页内容</span>
@@ -388,7 +391,7 @@ onUnmounted(() => {
 
     <!-- 播放器 -->
     <div v-if="audioReady" class="player-bar">
-      <button class="btn-play" @click="togglePlay">
+      <button class="btn-play" @click="togglePlay" :aria-label="isPlaying ? '暂停播放' : '开始播放'">
         <span v-if="isPlaying">⏸️</span>
         <span v-else>▶️</span>
       </button>
@@ -398,14 +401,14 @@ onUnmounted(() => {
         <span class="player-time">{{ timeDisplay }}</span>
       </div>
 
-      <div class="progress-bar" @click="seekTo">
+      <div class="progress-bar" @click="seekTo" role="slider" :aria-valuenow="Math.round(progress)" aria-valuemin="0" aria-valuemax="100" aria-label="播放进度">
         <div class="progress-fill" :style="{ width: progress + '%' }"></div>
       </div>
 
       <div class="player-controls">
-        <button class="btn-skip" @click="skip(-10)">⏪</button>
-        <button class="btn-skip" @click="skip(10)">⏩</button>
-        <button class="btn-rate" @click="isExpanded = !isExpanded">{{ playbackRate }}x</button>
+        <button class="btn-skip" @click="skip(-10)" aria-label="后退10秒">⏪</button>
+        <button class="btn-skip" @click="skip(10)" aria-label="前进10秒">⏩</button>
+        <button class="btn-rate" @click="isExpanded = !isExpanded" :aria-label="`当前${playbackRate}倍速，点击展开设置`">{{ playbackRate }}x</button>
       </div>
     </div>
 
