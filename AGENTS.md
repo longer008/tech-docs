@@ -2900,3 +2900,65 @@
   - ✅ 补充 AI 面试高级问题（Q5、Q6、Q7，~1500+ 行）
   - ✅ 所有代码示例可直接运行
   - ✅ 适合面试准备和实际开发参考
+
+
+### 2025-05-14
+- ✅ **实现播客功能（Edge TTS + Vue 播放器）**
+  
+  **功能概述**：
+  - 将 Markdown 文档转为播客音频，在页面上播放
+  - 智能跳过代码块、表格、HTML 等不适合朗读的内容
+  - 专业的播放器 UI，支持倍速、进度条、音量控制
+  
+  **技术方案**：
+  - Edge TTS（微软免费语音合成，中文音质好）
+  - 自定义 Vue 播放器组件（PodcastPlayer.vue）
+  - Node.js 内容过滤脚本（Markdown → 纯文本）
+  - Python 音频生成脚本（文本 → MP3）
+  
+  **新增文件**：
+  1. `scripts/podcast/extract-text.js` - Markdown 内容提取器
+  2. `scripts/podcast/generate-audio.py` - Edge TTS 音频生成
+  3. `scripts/podcast/generate-podcast.js` - 一键生成主脚本
+  4. `scripts/podcast/README.md` - 使用说明
+  5. `docs/.vitepress/components/PodcastPlayer.vue` - 播放器组件
+  6. `docs/public/podcast/index.json` - 播客索引
+  
+  **使用方法**：
+  ```bash
+  # 生成单个文档的播客
+  pnpm podcast:generate docs/ai-interview/index.md
+  
+  # 指定语音和语速
+  pnpm podcast:generate docs/frontend/vue/vue3-interview.md --voice yunxi --rate +10%
+  ```
+  
+  **播放器功能**：
+  - ▶️ 播放/暂停
+  - ⏪⏩ 快退/快进 10 秒
+  - 🎚️ 进度条拖动
+  - 🔊 音量调节
+  - ⚡ 倍速播放（0.75x ~ 2x）
+  - 📱 响应式设计
+  - 🔄 自动检测页面是否有对应音频
+  
+  **内容过滤规则**：
+  - 跳过：代码块、表格、图片、HTML、链接URL、frontmatter、VitePress容器
+  - 保留：标题、段落、列表、引用（去除标记符号）
+  
+  **可用语音**：
+  - xiaoxiao（女声，温暖自然，默认）
+  - yunxi（男声，年轻活力）
+  - yunyang（男声，新闻播报）
+  - xiaoyi（女声，活泼）
+  - yunfeng（男声，沉稳）
+  
+  **已生成示例**：
+  - ✅ docs/ai-interview/index.md（xiaoxiao 语音）
+  - ✅ docs/ai-interview/prompt-engineering-interview.md（yunxi 语音）
+  
+  **依赖**：
+  - Python 3.8+ + edge-tts（`pip install edge-tts`）
+  - 无需额外 npm 依赖
+
+- 📊 **当前总进度**：86/150+ 文档已优化（约 57%）
