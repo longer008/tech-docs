@@ -22,10 +22,49 @@ const route = useRoute()
 const { page } = useData()
 
 // 本地 TTS 服务地址（使用 127.0.0.1 避免代理拦截 localhost）
-const TTS_SERVER = 'http://127.0.0.1:3456'
+// const TTS_SERVER = 'http://127.0.0.1:3456'
+const TTS_SERVER = 'http://66.63.177.137:3456'
 
 // 文本分段大小（与服务端 CHUNK_SIZE 保持一致）
 const CHUNK_SIZE = 500
+
+// ============ 管理员认证 ============
+
+const ADMIN_KEY = 'podcast_admin_token'
+
+function getAdminToken(): string {
+  return localStorage.getItem(ADMIN_KEY) || ''
+}
+
+function checkAndSaveAdminToken() {
+  // 检查 URL 中是否有 admin 参数
+  const params = new URLSearchParams(window.location.search)
+  const token = params.get('admin')
+  if (token && token.length === 32) {
+    localStorage.setItem(ADMIN_KEY, token)
+    // 清除 URL 中的 admin 参数，避免泄露
+    const url = new URL(window.location.href)
+    url.searchParams.delete('admin')
+    window.history.replaceState({}, '', url.toString())
+    console.debug('[PodcastPlayer] 管理员 Token 已保存')
+  }
+}
+
+function isAdmin(): boolean {
+  return getAdminToken().length === 32
+}
+
+// 带认证头的 fetch
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = getAdminToken()
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { 'X-Admin-Token': token } : {}),
+    },
+  })
+}
 
 // 格式化时间
 const formatTime = (seconds: number): string => {
@@ -50,7 +89,7 @@ const rateOptions = [0.75, 1, 1.25, 1.5, 1.75, 2]
 
 async function checkServer() {
   try {
-    const res = await fetch(`${TTS_SERVER}/health`, { signal: AbortSignal.timeout(2000) })
+    const res = await authFetch(`${TTS_SERVER}/health`, { signal: AbortSignal.timeout(5000) })
     serverOnline.value = res.ok
   } catch {
     serverOnline.value = false
@@ -162,6 +201,66 @@ function isGoodComment(text: string): boolean {
   )
 }
 
+/**
+ * 提取原始页面文本（保留代码内容，供 AI 理解）
+ */
+/**
+ * 提取原始页面文本（保留代码注释，供 AI 理解，但不含完整代码）
+ */
+function extractRawPageText(): string {
+  const content = document.querySelector('.vp-doc')
+    || document.querySelector('.content-container')
+    || document.querySelector('main')
+  if (!content) return ''
+
+  const clone = content.cloneNode(true) as HTMLElement
+
+  // 第一步：先收集代码块中的注释（在 DOM 操作之前）
+  const codeComments: string[] = []
+  clone.querySelectorAll('pre').forEach(pre => {
+    const code = pre.querySelector('code')
+    const text = (code || pre).textContent || ''
+    // 提取 // 注释
+    const lines = text.split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      const m = trimmed.match(/^\/\/\s*(.+)/) || trimmed.match(/^#\s+(.+)/)
+      if (m) {
+        const comment = m[1].trim()
+        if (comment.length > 4 && !/^https?:\/\//.test(comment) && !/^\w+\s*[({]/.test(comment)) {
+          codeComments.push(comment)
+        }
+      }
+    }
+  })
+
+  // 第二步：移除代码块和 UI 噪音
+  const removeSelectors = [
+    'pre', 'code',
+    '.podcast-player', '.reading-time', '.header-anchor',
+    'style', 'script', 'img', 'svg', '.vp-adaptive-theme',
+    '.table-of-contents', '[class*="toc"]',
+    '.line-numbers-wrapper', '.line-numbers',
+    'button.copy', '.lang',
+    'blockquote', '.custom-block',
+  ]
+  removeSelectors.forEach(sel => {
+    clone.querySelectorAll(sel).forEach(el => el.remove())
+  })
+
+  // 第三步：获取正文
+  const bodyText = (clone.innerText || clone.textContent || '')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+$/gm, '')
+    .trim()
+
+  // 第四步：合并正文 + 去重注释
+  const uniqueComments = [...new Set(codeComments)]
+  if (uniqueComments.length === 0) return bodyText
+
+  return bodyText + '\n\n代码要点：\n' + uniqueComments.join('\n')
+}
+
 function extractPageText(): string {
   // 尝试多个可能的内容容器
   const content = document.querySelector('.vp-doc') 
@@ -258,6 +357,7 @@ function extractPageText(): string {
 // ============ 生成音频 ============
 
 async function handleGenerate() {
+  if (isGenerating.value) return  // 防止重复触发
   errorMsg.value = ''
 
   // 先检查缓存
@@ -275,100 +375,91 @@ async function handleGenerate() {
     return
   }
 
-  // 提取文本
-  const text = extractPageText()
-  if (!text || text.length < 5) {
-    errorMsg.value = `页面内容提取失败（${text.length} 字符），请刷新后重试`
+  // 提取文本（用原始版本，包含代码注释）
+  const rawText = extractRawPageText()
+  if (!rawText || rawText.length < 5) {
+    errorMsg.value = `页面内容提取失败（${rawText.length} 字符），请刷新后重试`
     return
   }
 
   isGenerating.value = true
 
   try {
-    // 提取正文 + 从源文件提取代码注释
-    const sourceComments = await extractCommentsFromSource()
-    let fullText = text
-    if (sourceComments.length > 0) {
-      fullText = text + '\n\n' + sourceComments.join('。\n')
-    }
+    console.debug(`[PodcastPlayer] 原始文本: ${rawText.length} 字符`)
 
-    // 步骤 1：AI 改写为播客脚本
-    let podcastScript = fullText.slice(0, 8000)
-    try {
-      const rewriteRes = await fetch(`${TTS_SERVER}/rewrite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: podcastScript }),
-      })
-      if (rewriteRes.ok) {
-        const { text: rewritten } = await rewriteRes.json()
-        if (rewritten && rewritten.length > 50) {
-          podcastScript = rewritten
-          console.debug(`[PodcastPlayer] AI 改写: ${fullText.length} → ${podcastScript.length} 字`)
-        }
-      }
-    } catch {
-      // AI 改写失败，使用原文
-      console.debug('[PodcastPlayer] AI 改写跳过，使用原文')
-    }
+    // 按 3000 字分批 AI 改写，改写完立即 TTS
+    const AI_BATCH = 3000
+    const batches = splitIntoBatches(rawText, AI_BATCH)
+    console.debug(`[PodcastPlayer] 分 ${batches.length} 批 AI 改写`)
 
-    // 步骤 2：分段请求 TTS
-    const truncatedText = podcastScript.slice(0, 50000)
-    const totalChunks = Math.ceil(truncatedText.length / CHUNK_SIZE)
     const allAudioChunks: Uint8Array[] = []
     let firstChunkPlayed = false
+    let ttsChunkIndex = 0
+    let rewrittenFull = ''  // 收集所有改写结果，用于缓存
 
-    for (let i = 0; i < totalChunks; i++) {
-      const response = await fetch(`${TTS_SERVER}/tts/stream`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: truncatedText, chunk_index: i }),
-      })
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({ error: '生成失败' }))
-        throw new Error(errData.error || `HTTP ${response.status}`)
+    for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
+      // 1. AI 改写当前批次
+      let batchScript = batches[batchIdx]
+      try {
+        const rewriteRes = await authFetch(`${TTS_SERVER}/rewrite`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: batchScript }),
+          signal: AbortSignal.timeout(60000),
+        })
+        if (rewriteRes.ok) {
+          const { text: rewritten } = await rewriteRes.json()
+          if (rewritten && rewritten.length > 20) {
+            batchScript = rewritten
+            console.debug(`[PodcastPlayer] 批次 ${batchIdx + 1}/${batches.length} AI 改写: ${batches[batchIdx].length} → ${batchScript.length} 字`)
+          }
+        }
+      } catch (e: any) {
+        // AI 超时或失败，用原文继续
+        console.warn(`[PodcastPlayer] AI 改写失败: ${e.message}，使用原文`)
       }
 
-      // 读取响应头中的实际总段数（服务端按段落切分，可能与预估不同）
-      const serverTotal = parseInt(response.headers.get('X-Total-Chunks') || '0')
-      if (serverTotal > 0 && i === 0) {
-        // 用服务端返回的实际段数
-        // 后续循环会在 i >= serverTotal 时自然结束
+      rewrittenFull += (rewrittenFull ? '\n\n' : '') + batchScript
+
+      // 2. 对改写结果分段 TTS
+      const ttsSegments = splitIntoBatches(batchScript, 500)
+      for (const seg of ttsSegments) {
+        const response = await authFetch(`${TTS_SERVER}/tts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: seg }),
+          signal: AbortSignal.timeout(60000),
+        })
+        if (!response.ok) continue
+
+        const arrayBuffer = await response.arrayBuffer()
+        const chunk = new Uint8Array(arrayBuffer)
+        if (chunk.length < 100) continue
+
+        allAudioChunks.push(chunk)
+        ttsChunkIndex++
+
+        // 第一段完成立即播放
+        if (!firstChunkPlayed) {
+          firstChunkPlayed = true
+          setupAudio(new Blob(allAudioChunks, { type: 'audio/mp3' }))
+        }
       }
-
-      const arrayBuffer = await response.arrayBuffer()
-      const chunk = new Uint8Array(arrayBuffer)
-
-      if (chunk.length < 100) {
-        throw new Error(`段 ${i + 1} 返回空音频，请检查 TTS 服务`)
-      }
-
-      allAudioChunks.push(chunk)
-
-      // 收到第一段立即开始播放
-      if (!firstChunkPlayed) {
-        firstChunkPlayed = true
-        const partialBlob = new Blob(allAudioChunks, { type: 'audio/mp3' })
-        setupAudio(partialBlob)
-      }
-
-      // 如果服务端返回了实际总段数，以它为准
-      if (serverTotal > 0 && i + 1 >= serverTotal) break
     }
 
-    // 全部完成，替换为完整音频
+    if (allAudioChunks.length === 0) {
+      throw new Error('未生成任何音频，请检查 TTS 服务')
+    }
+
+    // 替换为完整音频并缓存
     const fullBlob = new Blob(allAudioChunks, { type: 'audio/mp3' })
     const currentPos = audio ? audio.currentTime : 0
     const wasPlaying = isPlaying.value
-
     setupAudio(fullBlob)
-
     if (audio && currentPos > 0) {
       audio.currentTime = currentPos
       if (wasPlaying) audio.play().catch(() => {})
     }
-
     await setCachedAudio(cacheKey, fullBlob)
 
   } catch (e: any) {
@@ -376,6 +467,32 @@ async function handleGenerate() {
   } finally {
     isGenerating.value = false
   }
+}
+
+function splitIntoBatches(text: string, maxChars: number): string[] {
+  if (text.length <= maxChars) return [text]
+  const paras = text.split(/\n{2,}/)
+  const batches: string[] = []
+  let cur = ''
+  for (const p of paras) {
+    if (!p.trim()) continue
+    if (cur.length + p.length + 2 > maxChars) {
+      if (cur) batches.push(cur.trim())
+      // 单段超长时强制截断
+      if (p.length > maxChars) {
+        for (let i = 0; i < p.length; i += maxChars) {
+          batches.push(p.slice(i, i + maxChars))
+        }
+        cur = ''
+      } else {
+        cur = p
+      }
+    } else {
+      cur += (cur ? '\n\n' : '') + p
+    }
+  }
+  if (cur.trim()) batches.push(cur.trim())
+  return batches
 }
 
 // ============ IndexedDB 缓存 ============
@@ -517,8 +634,11 @@ async function checkCache() {
 }
 
 onMounted(() => {
-  checkServer()
-  checkCache()
+  checkAndSaveAdminToken()
+  if (isAdmin()) {
+    checkServer()
+    checkCache()
+  }
 })
 
 onUnmounted(() => {
@@ -534,7 +654,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="podcast-player" role="region" aria-label="播客播放器">
+  <div v-if="isAdmin()" class="podcast-player" role="region" aria-label="播客播放器">
     <!-- 未生成：显示生成按钮 -->
     <div v-if="!audioReady && !isGenerating" class="player-idle">
       <button class="btn-generate" @click="handleGenerate" aria-label="生成并播放本页语音">
@@ -585,7 +705,7 @@ onUnmounted(() => {
         <input type="range" min="0" max="1" step="0.1" :value="volume" @input="setVolume" class="volume-slider" />
       </div>
       <div class="panel-section">
-        <button class="btn-regenerate" @click="handleRegenerate">🔄 重新生成</button>
+        <button class="btn-regenerate" @click="handleRegenerate" :disabled="isGenerating">🔄 重新生成</button>
       </div>
     </div>
 

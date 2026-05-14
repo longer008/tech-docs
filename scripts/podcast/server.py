@@ -23,7 +23,30 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError
 import edge_tts
 
-PORT = 3456
+# 加载 .env 文件
+def load_dotenv():
+    env_paths = [
+        os.path.join(os.path.dirname(__file__), '.env'),
+        os.path.join(os.getcwd(), '.env'),
+    ]
+    for env_path in env_paths:
+        if os.path.exists(env_path):
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    if '=' in line:
+                        key, _, value = line.partition('=')
+                        os.environ.setdefault(key.strip(), value.strip())
+            print(f"  📄 已加载: {env_path}")
+            return
+    print(f"  📄 未找到 .env 文件")
+
+load_dotenv()
+
+PORT = int(os.environ.get("PORT", 3456))
+HOST = os.environ.get("HOST", "127.0.0.1")  # 服务器部署时设为 0.0.0.0
 DEFAULT_VOICE = "zh-CN-XiaoxiaoNeural"
 DEFAULT_RATE = "+5%"
 CHUNK_SIZE = 500
@@ -32,6 +55,8 @@ CHUNK_SIZE = 500
 LLM_API_BASE = os.environ.get("LLM_API_BASE", "https://api.openai.com/v1")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
 LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-4o-mini")
+
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
 
 PODCAST_SYSTEM_PROMPT = """你是一个技术播客主播，擅长把技术文档转化为口语化的播客内容。
 
@@ -51,10 +76,9 @@ def ai_rewrite(text: str) -> str:
         print("  ⚠️ 未配置 LLM_API_KEY，跳过 AI 改写")
         return text
 
-    # 截断过长文本（避免超出 token 限制）
-    max_input = 8000
-    if len(text) > max_input:
-        text = text[:max_input] + "\n...(内容过长已截断)"
+    # 单段文本直接改写
+    if len(text) > 8000:
+        text = text[:8000]
 
     url = f"{LLM_API_BASE}/chat/completions"
     payload = {
@@ -70,30 +94,54 @@ def ai_rewrite(text: str) -> str:
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {LLM_API_KEY}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     }
 
     try:
         req = Request(url, data=json.dumps(payload).encode(), headers=headers)
-        # 绕过代理访问 API
-        proxy_handler = None
-        if "127.0.0.1" in LLM_API_BASE or "localhost" in LLM_API_BASE:
-            import urllib.request
-            proxy_handler = urllib.request.ProxyHandler({})
-
-        if proxy_handler:
-            import urllib.request
-            opener = urllib.request.build_opener(proxy_handler)
-            resp = opener.open(req, timeout=60)
-        else:
-            resp = urlopen(req, timeout=60)
-
+        resp = urlopen(req, timeout=60)
         result = json.loads(resp.read().decode())
         content = result["choices"][0]["message"]["content"]
         print(f"  🤖 AI 改写完成: {len(text)} 字 → {len(content)} 字")
         return content
+    except URLError as e:
+        # 打印详细错误帮助排查
+        detail = ""
+        if hasattr(e, 'read'):
+            try:
+                detail = e.read().decode()[:200]
+            except:
+                pass
+        print(f"  ⚠️ AI 改写失败: {e} {detail}")
+        print(f"     URL: {url}")
+        print(f"     Model: {LLM_MODEL}")
+        return text
     except Exception as e:
         print(f"  ⚠️ AI 改写失败: {e}，使用原文")
         return text
+
+
+def split_for_ai(text: str, max_chars: int = 6000) -> list:
+    """按段落边界分段（用于 AI 改写，保持上下文完整）"""
+    paragraphs = re.split(r'\n{2,}', text)
+    segments = []
+    current = ""
+
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+        if len(current) + len(para) + 2 > max_chars:
+            if current:
+                segments.append(current.strip())
+            current = para
+        else:
+            current += ("\n\n" + para if current else para)
+
+    if current.strip():
+        segments.append(current.strip())
+
+    return segments
 
 
 def split_text(text: str, max_chars: int = CHUNK_SIZE) -> list:
@@ -143,9 +191,16 @@ class TTSHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Admin-Token")
         self.send_header("Access-Control-Max-Age", "86400")
         self.end_headers()
+
+    def _check_auth(self) -> bool:
+        """验证管理员 Token，未配置时允许所有请求"""
+        if not ADMIN_TOKEN:
+            return True
+        token = self.headers.get("X-Admin-Token", "")
+        return token == ADMIN_TOKEN
 
     def do_GET(self):
         if self.path == "/health":
@@ -158,6 +213,7 @@ class TTSHandler(BaseHTTPRequestHandler):
                 "voice": DEFAULT_VOICE,
                 "ai_enabled": bool(LLM_API_KEY),
                 "model": LLM_MODEL if LLM_API_KEY else None,
+                "auth_required": bool(ADMIN_TOKEN),
             }
             self.wfile.write(json.dumps(resp).encode())
         else:
@@ -165,6 +221,9 @@ class TTSHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
+        if not self._check_auth():
+            self._error(401, "未授权，请使用管理员链接访问")
+            return
         if self.path == "/tts":
             self._handle_tts()
         elif self.path == "/tts/stream":
@@ -176,7 +235,7 @@ class TTSHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def _handle_rewrite(self):
-        """单独的 AI 改写接口（前端可先改写再分段请求 TTS）"""
+        """AI 改写接口：自动分段处理长文本"""
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length).decode("utf-8")
 
@@ -192,7 +251,21 @@ class TTSHandler(BaseHTTPRequestHandler):
             return
 
         print(f"  🤖 AI 改写请求: {len(text)} 字")
-        result = ai_rewrite(text)
+
+        # 长文本分段改写（每段 6000 字）
+        AI_CHUNK_SIZE = 6000
+        if len(text) <= AI_CHUNK_SIZE:
+            result = ai_rewrite(text)
+        else:
+            # 按段落边界分段
+            segments = split_for_ai(text, AI_CHUNK_SIZE)
+            print(f"     分 {len(segments)} 段改写")
+            results = []
+            for i, seg in enumerate(segments):
+                print(f"     段 {i+1}/{len(segments)}: {len(seg)} 字")
+                rewritten = ai_rewrite(seg)
+                results.append(rewritten)
+            result = "\n\n".join(results)
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -312,7 +385,7 @@ def main():
     print(f"   语速: {DEFAULT_RATE}")
     print(f"   分段: 每段 {CHUNK_SIZE} 字")
     print(f"   AI:   {'✅ ' + LLM_MODEL if LLM_API_KEY else '❌ 未配置（设置 LLM_API_KEY 环境变量）'}")
-    print(f"   地址: http://127.0.0.1:{PORT}")
+    print(f"   地址: http://{HOST}:{PORT}")
     print(f"")
     print(f"   API:")
     print(f"     GET  /health      - 健康检查")
@@ -323,7 +396,7 @@ def main():
     print(f"   按 Ctrl+C 停止")
     print(f"{'='*50}")
 
-    server = HTTPServer(("127.0.0.1", PORT), TTSHandler)
+    server = HTTPServer((HOST, PORT), TTSHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -28,6 +28,7 @@ Thumbs.db
 
 # Podcast temp files
 scripts/podcast/.temp/
+scripts/podcast/.env
 
 # Podcast audio files (too large for git, generate locally)
 docs/public/podcast/**/*.mp3
