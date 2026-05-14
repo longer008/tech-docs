@@ -64,16 +64,57 @@ function extractPageText(): string {
 
   // 移除不需要朗读的元素
   const removeSelectors = [
-    'pre', 'code', 'table', '.header-anchor', 'img', 'svg',
-    '.podcast-player', '.reading-time', 'style', 'script',
-    '.custom-block.details',
+    // 代码相关
+    'pre',                    // 代码块
+    'code',                   // 行内代码
+    '.line-numbers-wrapper',  // 行号
+    '.line-numbers',          // 行号
+    '.lang',                  // 语言标签
+    'button.copy',            // 复制按钮
+    '[class*="language-"]',   // 整个代码容器（div.language-xxx）
+
+    // 表格和媒体
+    'table',
+    'img', 'svg', 'video', 'audio', 'canvas', 'iframe',
+
+    // VitePress 特殊元素
+    '.header-anchor',         // 标题锚点 #
+    '.custom-block',          // 所有提示块（tip/warning/danger/info/details）
+    'blockquote',             // 引用块（通常是提示信息）
+
+    // 播放器和组件
+    '.podcast-player',
+    '.reading-time',
+
+    // 其他
+    'style', 'script',
+    '.vp-code-group',         // 代码组
+    '.vp-adaptive-theme',     // 主题相关
   ]
+
   removeSelectors.forEach(sel => {
     clone.querySelectorAll(sel).forEach(el => el.remove())
   })
 
   let text = clone.innerText || clone.textContent || ''
-  text = text.replace(/\n{3,}/g, '\n\n').replace(/^\s+$/gm, '').trim()
+
+  // 后处理：清理残留噪音
+  text = text
+    // 移除连续数字行（代码行号残留）
+    .replace(/^(\d+\s*\n?){3,}/gm, '')
+    // 移除单独的数字行
+    .replace(/^\d+\s*$/gm, '')
+    // 移除 "javascript"、"typescript" 等语言标签残留
+    .replace(/^(javascript|typescript|html|css|python|java|bash|shell|json|xml|sql|yaml|vue|jsx|tsx|go|rust|c|cpp)\s*$/gim, '')
+    // 移除 emoji + 文字的提示行（如 ⚠️ 本文档...）
+    .replace(/^[⚠️✅❌🔥💡📝🎯⏳🔄📊]+\s*.{0,20}(过时|更新中|更新时间|注意|提示|警告).*$/gm, '')
+    // 移除 "更新时间：xxxx" 格式
+    .replace(/^.*更新时间[：:]\s*\d{4}[-/]\d{2}.*$/gm, '')
+    // 移除多余空行
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+$/gm, '')
+    .trim()
+
   return text
 }
 
