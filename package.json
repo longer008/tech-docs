@@ -8,6 +8,7 @@
     "docs:build": "vitepress build docs",
     "docs:build:cf": "cross-env NODE_OPTIONS='--max-old-space-size=3072' VITE_BASE_PATH=/ vitepress build docs",
     "docs:preview": "vitepress preview docs",
+    "podcast:generate": "node scripts/podcast/generate-podcast.js",
     "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 docs/public/favicon.svg",
     "deploy": "cross-env VITE_BASE_PATH=/ pnpm docs:build && npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs",
     "deploy:only": "cross-env VITE_BASE_PATH=/ npx wrangler pages deploy docs/.vitepress/dist --project-name=tech-docs"

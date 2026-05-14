@@ -25,3 +25,10 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Podcast temp files
+scripts/podcast/.temp/
+
+# Podcast audio files (too large for git, generate locally)
+docs/public/podcast/**/*.mp3
+docs/public/podcast/**/*.meta.json

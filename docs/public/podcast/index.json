@@ -1,0 +1,14 @@
+{
+  "/ai-interview/index": {
+    "title": "AI 与程序员面试指南",
+    "audioPath": "ai-interview/ai-interview-index.mp3",
+    "voice": "xiaoxiao",
+    "generatedAt": "2026-05-14T03:53:25.606Z"
+  },
+  "/ai-interview/prompt-engineering-interview": {
+    "title": "Prompt Engineering 提示词工程",
+    "audioPath": "ai-interview/ai-interview-prompt-engineering-interview.mp3",
+    "voice": "yunxi",
+    "generatedAt": "2026-05-14T03:56:14.891Z"
+  }
+}

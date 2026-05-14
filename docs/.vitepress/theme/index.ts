@@ -30,6 +30,7 @@ import InterviewCard from '../components/InterviewCard.vue'
 import HighlightBox from '../components/HighlightBox.vue'
 import TechStack from '../components/TechStack.vue'
 import ReadingTime from '../components/ReadingTime.vue'
+import PodcastPlayer from '../components/PodcastPlayer.vue'
 
 // 样式导入
 import 'vitepress-plugin-back-to-top/dist/style.css'
@@ -44,7 +45,7 @@ export default {
       'layout-top': () => h(NolebaseHighlightTargetedHeading),
       'nav-bar-content-after': () => h(NolebaseEnhancedReadabilitiesMenu),
       'nav-screen-content-after': () => h(NolebaseEnhancedReadabilitiesScreenMenu),
-      'doc-before': () => h(ReadingTime),
+      'doc-before': () => [h(ReadingTime), h(PodcastPlayer)],
     })
   },
 
@@ -73,6 +74,7 @@ export default {
     app.component('HighlightBox', HighlightBox)
     app.component('TechStack', TechStack)
     app.component('ReadingTime', ReadingTime)
+    app.component('PodcastPlayer', PodcastPlayer)
   },
 
   setup() {
