@@ -60,8 +60,16 @@ async function checkServer() {
 // ============ 内容提取 ============
 
 function extractPageText(): string {
-  const content = document.querySelector('.vp-doc')
-  if (!content) return ''
+  // 尝试多个可能的内容容器
+  const content = document.querySelector('.vp-doc') 
+    || document.querySelector('.content-container')
+    || document.querySelector('main')
+    || document.querySelector('#app')
+
+  if (!content) {
+    console.warn('[PodcastPlayer] 未找到内容容器')
+    return ''
+  }
 
   const clone = content.cloneNode(true) as HTMLElement
 
@@ -125,6 +133,7 @@ function extractPageText(): string {
     .replace(/^\s+$/gm, '')
     .trim()
 
+  console.debug(`[PodcastPlayer] 提取文本: ${text.length} 字符`)
   return text
 }
 
@@ -150,8 +159,8 @@ async function handleGenerate() {
 
   // 提取文本
   const text = extractPageText()
-  if (!text || text.length < 10) {
-    errorMsg.value = '页面内容太少，无法生成'
+  if (!text || text.length < 5) {
+    errorMsg.value = `页面内容提取失败（${text.length} 字符），请刷新后重试`
     return
   }
 
@@ -193,6 +202,11 @@ async function handleGenerate() {
 
     // 全部完成，用完整音频替换
     const fullBlob = new Blob(audioChunks, { type: 'audio/mp3' })
+
+    if (fullBlob.size < 100) {
+      throw new Error('未收到音频数据，请检查 TTS 服务是否正常运行')
+    }
+
     const currentPos = audio ? audio.currentTime : 0
     const wasPlaying = isPlaying.value
 

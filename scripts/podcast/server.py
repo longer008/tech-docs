@@ -131,8 +131,8 @@ class TTSHandler(BaseHTTPRequestHandler):
 
     def _handle_tts_stream(self):
         """
-        流式生成：分段生成音频，边生成边返回
-        使用 chunked transfer encoding
+        流式生成：分段生成音频，每段独立返回完整 MP3
+        前端分多次请求，每次传入 chunk_index 获取对应段
         """
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length).decode("utf-8")
@@ -146,6 +146,7 @@ class TTSHandler(BaseHTTPRequestHandler):
         text = data.get("text", "").strip()
         voice = data.get("voice", DEFAULT_VOICE)
         rate = data.get("rate", DEFAULT_RATE)
+        chunk_index = int(data.get("chunk_index", 0))
 
         if not text:
             self._error(400, "text is required")
@@ -157,38 +158,33 @@ class TTSHandler(BaseHTTPRequestHandler):
         # 分段
         chunks = split_text(text)
         total_chunks = len(chunks)
-        print(f"  📝 流式生成: {len(text)} 字, 分 {total_chunks} 段")
 
-        # 使用 chunked transfer encoding 流式返回
-        self.send_response(200)
-        self.send_header("Content-Type", "audio/mp3")
-        self.send_header("Transfer-Encoding", "chunked")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("X-Total-Chunks", str(total_chunks))
-        self.end_headers()
+        if chunk_index >= total_chunks:
+            self._error(400, f"chunk_index {chunk_index} out of range (total: {total_chunks})")
+            return
 
-        total_bytes = 0
+        chunk_text = chunks[chunk_index]
+        print(f"  📝 生成段 {chunk_index+1}/{total_chunks}: {len(chunk_text)} 字")
+
         try:
-            for i, chunk_text in enumerate(chunks):
-                audio_data = asyncio.run(self._generate_full(chunk_text, voice, rate))
-                # 发送 chunked 数据
-                chunk_header = f"{len(audio_data):X}\r\n".encode()
-                self.wfile.write(chunk_header)
-                self.wfile.write(audio_data)
-                self.wfile.write(b"\r\n")
-                self.wfile.flush()
-                total_bytes += len(audio_data)
-                print(f"    段 {i+1}/{total_chunks}: {len(chunk_text)} 字 -> {len(audio_data)//1024} KB")
+            audio_data = asyncio.run(self._generate_full(chunk_text, voice, rate))
+            if not audio_data:
+                raise Exception("edge-tts 返回空数据")
 
-            # 发送结束标记
-            self.wfile.write(b"0\r\n\r\n")
-            self.wfile.flush()
-            print(f"  ✅ 流式完成: 共 {total_bytes//1024} KB")
-
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mp3")
+            self.send_header("Content-Length", str(len(audio_data)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("X-Chunk-Index", str(chunk_index))
+            self.send_header("X-Total-Chunks", str(total_chunks))
+            self.end_headers()
+            self.wfile.write(audio_data)
+            print(f"    ✅ 段 {chunk_index+1}/{total_chunks}: {len(audio_data)//1024} KB")
         except (BrokenPipeError, ConnectionResetError):
             print(f"  ⚠️ 客户端断开连接")
         except Exception as e:
-            print(f"  ❌ 生成失败: {e}")
+            print(f"  ❌ 段 {chunk_index+1} 生成失败: {e}")
+            self._error(500, str(e))
 
     async def _generate_full(self, text: str, voice: str = DEFAULT_VOICE, rate: str = DEFAULT_RATE) -> bytes:
         """生成单段音频"""

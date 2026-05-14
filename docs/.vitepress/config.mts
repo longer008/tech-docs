@@ -129,7 +129,7 @@ export default withPwa(
     // 主题配置
     themeConfig: {
       // 站点标题和 Logo
-      logo: { src: `${base}logo.svg`, width: 24, height: 24, alt: '技术面试知识库' },
+      logo: { src: '/logo.svg', width: 24, height: 24, alt: '技术面试知识库' },
       siteTitle: '技术面试知识库',
 
       // 搜索配置 - 使用官方 Local Search
