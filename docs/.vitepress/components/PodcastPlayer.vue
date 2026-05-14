@@ -290,10 +290,30 @@ async function handleGenerate() {
     let fullText = text
     if (sourceComments.length > 0) {
       fullText = text + '\n\n' + sourceComments.join('。\n')
-      console.debug(`[PodcastPlayer] 追加源文件注释: ${sourceComments.length} 条，总计 ${fullText.length} 字符`)
     }
 
-    const truncatedText = fullText.slice(0, 50000)
+    // 步骤 1：AI 改写为播客脚本
+    let podcastScript = fullText.slice(0, 8000)
+    try {
+      const rewriteRes = await fetch(`${TTS_SERVER}/rewrite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: podcastScript }),
+      })
+      if (rewriteRes.ok) {
+        const { text: rewritten } = await rewriteRes.json()
+        if (rewritten && rewritten.length > 50) {
+          podcastScript = rewritten
+          console.debug(`[PodcastPlayer] AI 改写: ${fullText.length} → ${podcastScript.length} 字`)
+        }
+      }
+    } catch {
+      // AI 改写失败，使用原文
+      console.debug('[PodcastPlayer] AI 改写跳过，使用原文')
+    }
+
+    // 步骤 2：分段请求 TTS
+    const truncatedText = podcastScript.slice(0, 50000)
     const totalChunks = Math.ceil(truncatedText.length / CHUNK_SIZE)
     const allAudioChunks: Uint8Array[] = []
     let firstChunkPlayed = false
