@@ -747,12 +747,16 @@ async function Page() {
 
 ```tsx
 // 1. fetch 缓存
+// ⚠️ Next.js 15 重要变化：fetch 默认不再缓存（no-store）
+// Next.js 14 及之前：默认 force-cache
+// Next.js 15+：默认 no-store
+
 fetch('https://api.example.com/data', {
-  cache: 'force-cache' // 默认，永久缓存
+  cache: 'force-cache' // 显式声明缓存（Next.js 15+ 需要手动指定）
 })
 
 fetch('https://api.example.com/data', {
-  cache: 'no-store' // 不缓存，每次请求
+  cache: 'no-store' // 不缓存，每次请求（Next.js 15+ 默认行为）
 })
 
 fetch('https://api.example.com/data', {
@@ -1330,9 +1334,9 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
   
-  // 实验性功能
+  // Next.js 15+ PPR 已稳定，可正常配置
   experimental: {
-    ppr: true, // Partial Prerendering
+    ppr: 'incremental', // 或 true（Next.js 15 稳定版）
   },
   
   // 输出配置
@@ -1531,3 +1535,129 @@ async function Page() {
 - Edge Runtime 提供更快的响应速度
 - 灵活的缓存策略（fetch、路由段、全页面）
 - 支持并行路由和拦截路由等高级特性
+
+---
+
+## Next.js 15 稳定版新特性
+
+> Next.js 15 于 2024 年 10 月发布，带来了多项重要更新和稳定化改进。
+
+### 1. PPR（Partial Prerendering）稳定
+
+```tsx
+// nuxt.config.ts / next.config.ts
+experimental: {
+  ppr: 'incremental', // 逐步启用 PPR
+}
+
+// PPR 允许在同一页面中混合静态外壳和动态内容
+// 静态部分立即返回，动态部分通过 Suspense 流式注入
+export default function Page() {
+  return (
+    <div>
+      <header>静态导航栏</header>
+      <Suspense fallback={<Skeleton />}>
+        <DynamicContent /> {/* 动态内容流式加载 */}
+      </Suspense>
+      <footer>静态页脚</footer>
+    </div>
+  )
+}
+```
+
+### 2. 缓存默认行为变更
+
+```tsx
+// Next.js 14 及之前：fetch 默认缓存（force-cache）
+// Next.js 15+：fetch 默认不缓存（no-store）
+
+// 如果需要缓存，必须显式声明
+fetch('https://api.example.com/data', {
+  cache: 'force-cache' // 显式启用缓存
+})
+
+// GET 路由处理器也不再默认缓存
+// Next.js 14：GET handler 默认缓存
+// Next.js 15+：GET handler 默认不缓存
+export async function GET() {
+  const data = await fetchData()
+  return Response.json(data)
+}
+```
+
+### 3. Dynamic IO 改进
+
+```tsx
+// Next.js 15 引入了更明确的动态渲染标记
+// 使用 cookies()、headers() 等动态函数时，
+// 整个路由会自动选择动态渲染
+
+import { cookies } from 'next/headers'
+
+export default async function Page() {
+  const cookieStore = await cookies() // Next.js 15+ 异步调用
+  const theme = cookieStore.get('theme')
+  // 此页面自动为动态渲染
+}
+```
+
+### 4. 改进的错误覆盖层
+
+```tsx
+// Next.js 15 改进了开发环境的错误提示
+// 更清晰的 Hydration 错误信息
+// 更好的 Server Action 错误处理
+// 支持点击错误堆栈跳转到源码
+```
+
+### 5. Turbopack 改进
+
+```bash
+# Next.js 15 中 Turbopack 更稳定
+# 开发模式启动速度提升显著
+# 支持更多 Webpack loader 和 plugin
+
+# 使用 Turbopack
+next dev --turbopack
+```
+
+### 6. params 和 searchParams 变为 Promise
+
+```tsx
+// Next.js 15+：params 和 searchParams 变为异步
+// 之前（同步）：
+// export default function Page({ params }) { ... }
+
+// Next.js 15+（异步）：
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { id } = await params
+  const { q } = await searchParams
+
+  return <div>Post {id}, Search: {q}</div>
+}
+```
+
+### 7. Node.js 18 最低版本要求
+
+```bash
+# Next.js 15 最低要求 Node.js 18.18.0
+# 推荐使用 Node.js 20+ 以获得最佳性能
+node --version # 确保版本 >= 18.18.0
+```
+
+### Next.js 15 面试高频追问
+
+**Q1: Next.js 15 最大的缓存变更是什么？**
+- A: fetch 请求和 GET Route Handlers 默认不再缓存。这是最大的行为变更，之前默认缓存可能导致数据不更新的问题，现在需要显式启用缓存。
+
+**Q2: PPR 解决了什么问题？**
+- A: PPR 允许在同一页面中混合静态内容和动态内容。静态部分（导航、页脚）立即返回，动态部分通过 Suspense 流式注入，结合了 SSR 的动态性和 SSG 的速度。
+
+**Q3: 为什么 params 变成了 Promise？**
+- A: 为了支持部分预渲染（PPR）和更好的流式渲染，params 的解析变为异步，使 React 可以在渲染过程中按需获取路由参数。

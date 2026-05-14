@@ -1,5 +1,7 @@
 # CSS 核心概念面试题集
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > CSS 核心概念、选择器、定位、BFC 等高频面试题
 
 ## A. 面试宝典
@@ -647,6 +649,239 @@ document.documentElement.style
 .will-animate {
   will-change: transform, opacity;
 }
+```
+
+---
+
+#### 11. 现代 CSS 新特性（2023+）
+
+**CSS 嵌套（CSS Nesting，主流浏览器均已支持）**：
+
+```css
+/* 原生 CSS 嵌套，无需预处理器 */
+.card {
+  padding: 1rem;
+  background: white;
+
+  & .title {
+    font-size: 1.5rem;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (width >= 768px) {
+    padding: 2rem;
+  }
+}
+
+/* 等价于 */
+.card { padding: 1rem; background: white; }
+.card .title { font-size: 1.5rem; }
+.card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+@media (width >= 768px) { .card { padding: 2rem; } }
+```
+
+**@layer 级联层**：
+
+```css
+/* 级联层控制样式的优先级，解决第三方样式覆盖问题 */
+@layer reset, base, components, utilities;
+
+@layer reset {
+  * { margin: 0; box-sizing: border-box; }
+}
+
+@layer base {
+  body { font-family: system-ui; }
+  h1 { font-size: 2rem; }
+}
+
+@layer components {
+  .btn { padding: 0.5rem 1rem; border-radius: 4px; }
+}
+
+@layer utilities {
+  .hidden { display: none; }
+}
+
+/* 层越靠后优先级越高：utilities > components > base > reset */
+/* 未分层的样式优先级最高 */
+```
+
+**@scope 作用域样式**：
+
+```css
+/* 限制样式的作用范围 */
+@scope (.card) {
+  .title { color: blue; }  /* 只影响 .card 内的 .title */
+  .content { font-size: 14px; }
+}
+
+/* 带下限的作用域 */
+@scope (.card) to (.card-content) {
+  .title { color: blue; }  /* 不影响 .card-content 内的 .title */
+}
+```
+
+**@property 自定义属性注册**：
+
+```css
+/* 注册自定义属性，指定类型和初始值 */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --color {
+  syntax: '<color>';
+  initial-value: #ff0000;
+  inherits: true;
+}
+
+/* 可对自定义属性做动画（未注册的自定义属性无法过渡） */
+.element {
+  --angle: 0deg;
+  background: conic-gradient(from var(--angle), red, blue);
+  transition: --angle 1s;
+}
+
+.element:hover {
+  --angle: 360deg;
+}
+```
+
+**@starting-style 进入动画**：
+
+```css
+/* 为从 display:none 到显示的元素添加入场动画 */
+.dialog {
+  transition: opacity 0.3s, display 0.3s allow-discrete;
+  opacity: 0;
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.dialog[open] {
+  opacity: 1;
+}
+```
+
+**滚动驱动动画（Scroll-Driven Animations）**：
+
+```css
+/* 滚动进度驱动动画 */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.scroll-reveal {
+  animation: fade-in linear both;
+  animation-timeline: view();       /* 元素进入视口时触发 */
+  animation-range: entry 0% entry 100%;
+}
+
+/* 滚动位置驱动 */
+.progress-bar {
+  transform-origin: left;
+  scale: 0 1;
+  animation: scale-x linear both;
+  animation-timeline: scroll();     /* 基于滚动位置 */
+}
+
+@keyframes scale-x {
+  to { scale: 1 1; }
+}
+```
+
+**容器样式查询（Container Style Queries）**：
+
+```css
+/* 根据容器自定义属性值变化样式 */
+.card-container {
+  container-type: inline-size;
+  container-name: card;
+  --theme: light;
+}
+
+@container card style(--theme: dark) {
+  .card-content {
+    background: #1a1a1a;
+    color: white;
+  }
+}
+
+.card-container.dark {
+  --theme: dark;  /* 触发容器样式查询 */
+}
+```
+
+**:has() 父选择器（强调）**：
+
+```css
+/* 根据子元素状态选择父元素 */
+.form-group:has(input:invalid) {
+  border-color: red;
+}
+
+.card:has(img) {
+  grid-column: span 2;  /* 包含图片的卡片跨两列 */
+}
+
+nav:has(.active) {
+  background: highlight;
+}
+
+/* 检查兄弟元素 */
+h2:has(+ p) {
+  margin-bottom: 0.5rem;  /* 后面紧跟段落的标题 */
+}
+```
+
+**其他重要新特性**：
+
+```css
+/* subgrid - 子网格 */
+.grid-parent {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+}
+
+.grid-child {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;  /* 继承父网格列定义 */
+}
+
+/* anchor positioning - 锚点定位 */
+.tooltip {
+  position-anchor: --my-anchor;
+  position-area: top center;  /* 相对于锚点定位 */
+}
+
+.button {
+  anchor-name: --my-anchor;
+}
+
+/* light-dark() - 自适应明暗模式 */
+body {
+  color: light-dark(#333, #ccc);
+  background: light-dark(white, #1a1a1a);
+}
+
+/* color-mix() - 颜色混合 */
+.element {
+  border-color: color-mix(in srgb, blue 50%, white);
+}
+
+/* text-wrap: balance / pretty */
+h1 { text-wrap: balance; }   /* 标题文字平衡换行 */
+p { text-wrap: pretty; }     /* 段落避免孤字 */
 ```
 
 ---

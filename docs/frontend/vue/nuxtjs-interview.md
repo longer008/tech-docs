@@ -1670,6 +1670,90 @@ const { data } = await useFetch('/api/users')
 
 ---
 
+## Nuxt 3.10+ 新特性与 Nuxt 4 展望
+
+### Nuxt 3.10+ 新特性
+
+**1. usePreviewMode（Nuxt 3.10+）**
+
+```vue
+<script setup>
+// 启用预览模式，适用于 CMS 内容预览
+const { enabled, state } = usePreviewMode({
+  shouldEnable: () => route.query.preview === 'true'
+})
+</script>
+
+<template>
+  <div v-if="enabled">预览模式：内容将实时更新</div>
+</template>
+```
+
+**2. 共享预渲染缓存（Nuxt 3.11+）**
+
+```javascript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  routeRules: {
+    // 预渲染的页面可以被多个用户共享缓存
+    '/blog/**': { prerender: true, swr: 3600 }
+  }
+})
+```
+
+**3. 内置 DevTools 改进**
+
+```javascript
+// Nuxt DevTools 现已内置，无需额外安装
+// 支持：组件检查、路由分析、Payload 查看、服务器函数调试等
+// nuxt.config.ts
+export default defineNuxtConfig({
+  devtools: { enabled: true }
+})
+```
+
+**4. 改进的 Payload 提取**
+
+```javascript
+// Nuxt 3.11+ 支持更灵活的 payload 处理
+// 将 payload 提取为独立 JSON 文件，提升首屏加载性能
+export default defineNuxtConfig({
+  experimental: {
+    payloadExtraction: true
+  }
+})
+```
+
+**5. useRouteAnnouncer（Nuxt 3.12+）**
+
+```vue
+<script setup>
+// 为无障碍访问提供路由变更通知
+const { set } = useRouteAnnouncer()
+
+function navigate() {
+  set('正在跳转到新页面')
+  navigateTo('/new-page')
+}
+</script>
+```
+
+### Nuxt 4 展望
+
+Nuxt 4 计划中的重大变化：
+
+| 变化 | 说明 |
+|------|------|
+| 默认目录结构变更 | `server/` 目录移至根级别，与 `app/` 目录并列 |
+| Vue 3.5+ 为最低版本 | 更好地利用 Vue 3.5 新特性（响应式 Props 解构等） |
+| 改进的模块系统 | 更严格的模块规范，更好的类型安全 |
+| 更好的 Nitro v3 集成 | 更快的服务端性能 |
+| 兼容性升级 | 不再支持 Node.js 18 以下版本 |
+
+> **迁移提示**：Nuxt 4 将提供平滑的迁移路径，大部分 Nuxt 3 项目只需少量修改即可升级。
+
+---
+
 ## D. 参考资料
 
 ### 官方资源

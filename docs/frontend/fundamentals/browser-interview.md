@@ -1,5 +1,7 @@
 # 浏览器原理面试题集
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > 浏览器工作原理、渲染机制、网络协议与高频面试题
 > 
 > 更新时间：2025-02
@@ -35,7 +37,7 @@
 │      ┌──────────────────┼──────────────────┐               │
 │      ▼                  ▼                  ▼               │
 │  ┌────────┐      ┌────────────┐      ┌────────────┐       │
-│  │ GPU    │      │  Plugin    │      │ Extension  │       │
+│  │ GPU    │      │  Utility   │      │ Extension  │       │
 │  │Process │      │  Process   │      │  Process   │       │
 │  └────────┘      └────────────┘      └────────────┘       │
 │                                                              │
@@ -56,7 +58,8 @@
 | Renderer | 页面渲染、JavaScript 执行、事件处理 |
 | GPU | 3D 绘制、合成 |
 | Network | 网络请求 |
-| Plugin | 插件运行（如 Flash） |
+| Plugin | 插件运行（已废弃，Flash 等已停止支持） |
+| Utility | 音频服务、网络服务等辅助进程（替代原 Plugin 进程） |
 
 **为什么使用多进程架构？**
 - 稳定性：一个标签页崩溃不影响其他标签页
@@ -362,7 +365,10 @@ HTTP/3 完全无阻塞：
 │         ├─▶ 收集 Feedback (类型反馈)                       │
 │         │                                                   │
 │         ▼                                                   │
-│    TurboFan (优化编译器)                                    │
+│    SparkPlug (非优化编译器，快速生成机器码)                │
+│         │                                                   │
+│         ▼                                                   │
+│    Magistral (优化编译器，2024+ 替代 TurboFan)             │
 │         │                                                   │
 │         ▼                                                   │
 │    Optimized Machine Code (优化的机器码)                    │
@@ -377,7 +383,8 @@ HTTP/3 完全无阻塞：
 
 1. **JIT 编译（Just-In-Time）**
    - Ignition 解释器：快速启动，生成字节码
-   - TurboFan 编译器：优化热点代码为机器码
+   - SparkPlug 非优化编译器（2021+）：快速生成非优化机器码，提升启动速度
+   - Magistral 优化编译器（2024+，逐步替代 TurboFan）：更快的编译速度和更优的代码质量
    - 根据运行情况动态调整编译策略
 
 2. **隐藏类（Hidden Classes）**
@@ -577,12 +584,16 @@ request.onsuccess = (e) => {
 │  - 需要改进: 2.5s ~ 4s                                      │
 │  - 差: > 4s                                                 │
 │                                                              │
-│  FID (First Input Delay) - 首次输入延迟                     │
+│  INP (Interaction to Next Paint) - 交互到下次绘制（2024年3月起替代FID成为核心指标）│
 │  ──────────────────────────────────────────────────────────│
-│  - 测量首次交互响应延迟                                     │
-│  - 良好: < 100ms                                            │
-│  - 需要改进: 100ms ~ 300ms                                  │
-│  - 差: > 300ms                                              │
+│  - 测量用户所有交互的响应延迟                               │
+│  - 良好: < 200ms                                           │
+│  - 需要改进: 200ms ~ 500ms                                 │
+│  - 差: > 500ms                                             │
+│                                                              │
+│  FID (First Input Delay) - 首次输入延迟（已降级为补充指标）  │
+│  ──────────────────────────────────────────────────────────│
+│  - 仅测量首次交互响应延迟，不如 INP 全面                   │
 │                                                              │
 │  CLS (Cumulative Layout Shift) - 累积布局偏移               │
 │  ──────────────────────────────────────────────────────────│
@@ -595,18 +606,24 @@ request.onsuccess = (e) => {
 │  - FCP (First Contentful Paint): 首次内容绘制               │
 │  - TTFB (Time to First Byte): 首字节时间                    │
 │  - TTI (Time to Interactive): 可交互时间                    │
-│  - INP (Interaction to Next Paint): 交互到下次绘制          │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ```javascript
-// 使用 Performance API
-const timing = performance.timing
-const pageLoadTime = timing.loadEventEnd - timing.navigationStart
-const dnsTime = timing.domainLookupEnd - timing.domainLookupStart
-const tcpTime = timing.connectEnd - timing.connectStart
-const ttfb = timing.responseStart - timing.requestStart
+// 使用 Performance API（推荐使用 PerformanceNavigationTiming 替代已废弃的 performance.timing）
+const [navEntry] = performance.getEntriesByType('navigation')
+if (navEntry) {
+  console.log({
+    DNS: navEntry.domainLookupEnd - navEntry.domainLookupStart,
+    TCP: navEntry.connectEnd - navEntry.connectStart,
+    TTFB: navEntry.responseStart - navEntry.requestStart,
+    DOMReady: navEntry.domContentLoadedEventEnd - navEntry.startTime,
+    Load: navEntry.loadEventEnd - navEntry.startTime
+  })
+}
+
+// 注意：performance.timing 已废弃，请使用 PerformanceNavigationTiming
 
 // 使用 PerformanceObserver
 const observer = new PerformanceObserver((list) => {
@@ -617,15 +634,119 @@ const observer = new PerformanceObserver((list) => {
 
 observer.observe({ entryTypes: ['largest-contentful-paint'] })
 
-// Web Vitals 库
-import { getCLS, getFID, getLCP, getINP } from 'web-vitals'
+// Web Vitals 库（getFID 已废弃，使用 getINP 替代）
+import { getCLS, getLCP, getINP } from 'web-vitals'
 
 getCLS(console.log)
-getFID(console.log)
 getLCP(console.log)
 getINP(console.log)
 ```
 
+
+---
+
+#### 9. 现代浏览器新特性
+
+**WebGPU**：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    WebGPU vs WebGL                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  WebGPU 是 WebGL 的继任者：                                 │
+│  - 基于 Vulkan/Metal/D3D12 现代图形 API                    │
+│  - 更低的开销和更高效的 GPU 控制                            │
+│  - 支持通用计算着色器（Compute Shader）                     │
+│  - 适合机器学习推理、高性能渲染                             │
+│                                                              │
+│  典型应用场景：                                             │
+│  - 高性能 3D 渲染                                           │
+│  - 浏览器端 AI 推理                                         │
+│  - 科学计算可视化                                           │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Privacy Sandbox（隐私沙箱）**：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 Privacy Sandbox 核心方案                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  替代第三方 Cookie 的隐私方案：                             │
+│                                                              │
+│  Topics API：                                               │
+│  - 浏览器根据用户行为推断兴趣主题                          │
+│  - 广告商只能获取粗粒度兴趣标签                            │
+│                                                              │
+│  Attribution Reporting：                                     │
+│  - 隐私安全的广告转化归因                                  │
+│  - 不泄露用户级数据                                        │
+│                                                              │
+│  Protected Audiences（原 FLEDGE）：                         │
+│  - 本地设备上执行广告竞价                                  │
+│  - 用户数据不离开浏览器                                    │
+│                                                              │
+│  Shared Storage：                                           │
+│  - 跨站数据的安全存储与访问                                │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Speculation Rules API（预加载规则）**：
+
+```html
+<!-- 声明式预加载，替代传统 prefetch/prerender -->
+<script type="speculationrules">
+{
+  "prefetch": [
+    { "urls": ["/about", "/contact"] }
+  ],
+  "prerender": [
+    { "urls": ["/next-page"], "where": { "href_matches": "/next*" } }
+  ]
+}
+</script>
+
+<!-- prerender 会完整预渲染页面，实现几乎即时的页面切换 -->
+<!-- 浏览器会根据用户行为智能决定是否执行预加载 -->
+```
+
+**Passkeys / WebAuthn**：
+
+```javascript
+// WebAuthn API - 无密码认证
+// 注册 Passkey
+const credential = await navigator.credentials.create({
+  publicKey: {
+    challenge: new Uint8Array(32),
+    rp: { name: "Example Corp" },
+    user: {
+      id: new Uint8Array(16),
+      name: "user@example.com",
+      displayName: "User"
+    },
+    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+    authenticatorSelection: {
+      authenticatorAttachment: "platform",  // 使用设备内置认证器
+      userVerification: "required"
+    }
+  }
+})
+
+// 验证 Passkey
+const assertion = await navigator.credentials.get({
+  publicKey: {
+    challenge: new Uint8Array(32),
+    allowCredentials: [{
+      type: "public-key",
+      id: credential.rawId
+    }]
+  }
+})
+```
 
 ---
 

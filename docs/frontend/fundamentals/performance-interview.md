@@ -1,5 +1,7 @@
 # 前端性能优化面试题集
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > 前端性能优化策略与高频面试题 | 更新时间：2025-02
 
 ## 目录
@@ -577,6 +579,7 @@ const handleClick = useCallback(() => {}, []);
 | 全部使用懒加载 | 关键资源应预加载 |
 | 缓存时间越长越好 | 需要考虑更新需求 |
 | 虚拟列表解决一切 | 简单场景用分页更合适 |
+| 仍关注 FID | 2024年3月起 INP 替代 FID 成为核心指标 |
 
 ---
 
@@ -590,17 +593,18 @@ const handleClick = useCallback(() => {}, []);
 // - 核心 Web Vitals
 // - 优化建议
 
-// Performance API
-const timing = performance.timing;
-console.log({
-  DNS: timing.domainLookupEnd - timing.domainLookupStart,
-  TCP: timing.connectEnd - timing.connectStart,
-  TTFB: timing.responseStart - timing.requestStart,
-  Download: timing.responseEnd - timing.responseStart,
-  DOMParse: timing.domInteractive - timing.responseEnd,
-  DOMReady: timing.domContentLoadedEventEnd - timing.navigationStart,
-  Load: timing.loadEventEnd - timing.navigationStart
-});
+// Performance API（推荐使用 PerformanceNavigationTiming 替代已废弃的 performance.timing）
+const [navEntry] = performance.getEntriesByType('navigation');
+if (navEntry) {
+  console.log({
+    DNS: navEntry.domainLookupEnd - navEntry.domainLookupStart,
+    TCP: navEntry.connectEnd - navEntry.connectStart,
+    TTFB: navEntry.responseStart - navEntry.requestStart,
+    Download: navEntry.responseEnd - navEntry.responseStart,
+    DOMReady: navEntry.domContentLoadedEventEnd - navEntry.startTime,
+    Load: navEntry.loadEventEnd - navEntry.startTime
+  });
+}
 
 // PerformanceObserver
 const observer = new PerformanceObserver((list) => {
@@ -611,11 +615,19 @@ const observer = new PerformanceObserver((list) => {
 
 observer.observe({ entryTypes: ['longtask', 'largest-contentful-paint'] });
 
-// Web Vitals
-import { getCLS, getFID, getLCP } from 'web-vitals';
+// Long Animation Frames API（替代 longtask，检测导致 INP 差的长动画帧）
+const loaftObserver = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log('Long animation frame:', entry.duration, entry);
+  }
+});
+loaftObserver.observe({ type: 'long-animation-frame', buffered: true });
+
+// Web Vitals（2024年3月起 INP 替代 FID 成为核心指标）
+import { getCLS, getLCP, getINP } from 'web-vitals';
 getCLS(console.log);
-getFID(console.log);
 getLCP(console.log);
+getINP(console.log);
 ```
 
 ### Webpack 优化配置

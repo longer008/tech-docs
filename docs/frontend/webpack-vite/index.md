@@ -1,5 +1,7 @@
 # Webpack & Vite
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > 现代前端构建工具完全指南
 
 **更新时间**: 2025-02
@@ -31,6 +33,7 @@
 - 基于原生 ESM 的开发服务器
 - 极速的冷启动和热更新
 - 生产环境使用 Rollup 打包
+- Vite 6+ 引入 Environment API，计划使用 Rolldown 替代 Rollup
 
 **核心差异**：
 
@@ -49,7 +52,7 @@
 | 场景 | 推荐工具 | 原因 |
 |------|---------|------|
 | 新项目 | Vite | 开发体验好，配置简单 |
-| 大型项目 | Webpack | 生态成熟，可定制性强 |
+| 大型项目 | Vite / Webpack | Vite 6+ 已大幅改善大型项目支持 |
 | 库开发 | Rollup/Vite | 输出更小，支持多种格式 |
 | 老项目 | Webpack | 迁移成本低 |
 | 需要兼容 IE | Webpack | Vite 不支持 IE |
@@ -395,7 +398,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    minify: 'terser',
+    minify: 'esbuild', // 推荐 esbuild，速度更快（Vite 默认）
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
@@ -656,6 +659,8 @@ module.exports = {
 
 **4. DLL 插件（已过时，推荐使用 Webpack 5 缓存）**：
 
+> ⚠️ DLL 方案已过时，Webpack 5 的持久化缓存已完全替代 DLL 的功能，不建议在新项目中使用。
+
 ```javascript
 // webpack.dll.config.js
 const webpack = require('webpack')
@@ -781,40 +786,21 @@ export default defineConfig({
 **3. 图片优化**：
 
 ```javascript
-import { defineConfig } from 'vite'
-import viteImagemin from 'vite-plugin-imagemin'
+// ⚠️ vite-plugin-imagemin 已不再维护，推荐使用以下替代方案：
+// 方案1：使用 unplugin-imagemin（推荐）
+import imagemin from 'unplugin-imagemin/vite'
 
 export default defineConfig({
   plugins: [
-    viteImagemin({
-      gifsicle: {
-        optimizationLevel: 7,
-        interlaced: false
-      },
-      optipng: {
-        optimizationLevel: 7
-      },
-      mozjpeg: {
-        quality: 80
-      },
-      pngquant: {
-        quality: [0.8, 0.9],
-        speed: 4
-      },
-      svgo: {
-        plugins: [
-          {
-            name: 'removeViewBox'
-          },
-          {
-            name: 'removeEmptyAttrs',
-            active: false
-          }
-        ]
-      }
+    imagemin({
+      // 默认使用 sharp 进行压缩
     })
   ]
 })
+
+// 方案2：构建前使用脚本手动压缩图片
+// npm install sharp --save-dev
+// 在 package.json 中添加 prebuild 脚本
 ```
 
 **4. Gzip 压缩**：
@@ -1012,13 +998,15 @@ export default defineConfig({
     assetsDir: 'assets',
 
     // 压缩
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    },
+    minify: 'esbuild', // 推荐 esbuild（Vite 默认），比 terser 快 20-40 倍
+    // 如需 terser 的高级压缩选项：
+    // minify: 'terser',
+    // terserOptions: {
+    //   compress: {
+    //     drop_console: true,
+    //     drop_debugger: true
+    //   }
+    // },
 
     // Rollup 配置
     rollupOptions: {
@@ -1437,6 +1425,101 @@ export default defineConfig({
   ]
 })
 ```
+
+---
+
+## 最新知识补充（2024-2025）
+
+### 1. Vite 6 重大更新
+
+Vite 6 于 2024 年 11 月发布，主要变化：
+
+**Environment API**：
+Vite 6 引入了全新的 Environment API，允许在单个 Vite Dev Server 中配置和运行多个环境，支持 SSR、SSG 等场景。
+
+```javascript
+// vite.config.js - Environment API 示例
+export default defineConfig({
+  environments: {
+    client: {
+      // 客户端环境配置
+      build: {
+        outDir: 'dist/client'
+      }
+    },
+    ssr: {
+      // SSR 环境配置
+      build: {
+        outDir: 'dist/server',
+        ssr: true
+      }
+    }
+  }
+})
+```
+
+**其他 Vite 6 变更**：
+- Node.js 18+ 为最低要求
+- `resolve.conditions` 默认值更新
+- 更好的 CSS 处理（支持 Lightning CSS）
+- 改进的 HMR 边界处理
+
+### 2. Rolldown：Vite 的未来打包器
+
+[Rolldown](https://rolldown.rs/) 是基于 Rust 的 JavaScript 打包器，计划替代 Vite 生产构建中的 Rollup：
+
+- **统一开发/生产管线**：开发环境使用 esbuild（快速），生产环境将使用 Rolldown（与 Rollup 兼容但更快）
+- **极快的构建速度**：Rust 实现，比 Rollup 快 10-100 倍
+- **Rollup 兼容**：保持与 Rollup 插件和配置的兼容性
+- **当前状态**：已进入可用阶段，Vite 计划在后续版本集成
+
+```javascript
+// 未来 Vite 配置可能自动使用 Rolldown
+// 当前可通过实验性配置启用：
+export default defineConfig({
+  build: {
+    // Rolldown 集成后，将无需手动配置
+    rollupOptions: { /* ... */ }
+  }
+})
+```
+
+### 3. Vite 压缩工具选择
+
+```javascript
+// esbuild（Vite 默认，推荐）
+// 速度：极快（比 terser 快 20-40 倍）
+// 压缩率：略低于 terser（差距约 1-2%）
+export default defineConfig({
+  build: { minify: 'esbuild' }
+})
+
+// terser（需要额外安装）
+// 速度：慢
+// 压缩率：最高
+export default defineConfig({
+  build: { minify: 'terser' }
+})
+
+// Lightning CSS（Vite 5.4+ 新增选项）
+// 速度：极快（Rust 实现）
+// 同时处理 CSS 压缩和 JS 压缩
+export default defineConfig({
+  css: {
+    transformer: 'lightningcss'
+  },
+  build: {
+    cssMinify: 'lightningcss'
+  }
+})
+```
+
+### 4. vite-plugin-imagemin 已停止维护
+
+`vite-plugin-imagemin` 已不再维护，推荐替代方案：
+- `unplugin-imagemin`：基于 sharp 的图片压缩插件
+- `@vite-pwa/assets-generator`：PWA 场景下的图片处理
+- 构建前使用 sharp 脚本手动处理
 
 ---
 

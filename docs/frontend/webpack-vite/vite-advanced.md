@@ -1,5 +1,7 @@
 # Vite 配置与优化进阶指南
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > Vite 深度配置、性能优化与最佳实践 | 更新时间：2025-02
 
 ## 目录
@@ -116,14 +118,8 @@ export default defineConfig({
       }
     },
     
-    // 压缩配置
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // 删除 console
-        drop_debugger: true // 删除 debugger
-      }
-    },
+    // 压缩配置（推荐 esbuild，比 terser 快 20-40 倍，输出仅大 1-2%）
+    minify: 'esbuild', // 如需更高压缩率可使用 'terser'，但构建速度会显著下降
     
     // 分块大小警告限制
     chunkSizeWarningLimit: 1000
@@ -249,40 +245,21 @@ export default defineConfig({
 ### 3. 图片优化
 
 ```typescript
-// vite.config.ts
-import viteImagemin from 'vite-plugin-imagemin'
+// ⚠️ vite-plugin-imagemin 已停止维护，构建时常报错
+// 推荐使用 unplugin-imagemin 替代：
+// import imagemin from 'unplugin-imagemin/vite'
+//
+// export default defineConfig({
+//   plugins: [
+//     imagemin({
+//       // 默认使用 sharp，无需安装系统依赖
+//     })
+//   ]
+// })
 
-export default defineConfig({
-  plugins: [
-    viteImagemin({
-      gifsicle: {
-        optimizationLevel: 7,
-        interlaced: false
-      },
-      optipng: {
-        optimizationLevel: 7
-      },
-      mozjpeg: {
-        quality: 80
-      },
-      pngquant: {
-        quality: [0.8, 0.9],
-        speed: 4
-      },
-      svgo: {
-        plugins: [
-          {
-            name: 'removeViewBox'
-          },
-          {
-            name: 'removeEmptyAttrs',
-            active: false
-          }
-        ]
-      }
-    })
-  ]
-})
+// 以下为旧版 vite-plugin-imagemin 配置（已不推荐）：
+// import viteImagemin from 'vite-plugin-imagemin'
+// ...
 ```
 
 ### 4. Gzip 压缩
@@ -522,7 +499,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
-import viteImagemin from 'vite-plugin-imagemin'
+// ⚠️ vite-plugin-imagemin 已停止维护，推荐使用 unplugin-imagemin
+// import imagemin from 'unplugin-imagemin/vite'
 
 export default defineConfig({
   mode: 'production',
@@ -561,17 +539,19 @@ export default defineConfig({
       }
     },
     
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log']
-      },
-      format: {
-        comments: false
-      }
-    },
+    minify: 'esbuild', // 推荐 esbuild（默认值），比 terser 快 20-40 倍
+    // 如需更高压缩率，可切换为 terser（但构建速度会显著下降）
+    // minify: 'terser',
+    // terserOptions: {
+    //   compress: {
+    //     drop_console: true,
+    //     drop_debugger: true,
+    //     pure_funcs: ['console.log']
+    //   },
+    //   format: {
+    //     comments: false
+    //   }
+    // },
     
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false // 禁用 gzip 压缩大小报告
@@ -598,13 +578,10 @@ export default defineConfig({
       ext: '.br'
     }),
     
-    // 图片压缩
-    viteImagemin({
-      gifsicle: { optimizationLevel: 7 },
-      optipng: { optimizationLevel: 7 },
-      mozjpeg: { quality: 80 },
-      pngquant: { quality: [0.8, 0.9], speed: 4 }
-    }),
+    // 图片压缩（已改用 unplugin-imagemin）
+    // imagemin({
+    //   // 默认使用 sharp，无需安装系统依赖
+    // }),
     
     // 构建分析
     visualizer({
@@ -846,3 +823,88 @@ export default defineConfig({
 - [Rollup 官方文档](https://rollupjs.org/)
 - [esbuild 官方文档](https://esbuild.github.io/)
 - [Vite 插件开发指南](https://vitejs.dev/guide/api-plugin.html)
+
+---
+
+## 最新知识补充（2024-2025）
+
+### 1. Vite 6 Environment API
+
+Vite 6（2024 年 11 月发布）引入了 **Environment API**，允许在单个 Vite Dev Server 中配置多个运行时环境（如客户端 + SSR），实现更灵活的模块处理。
+
+```typescript
+// vite.config.ts - Environment API 示例
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  environments: {
+    client: {
+      // 客户端环境配置
+      build: {
+        outDir: 'dist/client',
+      },
+    },
+    ssr: {
+      // SSR 环境配置
+      build: {
+        outDir: 'dist/ssr',
+      },
+    },
+  },
+})
+```
+
+### 2. Rolldown：统一开发与生产构建管线
+
+Vite 当前开发使用 esbuild、生产使用 Rollup，导致行为差异。**Rolldown**（基于 Rust 开发）将统一两端管线：
+
+- 与 Rollup API 兼容
+- 开发和生产共享同一打包器，消除行为差异
+- 预计在 Vite 未来版本中替代 Rollup 作为生产打包器
+
+```typescript
+// 未来 Vite 配置可能支持
+export default defineConfig({
+  build: {
+    // rolldownMode: true, // 实验性，未来默认启用
+  },
+})
+```
+
+### 3. Lightning CSS 替代 PostCSS
+
+Vite 5.4+ 支持 `css.lightningcss` 选项，使用 Rust 编写的 Lightning CSS 替代 PostCSS 进行 CSS 转换，性能大幅提升：
+
+```typescript
+// vite.config.ts
+import lightningcss from 'lightningcss'
+
+export default defineConfig({
+  css: {
+    transformer: 'lightningcss',
+    lightningcss: {
+      // CSS 目标浏览器
+      targets: lightningcss.browserslistToTargets(['> 0.2%', 'not dead']),
+    },
+  },
+  build: {
+    cssMinify: 'lightningcss', // 使用 Lightning CSS 压缩
+  },
+})
+```
+
+### 4. 压缩工具对比
+
+| 工具 | 构建速度 | 输出大小 | 说明 |
+|------|---------|---------|------|
+| **esbuild** | 极快（基准） | 较大 1-2% | Vite 默认，推荐大多数场景 |
+| **terser** | 慢 20-40 倍 | 最小 | 需极致压缩时使用 |
+| **Lightning CSS** | 极快 | 与 esbuild 相当 | 仅 CSS 压缩，Vite 5.4+ |
+
+### 5. vite-plugin-imagemin 已停止维护
+
+`vite-plugin-imagemin` 依赖系统级工具（gifsicle、optipng 等），安装时常出错且已停止维护。
+
+**推荐替代**：
+- **unplugin-imagemin**：基于 sharp，无需系统依赖，跨平台兼容
+- **vite-plugin-static-copy** + 外部压缩：CI 中单独处理图片

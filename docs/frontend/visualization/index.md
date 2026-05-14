@@ -1,5 +1,7 @@
 # 前端可视化技术
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > WebGL、Three.js、ECharts、Canvas 数据可视化与图形渲染 | 更新时间：2025-02
 
 ## 目录
@@ -378,7 +380,7 @@ function isPowerOf2(value: number): boolean {
 
 ```typescript
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // 基础场景设置
 class ThreeScene {
@@ -479,7 +481,7 @@ class ThreeScene {
 
   // 加载模型
   async loadModel(url: string) {
-    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader');
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
     const loader = new GLTFLoader();
 
     return new Promise<THREE.Group>((resolve, reject) => {
@@ -602,9 +604,9 @@ class ParticleSystem3D {
 ### 3. Three.js 后期处理
 
 ```typescript
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 // 后期处理
 class PostProcessing {
@@ -768,3 +770,88 @@ myChart.setOption(lineOption);
 ```
 
 ### 3. ECh
+
+> ⚠️ 以下内容截断，待补充完整。请参考 [ECharts 官方文档](https://echarts.apache.org/zh/) 获取最新信息。
+
+---
+
+## 最新知识补充（2024-2025）
+
+### 1. Three.js 导入路径变更（r160+）
+
+Three.js r160 起将扩展模块的导入路径从 `three/examples/jsm/` 迁移到 `three/addons/`：
+
+```typescript
+// ❌ 旧写法（Three.js < r160）
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
+
+// ✅ 新写法（Three.js r160+）
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+```
+
+> 注意：旧路径在最新版本中仍可用但已废弃，建议尽快迁移。
+
+### 2. Three.js WebGPU 渲染器
+
+Three.js r150+ 实验性支持 **WebGPU 渲染器**（`WebGPURenderer`），提供更现代的 GPU API 访问：
+
+```typescript
+// WebGPU 渲染器（实验性）
+import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js'
+
+const renderer = new WebGPURenderer({ antialias: true })
+await renderer.init() // WebGPU 需要异步初始化
+renderer.setSize(window.innerWidth, window.innerHeight)
+```
+
+**WebGPU 优势**：
+- 更底层的 GPU 控制（Compute Shader）
+- 更好的性能（减少 CPU-GPU 通信开销）
+- 支持现代图形特性（间接绘制、存储缓冲区等）
+
+> WebGPU 目前浏览器支持有限（Chrome 113+），建议作为渐进增强使用。
+
+### 3. ECharts 5.5+ 更新
+
+- **按需引入优化**：支持更细粒度的 tree-shaking
+- **CSS transform 支持**：图表容器支持 CSS transform，不再出现坐标偏移
+- **数据区域缩放增强**：`dataZoom` 组件优化大数据场景性能
+- **无障碍访问**：改进 ARIA 支持
+
+```typescript
+// ECharts 按需引入（推荐）
+import * as echarts from 'echarts/core'
+import { BarChart, LineChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  BarChart, LineChart,
+  GridComponent, TooltipComponent, LegendComponent,
+  CanvasRenderer
+])
+```
+
+### 4. OffscreenCanvas Worker 渲染
+
+Canvas 2D 支持通过 `OffscreenCanvas` 将渲染移至 Web Worker，避免阻塞主线程：
+
+```typescript
+// 主线程
+const canvas = document.getElementById('myCanvas') as HTMLCanvasElement
+const offscreen = canvas.transferControlToOffscreen()
+const worker = new Worker('canvas-worker.js')
+worker.postMessage({ canvas: offscreen }, [offscreen])
+
+// canvas-worker.js
+self.onmessage = (e) => {
+  const canvas = e.data.canvas
+  const ctx = canvas.getContext('2d')
+  // 在 Worker 中执行耗时绘制操作，不阻塞主线程
+  // ...
+}
+```

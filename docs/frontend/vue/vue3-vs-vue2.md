@@ -564,7 +564,7 @@ export default {
   />
 </template>
 
-<!-- 子组件 -->
+<!-- 子组件：传统写法 -->
 <script setup>
 defineProps(['modelValue'])
 const emit = defineEmits(['update:modelValue'])
@@ -572,11 +572,36 @@ const emit = defineEmits(['update:modelValue'])
 function updateValue(val) {
   emit('update:modelValue', val)
 }
-
-// 多个 v-model
-defineProps(['firstName', 'lastName', 'email'])
-defineEmits(['update:firstName', 'update:lastName', 'update:email'])
 </script>
+
+<!-- 子组件：defineModel 写法（Vue 3.4+，推荐） -->
+<script setup>
+// defineModel 自动处理 props 和 emits，一行代码搞定
+const modelValue = defineModel()
+
+function updateValue(val) {
+  modelValue.value = val
+}
+
+// 多个 v-model 也很简单
+const firstName = defineModel('firstName')
+const lastName = defineModel('lastName')
+const email = defineModel('email')
+</script>
+```
+
+> **Vue 3.5+ 响应式 Props 解构**：从 Vue 3.5 开始，解构 props 会保持响应性，无需再通过 `props.xxx` 访问。
+>
+> ```vue
+> <script setup>
+> // Vue 3.5+ 解构保持响应性
+> const { modelValue, firstName } = defineProps({
+>   modelValue: String,
+>   firstName: String
+> })
+> // modelValue 和 firstName 仍然是响应式的
+> </script>
+> ```
 ```
 
 ### 3. 插槽变化

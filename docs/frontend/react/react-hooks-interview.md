@@ -549,7 +549,204 @@ export function UserProfile({ userId }: Props) {
     <div>
       <h1>{displayName}</h1>
       <button onClick={handleRefresh}>Refresh</button>
-    </div>
+      </div>
   );
 }
 ```
+
+---
+
+## React 19 稳定版新特性
+
+> React 19 于 2024 年 12 月正式发布稳定版，带来了多项重要更新。
+
+### 1. use() -- 读取 Promise 和 Context
+
+```tsx
+import { use, Suspense } from 'react';
+
+// 读取 Promise（需配合 Suspense 使用）
+function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
+  // use() 可以在条件语句中调用（与其他 Hooks 不同）
+  const user = use(userPromise);
+  return <div>{user.name}</div>;
+}
+
+// 读取 Context（替代 useContext）
+function ThemedButton() {
+  const theme = use(ThemeContext);
+  return <button style={{ background: theme.background }}>Click</button>;
+}
+
+// 配合 Suspense 使用
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UserProfile userPromise={fetchUser()} />
+    </Suspense>
+  );
+}
+```
+
+**注意**：`use()` 是唯一可以在条件语句（if/循环）中调用的 Hook。
+
+### 2. useActionState -- 表单 Action 状态管理
+
+```tsx
+import { useActionState } from 'react';
+
+// 替代之前的 useFormState（React 18 实验性 API）
+function SubmitForm() {
+  const [state, submitAction, isPending] = useActionState(
+    async (previousState, formData) => {
+      const name = formData.get('name');
+      const error = validate(name);
+      if (error) return { error };
+
+      await submitToServer(name);
+      return { success: true, error: null };
+    },
+    { error: null, success: false } // 初始状态
+  );
+
+  return (
+    <form action={submitAction}>
+      <input name="name" />
+      {state.error && <span>{state.error}</span>}
+      <button type="submit" disabled={isPending}>
+        {isPending ? '提交中...' : '提交'}
+      </button>
+    </form>
+  );
+}
+```
+
+### 3. useFormStatus -- 表单状态感知
+
+```tsx
+import { useFormStatus } from 'react-dom';
+
+// 必须在 <form> 内部的子组件中使用
+function SubmitButton() {
+  const { pending, data, method, action } = useFormStatus();
+
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? '提交中...' : '提交'}
+    </button>
+  );
+}
+
+// 使用方式
+function Form() {
+  return (
+    <form action={submitAction}>
+      <input name="email" />
+      <SubmitButton /> {/* 自动感知表单状态 */}
+    </form>
+  );
+}
+```
+
+### 4. useOptimistic -- 乐观更新
+
+```tsx
+import { useOptimistic } from 'react';
+
+function LikeButton({ postId, initialLiked }) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [optimisticLiked, addOptimistic] = useOptimistic(liked);
+
+  async function handleLike() {
+    // 立即显示乐观状态
+    addOptimistic(!liked);
+    try {
+      const newLiked = await toggleLike(postId);
+      setLiked(newLiked); // 服务器确认后更新真实状态
+    } catch {
+      // 失败时自动回退到真实状态
+    }
+  }
+
+  return (
+    <button onClick={handleLike} disabled={optimisticLiked !== liked}>
+      {optimisticLiked ? '已点赞' : '点赞'}
+    </button>
+  );
+}
+```
+
+### 5. ref 作为 prop（无需 forwardRef）
+
+```tsx
+// React 19 之前：需要 forwardRef
+const MyInput = forwardRef((props, ref) => (
+  <input ref={ref} {...props} />
+));
+
+// React 19：ref 可以作为普通 prop 传递
+function MyInput({ ref, ...props }) {
+  return <input ref={ref} {...props} />;
+}
+
+// 使用
+function App() {
+  const inputRef = useRef(null);
+  return <MyInput ref={inputRef} />;
+}
+```
+
+### 6. ref 清理函数
+
+```tsx
+function InputWithCleanup() {
+  const ref = useCallback((node) => {
+    const observer = new IntersectionObserver(/* ... */);
+    if (node) observer.observe(node);
+
+    // React 19 支持返回清理函数
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return <input ref={ref} />;
+}
+```
+
+### 7. Server Components 与 Server Actions
+
+```tsx
+// Server Component（默认，无需 'use client'）
+async function BlogPost({ slug }: { slug: string }) {
+  const post = await db.posts.findUnique({ where: { slug } });
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <p>{post.content}</p>
+    </article>
+  );
+}
+
+// Server Action
+'use server';
+async function createPost(formData: FormData) {
+  const title = formData.get('title') as string;
+  await db.posts.create({ data: { title } });
+  revalidatePath('/posts');
+}
+```
+
+### React 19 面试高频追问
+
+**Q1: use() 和 useContext 的区别？**
+- A: `use()` 可以读取 Promise 和 Context，而 `useContext` 只能读取 Context。`use()` 可以在条件语句中调用，`useContext` 不能。
+
+**Q2: useActionState 和 useState + 异步函数的区别？**
+- A: `useActionState` 专为表单 Action 设计，自动追踪 pending 状态，与 `<form action>` 原生集成，支持渐进增强（JS 禁用时也能工作）。
+
+**Q3: React 19 为什么移除了 forwardRef？**
+- A: 简化组件 API，ref 现在作为普通 prop 传递，减少了模板代码。forwardRef 仍然可用但不再推荐。
+
+**Q4: Server Components 的限制？**
+- A: 不能使用 state（useState/useReducer）、副作用（useEffect）、浏览器 API、事件监听器。仅限服务端运行。

@@ -1,5 +1,7 @@
 # HTML5 面试题集
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > HTML5 核心知识点与高频面试题
 
 ## A. 面试宝典
@@ -113,7 +115,7 @@
 <!-- 视口设置（移动端必须） -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- IE 兼容模式 -->
+<!-- IE 兼容模式（IE 已停止支持，现代项目可省略） -->
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <!-- SEO 相关 -->
@@ -500,6 +502,156 @@ dropZone.addEventListener('drop', (e) => {
 
 ---
 
+#### 11. 现代HTML新特性（2023+）
+
+**`<dialog>` 元素**：
+
+```html
+<!-- 原生对话框（主流浏览器均已支持） -->
+<dialog id="myDialog">
+  <form method="dialog">
+    <p>这是一个原生对话框</p>
+    <button value="confirm">确认</button>
+    <button value="cancel">取消</button>
+  </form>
+</dialog>
+
+<button onclick="document.getElementById('myDialog').showModal()">
+  打开模态框
+</button>
+
+<script>
+const dialog = document.getElementById('myDialog')
+
+// show() - 非模态显示
+// showModal() - 模态显示（带遮罩层）
+
+dialog.addEventListener('close', () => {
+  console.log(dialog.returnValue)  // "confirm" 或 "cancel"
+})
+
+// ::backdrop 伪元素自定义遮罩
+// dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+</script>
+```
+
+**`<search>` 元素**：
+
+```html
+<!-- 语义化搜索区域 -->
+<search>
+  <form action="/search">
+    <label for="query">搜索</label>
+    <input type="search" id="query" name="q">
+    <button type="submit">搜索</button>
+  </form>
+</search>
+```
+
+**Popover API**：
+
+```html
+<!-- 声明式弹出层 -->
+<button popovertarget="menu">打开菜单</button>
+<div id="menu" popover>
+  <ul>
+    <li>选项 1</li>
+    <li>选项 2</li>
+  </ul>
+</div>
+
+<!-- 手动控制 -->
+<button popovertarget="tooltip" popovertargetaction="show">显示</button>
+<button popovertarget="tooltip" popovertargetaction="hide">隐藏</button>
+<div id="tooltip" popover="manual">提示信息</div>
+
+<script>
+// JavaScript 控制
+popover.togglePopover()  // 切换显示
+popover.showPopover()    // 显示
+popover.hidePopover()    // 隐藏
+
+// 事件
+popover.addEventListener('toggle', (e) => {
+  console.log(e.newState)  // "open" 或 "closed"
+})
+</script>
+```
+
+**View Transitions API**：
+
+```javascript
+// 页面内状态切换动画
+document.startViewTransition(() => {
+  // 更新 DOM
+  updateUIState()
+})
+
+// 自定义过渡动画
+// CSS:
+// ::view-transition-old(root) { animation: fade-out 0.3s; }
+// ::view-transition-new(root) { animation: fade-in 0.3s; }
+
+// 跨页面导航（MPA View Transitions，Chrome 111+）
+// 在 navigate 事件中：
+navigation.addEventListener('navigate', (e) => {
+  e.intercept({
+    async handler() {
+      const transition = document.startViewTransition(async () => {
+        // 更新 DOM 内容
+      })
+      await transition.finished
+    }
+  })
+})
+```
+
+**Declarative Shadow DOM**：
+
+```html
+<!-- 无需 JavaScript 的 Shadow DOM -->
+<host-element>
+  <template shadowrootmode="open">
+    <style>
+      .inner { color: red; }
+    </style>
+    <span class="inner"><slot></slot></span>
+  </template>
+  Hello, Shadow DOM!
+</host-element>
+
+<!-- SSR 友好的 Web Components -->
+<!-- shadowrootmode: "open" | "closed" -->
+```
+
+**File System Access API**：
+
+```javascript
+// 读取本地文件
+const [fileHandle] = await window.showOpenFilePicker()
+const file = await fileHandle.getFile()
+const contents = await file.text()
+
+// 写入文件
+const handle = await window.showSaveFilePicker({
+  types: [{
+    description: 'Text Documents',
+    accept: { 'text/plain': ['.txt'] }
+  }]
+})
+const writable = await handle.createWritable()
+await writable.write('Hello, World!')
+await writable.close()
+
+// 访问目录
+const dirHandle = await window.showDirectoryPicker()
+for await (const entry of dirHandle.values()) {
+  console.log(entry.kind, entry.name)  // "file" / "directory"
+}
+```
+
+---
+
 ### 避坑指南
 
 | 常见错误 | 正确做法 |
@@ -523,7 +675,7 @@ dropZone.addEventListener('drop', (e) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE 已停止支持，现代项目可省略 -->
   <meta name="description" content="页面描述">
   <title>页面标题</title>
   <link rel="icon" href="/favicon.ico">

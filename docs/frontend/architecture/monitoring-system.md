@@ -1,5 +1,7 @@
 # 前端监控系统
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > 更新时间：2025-02
 
 ## 目录导航
@@ -34,6 +36,8 @@
 
 **Web Vitals 核心指标**：
 
+> ⚠️ **重要更新**：2024 年 3 月起，**INP (Interaction to Next Paint)** 已正式取代 FID (First Input Delay) 成为 Core Web Vitals 核心指标。FID 仅衡量首次输入延迟，而 INP 衡量用户与页面所有交互的响应性，更能反映真实用户体验。
+
 ```javascript
 // LCP (Largest Contentful Paint) - 最大内容绘制
 new PerformanceObserver((list) => {
@@ -42,12 +46,19 @@ new PerformanceObserver((list) => {
   }
 }).observe({ entryTypes: ['largest-contentful-paint'] })
 
-// FID (First Input Delay) - 首次输入
-t
+// INP (Interaction to Next Paint) - 交互到下次绘制（2024年3月取代FID成为核心指标）
+new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    // INP = 从用户交互到下次绘制的延迟
+    console.log('INP:', entry.duration)
+  }
+}).observe({ type: 'event', buffered: true })
+
 // FCP (First Contentful Paint) - 首次内容绘制
 // FMP (First Meaningful Paint) - 首次有意义绘制
 // TTI (Time to Interactive) - 可交互时间
 // TBT (Total Blocking Time) - 总阻塞时间
+// CLS (Cumulative Layout Shift) - 累积布局偏移
 
 const observer = new PerformanceObserver((list) => {
   for (const entry of list.getEntries()) {
@@ -98,7 +109,7 @@ class PerformanceMonitor {
   }
   
   observePerformance() {
-    // 监听导航时间
+    // 监听导航时间（使用 Navigation Timing Level 2 API）
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         this.reportNavigation(entry)
@@ -117,26 +128,36 @@ class PerformanceMonitor {
   }
   
   collectPerformance() {
-    const timing = performance.timing
+    // ⚠️ performance.timing 已废弃，推荐使用 Navigation Timing Level 2 API
+    // 旧写法（已废弃）：
+    // const timing = performance.timing
+    // 新写法：
+    const [navEntry] = performance.getEntriesByType('navigation')
+    if (!navEntry) return
+
     const data = {
       // DNS 查询时间
-      dns: timing.domainLookupEnd - timing.domainLookupStart,
+      dns: navEntry.domainLookupEnd - navEntry.domainLookupStart,
       // TCP 连接时间
-      tcp: timing.connectEnd - timing.connectStart,
+      tcp: navEntry.connectEnd - navEntry.connectStart,
       // SSL 握手时间
-      ssl: timing.secureConnectionStart ? timing.connectEnd - timing.secureConnectionStart : 0,
+      ssl: navEntry.secureConnectionStart ? navEntry.connectEnd - navEntry.secureConnectionStart : 0,
       // 请求时间
-      request: timing.responseStart - timing.requestStart,
+      request: navEntry.responseStart - navEntry.requestStart,
       // 响应时间
-      response: timing.responseEnd - timing.responseStart,
+      response: navEntry.responseEnd - navEntry.responseStart,
       // DOM 解析时间
-      domParse: timing.domInteractive - timing.responseEnd,
+      domParse: navEntry.domInteractive - navEntry.responseEnd,
       // 资源加载时间
-      resourceLoad: timing.loadEventStart - timing.domContentLoadedEventEnd,
+      resourceLoad: navEntry.loadEventStart - navEntry.domContentLoadedEventEnd,
       // 首屏时间
-      firstScreen: timing.domContentLoadedEventEnd - timing.fetchStart,
+      firstScreen: navEntry.domContentLoadedEventEnd - navEntry.startTime,
       // 页面完全加载时间
-      load: timing.loadEventEnd - timing.fetchStart,
+      load: navEntry.loadEventEnd - navEntry.startTime,
+      // 传输大小（Level 2 新增）
+      transferSize: navEntry.transferSize,
+      // 协议（Level 2 新增）
+      protocol: navEntry.nextHopProtocol,
     }
     
     this.report('performance', data)
@@ -178,14 +199,24 @@ class PerformanceMonitor {
       })
     }).observe({ entryTypes: ['largest-contentful-paint'] })
     
-    // FID
+    // INP（Interaction to Next Paint，2024年3月取代FID成为核心指标）
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        this.report('fid', {
-          value: entry.processingStart - entry.startTime,
+        this.report('inp', {
+          value: entry.duration,
+          interactionType: entry.name, // pointerdown, keydown 等
         })
       }
-    }).observe({ entryTypes: ['first-input'] })
+    }).observe({ type: 'event', buffered: true })
+    
+    // 注意：FID 已被 INP 取代，如仍需监控 FID 可保留以下代码
+    // new PerformanceObserver((list) => {
+    //   for (const entry of list.getEntries()) {
+    //     this.report('fid', {
+    //       value: entry.processingStart - entry.startTime,
+    //     })
+    //   }
+    // }).observe({ entryTypes: ['first-input'] })
     
     // CLS
     let clsScore = 0
@@ -702,6 +733,69 @@ const monitor = new Monitor({
 5. **用户标识**：添加用户 ID，方便问题定位
 6. **环境信息**：记录浏览器、操作系统等信息
 7. **隐私保护**：不要上报敏感信息
+
+## 最新知识补充（2024-2025）
+
+### 1. INP 取代 FID 成为 Core Web Vitals 核心指标
+
+2024 年 3 月，Google 正式将 **INP (Interaction to Next Paint)** 替代 FID (First Input Delay) 作为 Core Web Vitals 的三大核心指标之一（与 LCP、CLS 并列）。
+
+**为什么替换？**
+- FID 仅衡量首次输入的延迟，无法反映整个页面生命周期的交互响应性
+- INP 衡量用户与页面的**所有交互**的延迟，更能代表真实用户体验
+- INP 考虑了从交互开始到浏览器绘制下一帧的完整时间
+
+**INP 评分标准**：
+- 良好：<= 200ms
+- 需要改进：200ms - 500ms
+- 较差：> 500ms
+
+**使用 web-vitals 库监控 INP**：
+```javascript
+import { onINP } from 'web-vitals'
+
+onINP((metric) => {
+  console.log('INP:', metric.value)
+  console.log('评级:', metric.rating) // 'good' | 'needs-improvement' | 'poor'
+})
+```
+
+### 2. Navigation Timing Level 2 API
+
+`performance.timing` 已被标记为废弃（Deprecated），推荐使用 Navigation Timing Level 2 API：
+
+```javascript
+// ❌ 旧写法（已废弃）
+const timing = performance.timing
+const dns = timing.domainLookupEnd - timing.domainLookupStart
+
+// ✅ 新写法（Navigation Timing Level 2）
+const [navEntry] = performance.getEntriesByType('navigation')
+const dns = navEntry.domainLookupEnd - navEntry.domainLookupStart
+const transferSize = navEntry.transferSize  // Level 2 新增
+const protocol = navEntry.nextHopProtocol    // Level 2 新增（如 h2, h3）
+```
+
+**Level 2 新增属性**：`transferSize`、`encodedBodySize`、`decodedBodySize`、`nextHopProtocol`、`serverTiming` 等。
+
+### 3. web-vitals v4 库
+
+web-vitals 库已更新到 v4 版本，主要变化：
+- 新增 `onINP()` 替代已废弃的 `onFID()`
+- 支持 attribution 模式，提供更详细的性能归因信息
+- 支持 Soft Navigation（SPA 路由切换的性能监控）
+
+```javascript
+// web-vitals v4 + attribution
+import { onINP, onLCP, onCLS } from 'web-vitals/attribution'
+
+onINP((metric) => {
+  console.log('INP:', metric.value, metric.rating)
+  // attribution 提供详细信息
+  console.log('交互类型:', metric.attribution.interactionType)
+  console.log('目标元素:', metric.attribution.eventTarget)
+})
+```
 
 ## 参考资料
 

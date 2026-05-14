@@ -1,5 +1,7 @@
 # TypeScript 面试题集
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > TypeScript 核心知识点与高频面试题
 
 ## A. 面试宝典
@@ -352,6 +354,97 @@ type TB = ToArrayNonDist<string | number> // (string | number)[]
 
 ---
 
+#### 3. TypeScript 5.x 新特性
+
+```typescript
+// ===== 1. satisfies 运算符（TS 4.9+）=====
+// 验证类型的同时保留字面量类型推断
+const palette = {
+  red: [255, 0, 0],
+  green: '#00ff00',
+  blue: [0, 0, 255],
+} satisfies Record<string, string | number[]>
+
+// 不使用 satisfies：类型会被拓宽为 string | number[]
+// 使用 satisfies：保留字面量类型，palette.green 是 string 类型（而非 string | number[]）
+palette.green.toUpperCase()  // OK，类型为 string
+
+// ===== 2. const 类型参数（TS 5.0+）=====
+// 泛型参数添加 const 修饰符，推断为字面量类型
+function createRoute<const T extends readonly string[]>(paths: T) {
+  return paths
+}
+// 不加 const：推断为 string[]
+// 加 const：推断为 readonly ["home", "about", "contact"]
+createRoute(["home", "about", "contact"])
+
+// ===== 3. 装饰器（TS 5.0+，Stage 3 提案）=====
+function logged(originalMethod: any, context: ClassMethodDecoratorContext) {
+  return function (this: any, ...args: any[]) {
+    console.log(`Calling ${String(context.name)} with`, args)
+    return originalMethod.call(this, ...args)
+  }
+}
+
+class Account {
+  @logged
+  deposit(amount: number) {
+    return amount
+  }
+}
+
+// ===== 4. NoInfer 工具类型（TS 5.4+）=====
+// 阻止 TypeScript 对某个位置进行类型推断
+type CreateRouter<Path extends string> = (
+  path: NoInfer<Path>,
+  handler: () => void
+) => void
+
+declare const createRouter: CreateRouter<'/home' | '/about'>
+createRouter('/home', () => {})   // OK
+createRouter('/about', () => {})  // OK
+// createRouter('/other', () => {})  // Error! NoInfer 阻止推断新值
+
+// ===== 5. using 关键字（TS 5.2+）=====
+// 显式资源管理，作用域结束自动调用 dispose
+class DatabaseConnection {
+  constructor(private url: string) {}
+  [Symbol.dispose]() {
+    console.log(`Closing ${this.url}`)
+  }
+}
+
+{
+  using db = new DatabaseConnection('mysql://localhost')
+  // 使用数据库...
+} // 自动调用 db[Symbol.dispose]()
+
+// ===== 6. 模板字面量类型 =====
+type EventName = 'click' | 'focus' | 'blur'
+type HandlerName = `on${Capitalize<EventName>}`
+// "onClick" | "onFocus" | "onBlur"
+
+type CSSProperty = 'margin' | 'padding'
+type Direction = 'top' | 'right' | 'bottom' | 'left'
+type CSSRule = `${CSSProperty}-${Direction}`
+// "margin-top" | "margin-right" | ... | "padding-left"
+
+// ===== 7. 映射类型键重命名 =====
+type Getters<T> = {
+  [P in keyof T as `get${Capitalize<string & P>}`]: () => T[P]
+}
+
+interface User {
+  name: string
+  age: number
+}
+
+type UserGetters = Getters<User>
+// { getName: () => string; getAge: () => number }
+```
+
+---
+
 ## B. 实战文档
 
 ### 速查链接
@@ -367,7 +460,7 @@ type TB = ToArrayNonDist<string | number> // (string | number)[]
 ```json
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",  // 推荐 ES2022+，支持 top-level await 等特性
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,

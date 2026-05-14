@@ -3189,18 +3189,68 @@ const users = defineModel<User[]>()
 </script>
 ```
 
-**4. 性能改进**
+**4. useTemplateRef（Vue 3.5+）**
+```vue
+<script setup>
+import { useTemplateRef } from 'vue'
+
+// 通过 ref 名称获取模板引用（替代传统的 ref="" 方式）
+const inputRef = useTemplateRef('inputEl')
+
+function focus() {
+  inputRef.value?.focus()
+}
+</script>
+
+<template>
+  <input ref="inputEl" />
+  <button @click="focus">Focus</button>
+</template>
+```
+
+**5. useId（Vue 3.5+）**
+```vue
+<script setup>
+import { useId } from 'vue'
+
+// 生成唯一 ID，SSR 友好（服务端和客户端生成相同 ID）
+const id = useId()
+</script>
+
+<template>
+  <label :for="id">Name</label>
+  <input :id="id" type="text" />
+</template>
+```
+
+**6. v-bind 同名简写（Vue 3.4+）**
+```vue
+<script setup>
+import { ref } from 'vue'
+const title = ref('Hello')
+const id = ref('app')
+</script>
+
+<template>
+  <!-- Vue 3.4+ 同名简写：:title 等价于 :title="title" -->
+  <div :title :id></div>
+  <!-- 等价于 -->
+  <div :title="title" :id="id"></div>
+</template>
+```
+
+**7. 性能改进**
 - 更快的响应式系统
 - 更小的打包体积
 - 更好的 Tree-shaking
 
 **追问点**：
 - Q: Vue 3.4 和 Vue 3.3 的主要区别？
-  - A: defineModel、更好的 TypeScript 支持、性能改进
+  - A: defineModel、v-bind 同名简写、更好的 TypeScript 支持、性能改进
 - Q: 如何升级到 Vue 3.4+？
   - A: 更新依赖，检查 breaking changes，测试应用
 - Q: Vue 3.5 有哪些新特性？
-  - A: 响应式 Props 解构、更好的 SSR 支持、性能优化
+  - A: 响应式 Props 解构、useTemplateRef、useId、更好的 SSR 支持、性能优化
 
 ---
 

@@ -1,5 +1,7 @@
 # JavaScript 进阶与高级特性
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > 更新时间：2025-02
 
 ## 目录导航
@@ -724,6 +726,57 @@ const result = [...take(
 )]
 console.log(result)  // [0, 6, 12, 18, 24]
 ```
+
+**异步生成器与 for await...of（ES2018+）**：
+
+```javascript
+// 异步生成器函数
+async function* asyncFetchData(urls) {
+  for (const url of urls) {
+    const response = await fetch(url)
+    const data = await response.json()
+    yield data
+  }
+}
+
+// 使用 for await...of 消费异步迭代器
+const urls = ['/api/users', '/api/posts', '/api/comments']
+for await (const data of asyncFetchData(urls)) {
+  console.log(data)
+}
+
+// 异步生成器实现分页数据流
+async function* paginate(baseUrl) {
+  let page = 1
+  let hasMore = true
+
+  while (hasMore) {
+    const res = await fetch(`${baseUrl}?page=${page}`)
+    const { data, next } = await res.json()
+    yield* data
+    hasMore = !!next
+    page++
+  }
+}
+
+// 实际应用：实时数据流
+async function* eventStream(url) {
+  const eventSource = new EventSource(url)
+  try {
+    while (true) {
+      const event = await new Promise((resolve, reject) => {
+        eventSource.onmessage = resolve
+        eventSource.onerror = reject
+      })
+      yield JSON.parse(event.data)
+    }
+  } finally {
+    eventSource.close()
+  }
+}
+```
+
+---
 
 ## 函数式编程
 
@@ -2661,6 +2714,82 @@ console.log(greet.myApply(person, ['Hi', '.']))  // 'Hi, John.'
 
 const boundGreet = greet.myBind(person, 'Hey')
 console.log(boundGreet('?'))  // 'Hey, John?'
+```
+
+---
+
+### 11. Decorators 装饰器（Stage 3 提案 / TC39）
+
+```javascript
+// 类方法装饰器（最新 Stage 3 提案语法）
+function log(originalMethod, context) {
+  return function (...args) {
+    console.log(`Calling ${context.name} with`, args)
+    const result = originalMethod.call(this, ...args)
+    console.log(`Result:`, result)
+    return result
+  }
+}
+
+class Calculator {
+  @log
+  add(a, b) {
+    return a + b
+  }
+}
+
+// 类字段装饰器
+function readonly(_, context) {
+  return {
+    get() { return context.access.get(this) },
+    set() { throw new TypeError('Read-only property') }
+  }
+}
+
+class Person {
+  @readonly
+  name = 'John'
+}
+
+// 注意：TypeScript 5.0 已支持此装饰器提案
+// 此前 TypeScript 的实验性装饰器（experimentalDecorators）使用的是旧语法
+```
+
+---
+
+### 12. V8 引擎执行管线更新
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│               V8 现代执行管线（2024+）                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  源码                                                        │
+│   │                                                         │
+│   ▼                                                         │
+│  Parser（解析器）→ AST                                      │
+│   │                                                         │
+│   ▼                                                         │
+│  Ignition（解释器）→ 字节码执行                             │
+│   │                      ↓ 热点代码收集                     │
+│   ▼                                                         │
+│  SparkPlug（非优化编译器，2021+）                           │
+│   │  快速生成非优化机器码，提升启动速度                     │
+│   │                      ↓ 高频热点代码                     │
+│   ▼                                                         │
+│  Magistral（优化编译器，2024+，替代 TurboFan）              │
+│   │  更快的编译速度和更优的代码质量                         │
+│   │  支持 Type Feedback 类型反馈优化                        │
+│   ▼                                                         │
+│  优化机器码执行                                             │
+│   │  去优化（Deopt）→ 回退到 Ignition                      │
+│                                                              │
+│  关键变化：                                                 │
+│  - SparkPlug 取代了无优化层的 Ignition 直接执行            │
+│  - Magistral 正在取代 TurboFan 作为顶层优化编译器          │
+│  - 编译速度更快，内存占用更低                               │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---

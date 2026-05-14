@@ -43,8 +43,26 @@ function parse(template) {
     source: template,
     mode: 'html',
     advanceBy(num) {
-      context.source = context.source.sl
- = parseInterpolation(context)
+      context.source = context.source.slice(num)
+    },
+    advanceSpaces() {
+      const match = /^[\t\r\n\f ]*/.exec(context.source)
+      if (match) {
+        context.advanceBy(match[0].length)
+      }
+    }
+  }
+
+  const ancestors = []
+  const nodes = []
+
+  while (context.source) {
+    const s = context.source
+    let node = null
+
+    if (s.startsWith('{{')) {
+      // 解析插值
+      node = parseInterpolation(context)
     } else if (s[0] === '<') {
       if (s[1] === '/') {
         // 结束标签
@@ -54,12 +72,12 @@ function parse(template) {
         node = parseElement(context, ancestors)
       }
     }
-    
+
     if (!node) {
       // 解析文本
       node = parseText(context)
     }
-    
+
     nodes.push(node)
   }
   
@@ -126,7 +144,7 @@ function parseTag(context, type) {
 function parseAttributes(context) {
   const { advanceBy, advanceSpaces } = context
   const props = []
-  
+
   while (
     !context.source.startsWith('>') &&
     !context.source.startsWith('/>')
@@ -134,15 +152,50 @@ function parseAttributes(context) {
     // 匹配属性名
     const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
     const name = match[0]
-    
+
     advanceBy(name.length)
-    advanceSpaces(
-ce(0, closeIndex - 2)
+    advanceSpaces()
+
+    // 解析属性值
+    let value = null
+    if (context.source.startsWith('=')) {
+      advanceBy(1)
+      advanceSpaces()
+
+      if (context.source.startsWith('"')) {
+        advanceBy(1)
+        const closeIndex = context.source.indexOf('"')
+        value = context.source.slice(0, closeIndex)
+        advanceBy(value.length + 1)
+      } else if (context.source.startsWith("'")) {
+        advanceBy(1)
+        const closeIndex = context.source.indexOf("'")
+        value = context.source.slice(0, closeIndex)
+        advanceBy(value.length + 1)
+      }
+    }
+
+    props.push({ type: 'Attribute', name, value })
+    advanceSpaces()
+  }
+
+  return props
+}
+```
+
+### 解析插值
+
+```javascript
+function parseInterpolation(context) {
+  context.advanceBy(2) // 跳过 {{
+
+  const closeIndex = context.source.indexOf('}}')
+  const rawContent = context.source.slice(0, closeIndex)
   const content = rawContent.trim()
-  
-  advanceBy(rawContent.length)
-  advanceBy(2) // 跳过 }}
-  
+
+  context.advanceBy(rawContent.length)
+  context.advanceBy(2) // 跳过 }}
+
   return {
     type: 'Interpolation',
     content: {
@@ -518,6 +571,42 @@ function render() {
 }
 
 // Block 收集动态节点，diff 时只比较动态节点
+```
+
+### 5. v-bind 同名简写（Vue 3.4+）
+
+```javascript
+// Vue 3.4+ 支持同名简写
+// 模板
+<div :title :id></div>
+
+// 编译后（当变量名与属性名相同时可省略值）
+function render(_ctx) {
+  return h('div', { title: _ctx.title, id: _ctx.id })
+}
+```
+
+### 6. 更精确的静态提升（Vue 3.4+）
+
+```javascript
+// Vue 3.4+ 改进了静态提升的分析精度
+// 对于含有动态绑定的元素，其静态属性也会被提升
+
+// 模板
+<div class="static-class" :id="dynamicId">
+  <p>静态文本</p>
+</div>
+
+// Vue 3.4+ 编译后
+const _hoisted_1 = { class: "static-class" }
+const _hoisted_2 = /* @__PURE__ */ h('p', null, '静态文本')
+
+function render(_ctx) {
+  return (openBlock(), createBlock('div',
+    _hoisted_1, // 静态 class 被提升
+    [_hoisted_2, createVNode(...)] // 静态子节点也被提升
+  ))
+}
 ```
 
 ## 指令编译

@@ -244,11 +244,19 @@ function trigger(target, key) {
 
 ## effect() 副作用函数
 
-### 基础实
+### 基础实现
 
+```javascript
+function effect(fn) {
+  const effectFn = () => {
+    // 清理旧依赖
+    cleanup(effectFn)
+    // 设置当前正在执行的副作用函数
+    activeEffect = effectFn
+    // 执行原始函数
     effectFn()
   }
-  
+
   return effectFn
 }
 
@@ -538,8 +546,21 @@ function traverse(value, seen = new Set()) {
   }
   
   seen.add(value)
-lue, oldValue)
-})
+
+  for (const key of Object.keys(value)) {
+    traverse(value[key], seen)
+  }
+
+  return value
+}
+
+// 使用示例
+watch(
+  () => state.count,
+  (newValue, oldValue) => {
+    console.log('changed:', newValue, oldValue)
+  }
+)
 
 // 立即执行
 watch(
@@ -1089,6 +1110,122 @@ effect(() => {
   if (state.count < 10) {
     state.count++
   }
+})
+```
+
+## effectScope 副作用作用域
+
+### 基础用法
+
+```javascript
+import { effectScope, onScopeDispose } from 'vue'
+
+// 创建作用域，统一管理内部的所有副作用
+const scope = effectScope()
+
+scope.run(() => {
+  // 此内的 effect、computed、watch 等都会被 scope 收集
+  const state = reactive({ count: 0 })
+
+  watch(() => state.count, (val) => {
+    console.log('count:', val)
+  })
+
+  effect(() => {
+    console.log('effect:', state.count)
+  })
+
+  // 注册作用域销毁时的清理回调
+  onScopeDispose(() => {
+    console.log('scope disposed')
+  })
+})
+
+// 一次性停止作用域内的所有副作用
+scope.stop()
+```
+
+### 在 Composable 中使用
+
+```javascript
+// 典型场景：Composable 中自动收集副作用
+function useCounter() {
+  const scope = effectScope()
+
+  const count = scope.run(() => {
+    const count = ref(0)
+
+    // 自动被外层 effectScope 收集
+    watch(count, (val) => {
+      console.log('count changed:', val)
+    })
+
+    return count
+  })
+
+  function increment() {
+    count.value++
+  }
+
+  // 返回 stop 函数，组件卸载时调用即可清理所有副作用
+  return { count, increment, stop: scope.stop }
+}
+```
+
+### getCurrentScope
+
+```javascript
+import { effectScope, getCurrentScope, onScopeDispose } from 'vue'
+
+const scope = effectScope()
+
+scope.run(() => {
+  // 获取当前活跃的 effectScope
+  const currentScope = getCurrentScope()
+  console.log(currentScope === scope) // true
+
+  onScopeDispose(() => {
+    // 当 scope.stop() 被调用时执行
+    console.log('cleanup')
+  })
+})
+```
+
+---
+
+## Vue 3.5 响应式优化
+
+### 1. 响应式 Props 解构
+
+```javascript
+// Vue 3.5+ 解构 props 保持响应性
+const { count, message } = defineProps({
+  count: Number,
+  message: String
+})
+
+// count 和 message 仍然是响应式的，可直接在模板中使用
+// 编译器会自动转换为类似 toRefs 的处理
+```
+
+### 2. 改进的 SSR 响应性
+
+```javascript
+// Vue 3.5 对 SSR 场景下的响应式系统做了优化
+// 减少了服务端不必要的依赖追踪开销
+import { pauseTracking, resetTracking } from '@vue/reactivity'
+
+// SSR 渲染期间自动暂停追踪，提升性能
+```
+
+### 3. Lazy 计算属性优化
+
+```javascript
+// Vue 3.5 对 computed 做了进一步优化
+// 计算属性的求值更加惰性，减少不必要的计算
+const expensive = computed(() => {
+  // 只在真正被访问且 dirty 时才重新计算
+  return heavyCalculation(data.value)
 })
 ```
 

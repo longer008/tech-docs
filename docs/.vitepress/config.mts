@@ -158,31 +158,33 @@ export default withPwa(
       // 导航栏
       nav: [
         { text: '首页', link: '/' },
-        { text: '10天冲刺', link: '/sprint-plan/day01-js-java-core' },
+        { text: '冲刺计划', link: '/sprint-plan/day01-js-java-core' },
         {
           text: '前端',
           items: [
+            { text: '前端100道问答', link: '/frontend/前端100道问答' },
             { text: 'JavaScript 核心', link: '/frontend/fundamentals/javascript-core-interview' },
             { text: 'JavaScript 进阶', link: '/frontend/fundamentals/javascript-advanced' },
+            { text: 'TypeScript', link: '/frontend/fundamentals/typescript-interview' },
             { text: 'Vue.js', link: '/frontend/vue/vue3-interview' },
             { text: 'React', link: '/frontend/react/react-hooks-interview' },
-            { text: 'TypeScript', link: '/frontend/fundamentals/typescript-interview' },
             { text: 'SSR 框架', link: '/frontend/react/nextjs-interview' },
+            { text: '构建工具', link: '/frontend/fundamentals/webpack-vite-interview' },
             { text: '跨端开发', link: '/frontend/cross-platform/uniapp-interview' },
             { text: '桌面端开发', link: '/frontend/desktop/' },
+            { text: '前端架构', link: '/frontend/architecture/' },
           ]
         },
         {
           text: '后端',
           items: [
-            { text: 'Java', link: '/backend/java/java-core-interview' },
+            { text: 'Java 核心', link: '/backend/java/java-core-interview' },
             { text: 'Spring Boot', link: '/backend/spring-boot/' },
             { text: 'MyBatis', link: '/backend/mybatis/' },
             { text: 'Node.js', link: '/backend/nodejs/nodejs-runtime-interview' },
             { text: 'Python', link: '/backend/python/python-core-interview' },
           ]
         },
-        { text: '全栈开发', link: '/fullstack/' },
         {
           text: '数据库',
           items: [
@@ -192,18 +194,23 @@ export default withPwa(
             { text: '消息队列', link: '/database/mq/kafka-interview' },
           ]
         },
-        { text: 'DevOps', link: '/devops/git-workflow' },
-        { text: 'AI 面试', link: '/ai-interview/' },
         {
-          text: '计算机基础',
+          text: '基础 & DevOps',
           items: [
+            { text: '计算机网络', link: '/devops/network-interview' },
+            { text: 'HTTP/HTTPS', link: '/devops/http-https-interview' },
+            { text: 'Git 工作流', link: '/devops/git-workflow' },
+            { text: 'Docker/K8s', link: '/devops/docker-k8s-interview' },
+            { text: 'Linux 命令', link: '/devops/linux-commands' },
+            { text: 'Nginx', link: '/devops/nginx-interview' },
             { text: '数据结构', link: '/appendix/data-structures' },
             { text: '算法模式', link: '/appendix/algorithm-patterns' },
             { text: '设计模式', link: '/appendix/design-patterns' },
             { text: '系统设计', link: '/appendix/system-design-templates' },
           ]
         },
-        { text: '插件文档', link: '/vitepress-plugins' },
+        { text: '全栈开发', link: '/fullstack/' },
+        { text: 'AI 面试', link: '/ai-interview/' },
       ],
 
       // 多侧边栏配置

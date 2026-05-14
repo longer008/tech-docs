@@ -1,5 +1,7 @@
 # JavaScript 核心面试题集
 
+> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
+
 > 更新时间：2025-02
 
 ## 目录导航
@@ -12,6 +14,7 @@
 - [异步编程](#异步编程)
 - [事件循环](#事件循环)
 - [ES6+ 特性](#es6-特性)
+- [ES2023+ 新特性补充](#es2023-新特性补充)
 - [常见面试题](#常见面试题)
 
 ## 数据类型
@@ -194,6 +197,11 @@ console.log(obj3.b.c)  // 2（不受影响）
 // 使用 JSON 深拷贝（有限制）
 const obj5 = JSON.parse(JSON.stringify(obj3))
 // 限制：无法复制函数、undefined、Symbol、循环引用
+
+// 使用 structuredClone（ES2022+，推荐）
+const obj6 = structuredClone(obj3)
+// 优势：支持循环引用、Date、RegExp、Map、Set、ArrayBuffer 等
+// 限制：不支持函数、DOM 节点、Error、Symbol 值
 
 // 深度比较
 function deepEqual(a, b) {
@@ -1854,6 +1862,159 @@ console.log(name ?? 'Guest')  // ''
 const value = null
 console.log(value ?? 'default')  // 'default'
 ```
+
+## ES2023+ 新特性补充
+
+> 以下为 ES2023、ES2024 及更新提案中的重要新特性，面试中逐渐成为高频考点。
+
+### 数组不修改原值方法（ES2023）
+
+```javascript
+// toSorted() - 不修改原数组的排序
+const arr = [3, 1, 4, 1, 5]
+const sorted = arr.toSorted()
+console.log(sorted)  // [1, 1, 3, 4, 5]
+console.log(arr)     // [3, 1, 4, 1, 5]（原数组不变）
+
+// toReversed() - 不修改原数组的反转
+const reversed = arr.toReversed()
+console.log(reversed)  // [5, 1, 4, 1, 3]
+
+// toSpliced() - 不修改原数组的 splice
+const spliced = arr.toSpliced(1, 2, 10, 20)
+console.log(spliced)  // [3, 10, 20, 1, 5]
+
+// with() - 不修改原数组的索引赋值
+const replaced = arr.with(1, 99)
+console.log(replaced)  // [3, 99, 4, 1, 5]
+
+// 对比传统方法：
+// arr.sort()    → 修改原数组
+// arr.toSorted() → 返回新数组，原数组不变
+```
+
+### at() 方法（ES2022）
+
+```javascript
+// 数组 at() - 支持负索引
+const arr = [10, 20, 30, 40, 50]
+arr.at(0)    // 10
+arr.at(-1)   // 50（最后一个元素）
+arr.at(-2)   // 40
+
+// 字符串 at()
+const str = 'hello'
+str.at(-1)   // 'o'
+
+// 相比 arr[arr.length - 1] 更简洁直观
+```
+
+### Object.groupBy / Map.groupBy（ES2024）
+
+```javascript
+// Object.groupBy - 按条件分组，返回对象
+const inventory = [
+  { name: 'asparagus', type: 'vegetables', quantity: 5 },
+  { name: 'bananas', type: 'fruit', quantity: 0 },
+  { name: 'goat', type: 'meat', quantity: 23 },
+  { name: 'cherries', type: 'fruit', quantity: 12 },
+]
+
+const result = Object.groupBy(inventory, ({ type }) => type)
+// {
+//   vegetables: [{ name: 'asparagus', ... }],
+//   fruit: [{ name: 'bananas', ... }, { name: 'cherries', ... }],
+//   meat: [{ name: 'goat', ... }]
+// }
+
+// Map.groupBy - 返回 Map，键可以是任意类型
+const byQuantity = Map.groupBy(inventory, ({ quantity }) =>
+  quantity > 5 ? 'plenty' : 'restock'
+)
+// Map { 'restock' => [...], 'plenty' => [...] }
+```
+
+### Promise.withResolvers（ES2024）
+
+```javascript
+// 传统方式：外部访问 resolve/reject
+let resolve, reject
+const promise = new Promise((res, rej) => {
+  resolve = res
+  reject = rej
+})
+
+// ES2024：一行搞定
+const { promise: p, resolve: r, reject: j } = Promise.withResolvers()
+
+// 实际应用：将回调风格 API 包装为 Promise
+function readableStreamToPromise(stream) {
+  const { promise, resolve, reject } = Promise.withResolvers()
+  stream.on('end', resolve)
+  stream.on('error', reject)
+  return promise
+}
+```
+
+### Iterator Helpers（ES2024 提案）
+
+```javascript
+// Iterator 原型新增辅助方法
+function* naturals() {
+  let i = 0
+  while (true) yield i++
+}
+
+// map / filter / take / drop / reduce / forEach / toArray
+const result = naturals()
+  .filter(x => x % 2 === 0)
+  .map(x => x * x)
+  .take(5)
+  .toArray()
+// [0, 4, 16, 36, 64]
+
+// Iterator.from() - 将可迭代对象转为 Iterator Helper 对象
+const iter = Iterator.from([1, 2, 3, 4, 5])
+  .filter(x => x > 2)
+  .map(x => x * 10)
+  .toArray()
+// [30, 40, 50]
+```
+
+### using 关键字 — 显式资源管理（ES2024 提案）
+
+```javascript
+// using 声明 — 作用域结束时自动调用 [Symbol.dispose]()
+{
+  using file = openFile('data.txt')
+  // 使用文件...
+} // 离开作用域时自动调用 file[Symbol.dispose]()
+
+// 自定义可释放资源
+class DatabaseConnection {
+  constructor(url) {
+    this.url = url
+    console.log(`Connected to ${url}`)
+  }
+
+  [Symbol.dispose]() {
+    console.log(`Closing connection to ${this.url}`)
+  }
+}
+
+{
+  using db = new DatabaseConnection('mysql://localhost')
+  // 使用数据库...
+} // 自动关闭连接
+
+// await using — 异步资源释放
+{
+  await using resource = await acquireAsyncResource()
+  // 使用资源...
+} // 自动调用 resource[Symbol.asyncDispose]()
+```
+
+---
 
 ## 常见面试题
 
