@@ -99,7 +99,7 @@ export default withPwa(
       // Markdown-it 插件配置
       config: (md) => {
         md.use(tabsMarkdownPlugin)
-        md.use(katex)
+        md.use(katex, { strict: false })
         md.use(footnote)
         md.use(mark)
         md.use(sub)

@@ -26,5 +26,7 @@ export default defineConfig({
     'i-carbon-logo-github',
     'i-carbon-document',
     'i-carbon-code',
+    'i-icon-park-outline:book-open',
+    'i-icon-park-outline:guide-board',
   ],
 })

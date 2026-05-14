@@ -396,7 +396,7 @@ CMD ["python3", "app.py"]
 
 ### 2. 使用 .dockerignore
 
-```.dockerignore
+```txt
 # .dockerignore 文件
 node_modules
 npm-debug.log

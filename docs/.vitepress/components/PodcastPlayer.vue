@@ -19,7 +19,7 @@ const errorMsg = ref('')
 let audio: HTMLAudioElement | null = null
 
 const route = useRoute()
-const { frontmatter } = useData()
+const { frontmatter, page } = useData()
 
 // 格式化时间
 const formatTime = (seconds: number): string => {
@@ -58,21 +58,26 @@ async function checkAudioAvailability() {
     
     const index = await response.json()
     
-    // 当前页面路径（去掉 base 前缀和 .html 后缀）
-    const base2 = (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
-    let currentPath = route.path
-      .replace(/\.html$/, '')
-      .replace(/\/$/, '')
-    // 去掉 base 前缀
-    if (base2 && currentPath.startsWith(base2)) {
-      currentPath = currentPath.slice(base2.length)
-    }
-    if (!currentPath) currentPath = '/index'
+    // 使用 page.relativePath 来匹配（最可靠的方式）
+    // page.value.relativePath 格式: "ai-interview/index.md"
+    const relativePath = page.value.relativePath
+    if (!relativePath) return
+    
+    // 转换为索引中的路径格式: /ai-interview/index
+    let currentPath = '/' + relativePath
+      .replace(/\.md$/, '')   // 去掉 .md
+      .replace(/\/$/, '')     // 去掉末尾斜杠
+    
+    // 目录页面的路径可能是 /ai-interview/index 而索引中也是 /ai-interview/index
+    const pathVariants = [
+      currentPath,
+      currentPath.replace(/\/index$/, ''),  // /ai-interview
+    ]
     
     // 查找匹配的音频
     for (const [docPath, info] of Object.entries(index) as [string, any][]) {
       const normalizedDocPath = docPath.replace(/\/$/, '')
-      if (currentPath === normalizedDocPath) {
+      if (pathVariants.includes(normalizedDocPath)) {
         hasAudio.value = true
         audioSrc.value = `${base}podcast/${info.audioPath}`
         podcastTitle.value = info.title || '播客音频'
@@ -80,7 +85,8 @@ async function checkAudioAvailability() {
       }
     }
   } catch (e) {
-    // 静默失败，不显示播放器
+    // 索引文件不存在或网络错误，静默处理
+    console.debug('[PodcastPlayer] 未找到播客索引:', e)
   }
 }
 

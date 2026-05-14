@@ -176,7 +176,7 @@
    - find/findOne
    - updateOne/updateMany
    - deleteOne/deleteMany
-   - 查询操作符（$eq、$gt、$in 等）
+   - 查询操作符（`$eq`、`$gt`、`$in` 等）
 
 3. **基础索引**
    - 单字段索引
@@ -191,10 +191,10 @@
    - 数组查询
 
 2. **聚合管道**
-   - $match、$group、$project
-   - $sort、$limit、$skip
-   - $lookup（关联查询）
-   - $unwind（数组展开）
+   - `$match`、`$group`、`$project`
+   - `$sort`、`$limit`、`$skip`
+   - `$lookup`（关联查询）
+   - `$unwind`（数组展开）
 
 3. **索引优化**
    - 索引类型（唯一、稀疏、TTL、文本、地理）
