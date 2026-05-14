@@ -73,6 +73,39 @@ function extractPageText(): string {
 
   const clone = content.cloneNode(true) as HTMLElement
 
+  // 从代码块中提取注释文本（注释本身就是代码的描述）
+  const codeComments: string[] = []
+  clone.querySelectorAll('pre code').forEach(codeEl => {
+    const codeText = codeEl.textContent || ''
+    // 提取单行注释 // ...
+    const singleLine = codeText.match(/\/\/\s*(.+)/g)
+    if (singleLine) {
+      singleLine.forEach(c => {
+        const text = c.replace(/^\/\/\s*/, '').trim()
+        // 过滤掉纯符号、太短或像代码的注释
+        if (text.length > 4 && !/^[=\-*+{}()\[\]<>\/\\|]+$/.test(text) && !/^\w+[({]/.test(text)) {
+          codeComments.push(text)
+        }
+      })
+    }
+    // 提取多行注释 /* ... */
+    const multiLine = codeText.match(/\/\*\*?\s*([\s\S]*?)\*\//g)
+    if (multiLine) {
+      multiLine.forEach(c => {
+        const text = c.replace(/\/\*\*?\s*|\s*\*\//g, '').replace(/^\s*\*\s*/gm, '').trim()
+        if (text.length > 4) codeComments.push(text)
+      })
+    }
+    // 提取 # 注释（Python/Shell/YAML）
+    const hashComments = codeText.match(/^#\s+(.+)/gm)
+    if (hashComments) {
+      hashComments.forEach(c => {
+        const text = c.replace(/^#\s+/, '').trim()
+        if (text.length > 4 && !/^[!\/]/.test(text)) codeComments.push(text)
+      })
+    }
+  })
+
   // 移除不需要朗读的元素
   const removeSelectors = [
     // 代码相关
@@ -149,6 +182,14 @@ function extractPageText(): string {
     .trim()
 
   console.debug(`[PodcastPlayer] 提取文本: ${text.length} 字符`)
+
+  // 如果正文太少（主要是代码的页面），追加代码注释作为补充
+  if (text.length < 200 && codeComments.length > 0) {
+    const commentsText = codeComments.join('。\n')
+    text = text + '\n\n' + commentsText
+    console.debug(`[PodcastPlayer] 追加代码注释: ${codeComments.length} 条`)
+  }
+
   return text
 }
 
