@@ -155,7 +155,8 @@ async function handleGenerate() {
   isGenerating.value = true
 
   try {
-    const response = await fetch(`${TTS_SERVER}/tts`, {
+    // 使用流式接口，边生成边播放
+    const response = await fetch(`${TTS_SERVER}/tts/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text.slice(0, 50000) }),
@@ -166,17 +167,52 @@ async function handleGenerate() {
       throw new Error(err.error || `HTTP ${response.status}`)
     }
 
-    const blob = await response.blob()
+    // 流式读取音频数据
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('浏览器不支持流式读取')
 
-    // 缓存
-    await setCachedAudio(cacheKey, blob)
+    const audioChunks: Uint8Array[] = []
+    let firstChunkPlayed = false
 
-    setupAudio(blob)
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      audioChunks.push(value)
+
+      // 收到第一批数据后立即开始播放
+      if (!firstChunkPlayed && getTotalSize(audioChunks) > 8000) {
+        firstChunkPlayed = true
+        const partialBlob = new Blob(audioChunks, { type: 'audio/mp3' })
+        setupAudio(partialBlob)
+      }
+    }
+
+    // 全部完成，用完整音频替换
+    const fullBlob = new Blob(audioChunks, { type: 'audio/mp3' })
+    const currentPos = audio ? audio.currentTime : 0
+    const wasPlaying = isPlaying.value
+
+    setupAudio(fullBlob)
+
+    // 恢复播放位置
+    if (audio && currentPos > 0) {
+      audio.currentTime = currentPos
+      if (wasPlaying) audio.play().catch(() => {})
+    }
+
+    // 缓存完整音频
+    await setCachedAudio(cacheKey, fullBlob)
+
   } catch (e: any) {
     errorMsg.value = e.message || '生成失败，请重试'
   } finally {
     isGenerating.value = false
   }
+}
+
+function getTotalSize(chunks: Uint8Array[]): number {
+  return chunks.reduce((sum, c) => sum + c.length, 0)
 }
 
 // ============ IndexedDB 缓存 ============
