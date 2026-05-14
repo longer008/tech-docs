@@ -59,6 +59,109 @@ async function checkServer() {
 
 // ============ 内容提取 ============
 
+/**
+ * 从 Markdown 源文件提取代码注释（通过 Vite 的 ?raw 接口）
+ * 开发模式可用，生产模式降级为 DOM 提取
+ */
+async function extractCommentsFromSource(): Promise<string[]> {
+  try {
+    const relPath = page.value.relativePath
+    if (!relPath) return extractCommentsFromDOM()
+
+    // Vite 开发模式：通过 /@fs/ 读取源文件
+    const base = import.meta.env.BASE_URL || '/'
+    // 尝试读取 md 文件（开发模式下 Vite 会处理）
+    const res = await fetch(`${base}${relPath}`, {
+      headers: { 'Accept': 'text/plain' }
+    }).catch(() => null)
+
+    if (res?.ok) {
+      const md = await res.text()
+      // 如果返回的是 HTML（生产模式），降级为 DOM 提取
+      if (md.trim().startsWith('<!DOCTYPE') || md.trim().startsWith('<html')) {
+        return extractCommentsFromDOM()
+      }
+      return extractCommentsFromMarkdown(md)
+    }
+    return extractCommentsFromDOM()
+  } catch {
+    return extractCommentsFromDOM()
+  }
+}
+
+/**
+ * 从渲染后的 DOM 中提取注释（通过 .token.comment 类）
+ */
+function extractCommentsFromDOM(): string[] {
+  const comments: string[] = []
+  // Prism/Shiki 渲染的注释有 .token.comment 或 .comment 类
+  document.querySelectorAll('.vp-doc .token.comment, .vp-doc .comment').forEach(el => {
+    const text = (el.textContent || '')
+      .replace(/^\/\/\s*/, '')
+      .replace(/^\/\*+\s*|\s*\*+\//g, '')
+      .replace(/^#\s*/, '')
+      .trim()
+    if (isGoodComment(text)) comments.push(text)
+  })
+  return [...new Set(comments)]
+}
+
+/**
+ * 从 Markdown 文本中提取代码块注释
+ */
+function extractCommentsFromMarkdown(md: string): string[] {
+  const comments: string[] = []
+
+  // 找出所有代码块
+  const codeBlocks = md.match(/```[\s\S]*?```/g) || []
+
+  for (const block of codeBlocks) {
+    const lines = block.split('\n')
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      // // 单行注释
+      const slashMatch = trimmed.match(/^\/\/\s*(.+)/)
+      if (slashMatch) {
+        const text = slashMatch[1].trim()
+        if (isGoodComment(text)) comments.push(text)
+        continue
+      }
+
+      // # 注释（Python/Shell/YAML/SCSS）
+      const hashMatch = trimmed.match(/^#\s+(.+)/)
+      if (hashMatch) {
+        const text = hashMatch[1].trim()
+        if (isGoodComment(text) && !/^[!\/]/.test(text)) comments.push(text)
+      }
+    }
+
+    // 多行注释 /* ... */
+    const multiMatches = block.match(/\/\*[\s\S]*?\*\//g) || []
+    for (const m of multiMatches) {
+      const text = m
+        .replace(/\/\*+\s*|\s*\*+\//g, '')
+        .replace(/^\s*\*\s*/gm, '')
+        .trim()
+      if (text.length > 4) comments.push(text)
+    }
+  }
+
+  // 去重
+  return [...new Set(comments)]
+}
+
+function isGoodComment(text: string): boolean {
+  return (
+    text.length > 4 &&
+    !/^[=\-*+{}()\[\]<>\/\\|@$#!]+$/.test(text) &&  // 纯符号
+    !/^\w+\s*[({]/.test(text) &&                      // 像函数调用
+    !/^https?:\/\//.test(text) &&                     // URL
+    !/^\d+$/.test(text)                               // 纯数字
+  )
+}
+
 function extractPageText(): string {
   // 尝试多个可能的内容容器
   const content = document.querySelector('.vp-doc') 
@@ -72,39 +175,6 @@ function extractPageText(): string {
   }
 
   const clone = content.cloneNode(true) as HTMLElement
-
-  // 从代码块中提取注释文本（注释本身就是代码的描述）
-  const codeComments: string[] = []
-  clone.querySelectorAll('pre code').forEach(codeEl => {
-    const codeText = codeEl.textContent || ''
-    // 提取单行注释 // ...
-    const singleLine = codeText.match(/\/\/\s*(.+)/g)
-    if (singleLine) {
-      singleLine.forEach(c => {
-        const text = c.replace(/^\/\/\s*/, '').trim()
-        // 过滤掉纯符号、太短或像代码的注释
-        if (text.length > 4 && !/^[=\-*+{}()\[\]<>\/\\|]+$/.test(text) && !/^\w+[({]/.test(text)) {
-          codeComments.push(text)
-        }
-      })
-    }
-    // 提取多行注释 /* ... */
-    const multiLine = codeText.match(/\/\*\*?\s*([\s\S]*?)\*\//g)
-    if (multiLine) {
-      multiLine.forEach(c => {
-        const text = c.replace(/\/\*\*?\s*|\s*\*\//g, '').replace(/^\s*\*\s*/gm, '').trim()
-        if (text.length > 4) codeComments.push(text)
-      })
-    }
-    // 提取 # 注释（Python/Shell/YAML）
-    const hashComments = codeText.match(/^#\s+(.+)/gm)
-    if (hashComments) {
-      hashComments.forEach(c => {
-        const text = c.replace(/^#\s+/, '').trim()
-        if (text.length > 4 && !/^[!\/]/.test(text)) codeComments.push(text)
-      })
-    }
-  })
 
   // 移除不需要朗读的元素
   const removeSelectors = [
@@ -182,14 +252,6 @@ function extractPageText(): string {
     .trim()
 
   console.debug(`[PodcastPlayer] 提取文本: ${text.length} 字符`)
-
-  // 如果正文太少（主要是代码的页面），追加代码注释作为补充
-  if (text.length < 200 && codeComments.length > 0) {
-    const commentsText = codeComments.join('。\n')
-    text = text + '\n\n' + commentsText
-    console.debug(`[PodcastPlayer] 追加代码注释: ${codeComments.length} 条`)
-  }
-
   return text
 }
 
@@ -223,7 +285,15 @@ async function handleGenerate() {
   isGenerating.value = true
 
   try {
-    const truncatedText = text.slice(0, 50000)
+    // 提取正文 + 从源文件提取代码注释
+    const sourceComments = await extractCommentsFromSource()
+    let fullText = text
+    if (sourceComments.length > 0) {
+      fullText = text + '\n\n' + sourceComments.join('。\n')
+      console.debug(`[PodcastPlayer] 追加源文件注释: ${sourceComments.length} 条，总计 ${fullText.length} 字符`)
+    }
+
+    const truncatedText = fullText.slice(0, 50000)
     const totalChunks = Math.ceil(truncatedText.length / CHUNK_SIZE)
     const allAudioChunks: Uint8Array[] = []
     let firstChunkPlayed = false
