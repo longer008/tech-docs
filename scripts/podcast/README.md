@@ -31,6 +31,9 @@ cp .env.example .env
 # 直接运行
 python server.py
 
+# 停掉当前进程
+kill $(pgrep -f server.py)
+
 # 后台运行（推荐）
 nohup python -u server.py > server.log 2>&1 &
 

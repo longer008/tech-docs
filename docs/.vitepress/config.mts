@@ -79,13 +79,17 @@ export default withPwa(
         ]
       },
       build: {
-        // 将大型依赖分割为独立 chunk，按需加载
+        chunkSizeWarningLimit: 1000,  // 提高警告阈值到 1MB（mermaid 本身就大）
         rollupOptions: {
           output: {
             manualChunks(id) {
-              if (id.includes('mermaid')) return 'mermaid'
-              if (id.includes('cytoscape')) return 'cytoscape'
+              // mermaid 及其所有依赖单独打包
+              if (id.includes('mermaid') || id.includes('d3-') || id.includes('dagre') || id.includes('khroma') || id.includes('cytoscape')) {
+                return 'mermaid-vendor'
+              }
               if (id.includes('katex')) return 'katex'
+              // nolebase 插件单独打包
+              if (id.includes('@nolebase')) return 'nolebase'
             }
           }
         }

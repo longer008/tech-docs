@@ -6,7 +6,13 @@ export default defineConfig({
     presetAttributify(),
     presetIcons({
       scale: 1.2,
-      warn: true,
+      warn: false,  // 关闭图标警告，避免误报文档内容中的数字/符号
+      collections: {
+        // 只加载实际用到的图标集
+        'carbon': () => import('@iconify-json/carbon/icons.json').then(i => i.default),
+        'icon-park-outline': () => import('@iconify-json/icon-park-outline/icons.json').then(i => i.default),
+        'octicon': () => import('@iconify-json/octicon/icons.json').then(i => i.default),
+      },
     }),
   ],
   shortcuts: {
@@ -26,7 +32,8 @@ export default defineConfig({
     'i-carbon-logo-github',
     'i-carbon-document',
     'i-carbon-code',
-    'i-icon-park-outline:book-open',
-    'i-icon-park-outline:guide-board',
+    // nolebase 插件内部使用的图标
+    'i-icon-park-outline-book-open',
+    'i-icon-park-outline-guide-board',
   ],
 })
