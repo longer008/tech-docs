@@ -1,6 +1,4 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from 'vitepress-plugin-mermaid'
-import { withPwa } from '@vite-pwa/vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { katex } from '@mdit/plugin-katex'
 import footnote from 'markdown-it-footnote'
@@ -12,16 +10,10 @@ import UnoCSS from 'unocss/vite'
 import NProgress from 'vitepress-plugin-nprogress'
 import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-icons'
 
-// 根据环境变量动态设置 base 路径
-// GitHub Pages: /tech-docs/
-// Cloudflare Pages: /
-// 优先使用 VITE_BASE_PATH 环境变量
 const base = process.env.VITE_BASE_PATH || '/tech-docs/'
 
 // https://vitepress.dev/reference/site-config
-export default withPwa(
-  withMermaid(
-    defineConfig({
+export default defineConfig({
     title: '技术面试知识库',
     description: '全栈开发技术面试准备与实战文档',
     lang: 'zh-CN',
@@ -120,14 +112,6 @@ export default withPwa(
         md.use(taskLists)
         md.use(groupIconMdPlugin)
       },
-    },
-
-    // Mermaid 配置
-    mermaid: {
-      theme: 'default',
-    },
-    mermaidPlugin: {
-      class: 'mermaid',
     },
 
     // 主题配置
@@ -632,28 +616,7 @@ export default withPwa(
       darkModeSwitchTitle: '切换到深色模式',
     },
 
-    // PWA 配置
-    pwa: {
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon.ico'],
-      manifest: {
-        name: '技术面试知识库',
-        short_name: '技术面试',
-        description: '全栈开发技术面试准备与实战文档',
-        theme_color: '#3eaf7c',
-        lang: 'zh-CN',
-        icons: [
-          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{css,js,html,svg,png,ico,txt,woff2}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-      },
-    },
+    // PWA 配置（已禁用，减少构建时间）
+    // pwa: { ... },
   })
-  )
-)
+

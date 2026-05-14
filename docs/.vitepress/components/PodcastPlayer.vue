@@ -40,18 +40,14 @@ function getAdminToken(): string {
 
 function checkAndSaveAdminToken() {
   if (typeof localStorage === 'undefined' || typeof window === 'undefined') return
-  // 检查 URL 中是否有 admin 参数
   const params = new URLSearchParams(window.location.search)
   const token = params.get('admin')
   if (token && token.length === 32) {
     localStorage.setItem(ADMIN_KEY, token)
-    // 清除 URL 中的 admin 参数，避免泄露
     const url = new URL(window.location.href)
     url.searchParams.delete('admin')
     window.history.replaceState({}, '', url.toString())
-    console.debug('[PodcastPlayer] 管理员 Token 已保存')
   }
-  // 更新响应式状态
   adminVerified.value = getAdminToken().length === 32
 }
 
