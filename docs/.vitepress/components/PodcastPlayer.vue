@@ -33,10 +33,12 @@ const CHUNK_SIZE = 500
 const ADMIN_KEY = 'podcast_admin_token'
 
 function getAdminToken(): string {
+  if (typeof localStorage === 'undefined') return ''
   return localStorage.getItem(ADMIN_KEY) || ''
 }
 
 function checkAndSaveAdminToken() {
+  if (typeof localStorage === 'undefined' || typeof window === 'undefined') return
   // 检查 URL 中是否有 admin 参数
   const params = new URLSearchParams(window.location.search)
   const token = params.get('admin')
@@ -51,6 +53,7 @@ function checkAndSaveAdminToken() {
 }
 
 function isAdmin(): boolean {
+  if (typeof localStorage === 'undefined') return false
   return getAdminToken().length === 32
 }
 
@@ -360,14 +363,6 @@ async function handleGenerate() {
   if (isGenerating.value) return  // 防止重复触发
   errorMsg.value = ''
 
-  // 先检查缓存
-  const cacheKey = getCacheKey()
-  const cached = await getCachedAudio(cacheKey)
-  if (cached) {
-    setupAudio(cached)
-    return
-  }
-
   // 检查服务是否在线
   await checkServer()
   if (!serverOnline.value) {
@@ -451,7 +446,7 @@ async function handleGenerate() {
       throw new Error('未生成任何音频，请检查 TTS 服务')
     }
 
-    // 替换为完整音频并缓存
+    // 替换为完整音频（不再缓存到浏览器，服务端已缓存）
     const fullBlob = new Blob(allAudioChunks, { type: 'audio/mp3' })
     const currentPos = audio ? audio.currentTime : 0
     const wasPlaying = isPlaying.value
@@ -460,7 +455,6 @@ async function handleGenerate() {
       audio.currentTime = currentPos
       if (wasPlaying) audio.play().catch(() => {})
     }
-    await setCachedAudio(cacheKey, fullBlob)
 
   } catch (e: any) {
     errorMsg.value = e.message || '生成失败，请重试'

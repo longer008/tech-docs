@@ -18,6 +18,7 @@ import json
 import os
 import io
 import re
+import hashlib
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.request import Request, urlopen
 from urllib.error import URLError
@@ -47,6 +48,57 @@ load_dotenv()
 
 PORT = int(os.environ.get("PORT", 3456))
 HOST = os.environ.get("HOST", "127.0.0.1")  # 服务器部署时设为 0.0.0.0
+
+# 音频缓存目录
+CACHE_DIR = os.environ.get("CACHE_DIR", os.path.join(os.path.dirname(__file__), "cache"))
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+
+def get_cache_path(text: str, voice: str, rate: str) -> str:
+    """根据文本内容生成音频缓存文件路径"""
+    key = f"{voice}|{rate}|{text}"
+    h = hashlib.md5(key.encode()).hexdigest()
+    return os.path.join(CACHE_DIR, f"{h}.mp3")
+
+
+def get_rewrite_cache_path(text: str) -> str:
+    """根据文本内容生成 AI 改写缓存文件路径"""
+    h = hashlib.md5(text.encode()).hexdigest()
+    return os.path.join(CACHE_DIR, f"rewrite_{h}.json")
+
+
+def get_cached_audio(text: str, voice: str, rate: str):
+    """读取缓存音频，不存在返回 None"""
+    path = get_cache_path(text, voice, rate)
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return f.read()
+    return None
+
+
+def save_cached_audio(text: str, voice: str, rate: str, data: bytes):
+    """保存音频到缓存"""
+    path = get_cache_path(text, voice, rate)
+    with open(path, "wb") as f:
+        f.write(data)
+    print(f"    💾 音频缓存: {os.path.basename(path)}")
+
+
+def get_cached_rewrite(text: str) -> str | None:
+    """读取 AI 改写缓存，不存在返回 None"""
+    path = get_rewrite_cache_path(text)
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f).get("text")
+    return None
+
+
+def save_cached_rewrite(text: str, result: str):
+    """保存 AI 改写结果到缓存"""
+    path = get_rewrite_cache_path(text)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"text": result}, f, ensure_ascii=False)
+    print(f"    💾 改写缓存: {os.path.basename(path)}")
 DEFAULT_VOICE = "zh-CN-XiaoxiaoNeural"
 DEFAULT_RATE = "+5%"
 CHUNK_SIZE = 500
@@ -76,6 +128,12 @@ def ai_rewrite(text: str) -> str:
         print("  ⚠️ 未配置 LLM_API_KEY，跳过 AI 改写")
         return text
 
+    # 先查缓存
+    cached = get_cached_rewrite(text)
+    if cached:
+        print(f"  🤖 改写缓存命中: {len(text)} 字")
+        return cached
+
     # 单段文本直接改写
     if len(text) > 8000:
         text = text[:8000]
@@ -103,6 +161,7 @@ def ai_rewrite(text: str) -> str:
         result = json.loads(resp.read().decode())
         content = result["choices"][0]["message"]["content"]
         print(f"  🤖 AI 改写完成: {len(text)} 字 → {len(content)} 字")
+        save_cached_rewrite(text, content)
         return content
     except URLError as e:
         # 打印详细错误帮助排查
@@ -272,7 +331,6 @@ class TTSHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(json.dumps({"text": result}).encode())
-
     def _handle_tts(self):
         """一次性生成"""
         content_length = int(self.headers.get("Content-Length", 0))
@@ -293,11 +351,26 @@ class TTSHandler(BaseHTTPRequestHandler):
         rate = data.get("rate", DEFAULT_RATE)
 
         try:
+            # 先查缓存
+            cached = get_cached_audio(text, voice, rate)
+            if cached:
+                print(f"  ✅ 缓存命中: {len(text)} 字 -> {len(cached)//1024} KB")
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/mp3")
+                self.send_header("Content-Length", str(len(cached)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("X-Cache", "HIT")
+                self.end_headers()
+                self.wfile.write(cached)
+                return
+
             audio_data = asyncio.run(self._generate(text, voice, rate))
+            save_cached_audio(text, voice, rate, audio_data)
             self.send_response(200)
             self.send_header("Content-Type", "audio/mp3")
             self.send_header("Content-Length", str(len(audio_data)))
             self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("X-Cache", "MISS")
             self.end_headers()
             self.wfile.write(audio_data)
             print(f"  ✅ 生成: {len(text)} 字 -> {len(audio_data)//1024} KB")
