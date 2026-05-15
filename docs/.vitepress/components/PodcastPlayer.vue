@@ -40,14 +40,6 @@ function getAdminToken(): string {
 
 function checkAndSaveAdminToken() {
   if (typeof localStorage === 'undefined' || typeof window === 'undefined') return
-  const params = new URLSearchParams(window.location.search)
-  const token = params.get('admin')
-  if (token && token.length === 32) {
-    localStorage.setItem(ADMIN_KEY, token)
-    const url = new URL(window.location.href)
-    url.searchParams.delete('admin')
-    window.history.replaceState({}, '', url.toString())
-  }
   adminVerified.value = getAdminToken().length === 32
 }
 

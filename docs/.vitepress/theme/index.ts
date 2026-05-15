@@ -94,6 +94,17 @@ export default {
 
     onMounted(() => {
       initZoom()
+
+      // 全局检查 admin token（确保任何页面都能保存）
+      if (typeof localStorage !== 'undefined' && typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const token = url.searchParams.get('admin')
+        if (token && token.length === 32) {
+          localStorage.setItem('podcast_admin_token', token)
+          url.searchParams.delete('admin')
+          window.history.replaceState({}, '', url.toString())
+        }
+      }
     })
 
     // 路由变化时重新初始化
