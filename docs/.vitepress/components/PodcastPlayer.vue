@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useData, useRoute } from 'vitepress'
 
 // 播放器状态
@@ -14,6 +14,16 @@ const audioReady = ref(false)
 const audioSrc = ref('')
 const errorMsg = ref('')
 const serverOnline = ref(false)
+const showTranscript = ref(true)  // 是否显示文字
+
+// 文字同步数据：每段文本 + 对应的音频起止时间
+interface Segment {
+  text: string
+  startTime: number  // 秒
+  endTime: number    // 秒
+}
+const segments = ref<Segment[]>([])
+const currentSegmentIndex = ref(-1)
 
 // Audio 元素引用
 let audio: HTMLAudioElement | null = null
@@ -23,7 +33,7 @@ const { page } = useData()
 
 // 本地 TTS 服务地址（使用 127.0.0.1 避免代理拦截 localhost）
 // const TTS_SERVER = 'http://127.0.0.1:3456'
-const TTS_SERVER = 'http://66.63.177.137:3456'
+const TTS_SERVER = 'https://tts.laou.tech'
 
 // 文本分段大小（与服务端 CHUNK_SIZE 保持一致）
 const CHUNK_SIZE = 500
@@ -369,6 +379,8 @@ async function handleGenerate() {
   }
 
   isGenerating.value = true
+  segments.value = []
+  currentSegmentIndex.value = -1
 
   try {
     console.debug(`[PodcastPlayer] 原始文本: ${rawText.length} 字符`)
@@ -422,7 +434,22 @@ async function handleGenerate() {
         const chunk = new Uint8Array(arrayBuffer)
         if (chunk.length < 100) continue
 
+        // 估算音频时长（MP3 48kbps, 24kHz）
+        // 48kbps = 6000 bytes/sec
+        const segDuration = chunk.length / 6000
+
         allAudioChunks.push(chunk)
+
+        // 记录段落时间信息
+        const startTime = segments.value.length > 0
+          ? segments.value[segments.value.length - 1].endTime
+          : 0
+        segments.value.push({
+          text: seg,
+          startTime,
+          endTime: startTime + segDuration,
+        })
+
         ttsChunkIndex++
 
         // 第一段完成立即播放
@@ -550,7 +577,25 @@ function initAudio() {
   audio.play().then(() => { isPlaying.value = true }).catch(() => {})
 }
 
-function onTimeUpdate() { if (audio) currentTime.value = audio.currentTime }
+function onTimeUpdate() {
+  if (!audio) return
+  currentTime.value = audio.currentTime
+
+  // 更新当前播放的段落索引
+  const t = audio.currentTime
+  const idx = segments.value.findIndex(s => t >= s.startTime && t < s.endTime)
+  if (idx !== -1 && idx !== currentSegmentIndex.value) {
+    currentSegmentIndex.value = idx
+    // 自动滚动到当前段落
+    nextTick(() => {
+      const container = document.querySelector('.transcript')
+      const active = container?.querySelector('.active')
+      if (active && container) {
+        active.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    })
+  }
+}
 function onLoadedMetadata() { if (audio) duration.value = audio.duration }
 function onEnded() { isPlaying.value = false; currentTime.value = 0 }
 function onError() { errorMsg.value = '音频播放失败'; isPlaying.value = false }
@@ -587,6 +632,16 @@ function setRate(rate: number) {
 function setVolume(event: Event) {
   volume.value = parseFloat((event.target as HTMLInputElement).value)
   if (audio) audio.volume = volume.value
+}
+
+function seekToSegment(idx: number) {
+  if (audio && segments.value[idx]) {
+    audio.currentTime = segments.value[idx].startTime
+    currentSegmentIndex.value = idx
+    if (!isPlaying.value) {
+      audio.play().then(() => { isPlaying.value = true }).catch(() => {})
+    }
+  }
 }
 
 async function handleRegenerate() {
@@ -691,7 +746,20 @@ onUnmounted(() => {
       </div>
       <div class="panel-section">
         <button class="btn-regenerate" @click="handleRegenerate" :disabled="isGenerating">🔄 重新生成</button>
+        <button class="btn-transcript" @click="showTranscript = !showTranscript">
+          {{ showTranscript ? '📖 隐藏文字' : '📖 显示文字' }}
+        </button>
       </div>
+    </div>
+
+    <!-- 文字同步展示 -->
+    <div v-if="audioReady && showTranscript && segments.length > 0" class="transcript" ref="transcriptRef">
+      <p
+        v-for="(seg, idx) in segments"
+        :key="idx"
+        :class="{ active: idx === currentSegmentIndex, past: idx < currentSegmentIndex }"
+        @click="seekToSegment(idx)"
+      >{{ seg.text }}</p>
     </div>
 
     <!-- 错误提示 -->
@@ -877,5 +945,53 @@ onUnmounted(() => {
   .player-bar { flex-wrap: wrap; gap: 8px; }
   .progress-bar { order: 10; width: 100%; flex: none; }
   .player-info { flex: 1; }
+}
+
+/* 文字同步展示 */
+.transcript {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--vp-c-divider);
+  scroll-behavior: smooth;
+}
+
+.transcript p {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--vp-c-text-3);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.transcript p:hover {
+  background: var(--vp-c-bg-mute);
+}
+
+.transcript p.active {
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-brand-soft);
+  font-weight: 500;
+}
+
+.transcript p.past {
+  color: var(--vp-c-text-2);
+}
+
+.btn-transcript {
+  padding: 4px 12px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-transcript:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
 }
 </style>
