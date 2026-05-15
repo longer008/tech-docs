@@ -123,17 +123,18 @@ PODCAST_SYSTEM_PROMPT = """你是一个技术播客主播，擅长把技术文�
 8. 不要添加开场白和结束语"""
 
 
-def ai_rewrite(text: str) -> str:
+def ai_rewrite(text: str, force: bool = False) -> str:
     """调用 LLM 将文档内容改写为播客脚本"""
     if not LLM_API_KEY:
         print("  ⚠️ 未配置 LLM_API_KEY，跳过 AI 改写")
         return text
 
-    # 先查缓存
-    cached = get_cached_rewrite(text)
-    if cached:
-        print(f"  🤖 改写缓存命中: {len(text)} 字")
-        return cached
+    # 先查缓存（force=True 时跳过）
+    if not force:
+        cached = get_cached_rewrite(text)
+        if cached:
+            print(f"  🤖 改写缓存命中: {len(text)} 字")
+            return cached
 
     # 单段文本直接改写
     if len(text) > 12000:
@@ -306,12 +307,13 @@ class TTSHandler(BaseHTTPRequestHandler):
             return
 
         text = data.get("text", "").strip()
+        force = bool(data.get("force", False))
         if not text:
             self._error(400, "text is required")
             return
 
-        print(f"  🤖 AI 改写请求: {len(text)} 字")
-        result = ai_rewrite(text)
+        print(f"  🤖 AI 改写请求: {len(text)} 字{' (强制刷新)' if force else ''}")
+        result = ai_rewrite(text, force=force)
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -336,20 +338,22 @@ class TTSHandler(BaseHTTPRequestHandler):
 
         voice = data.get("voice", DEFAULT_VOICE)
         rate = data.get("rate", DEFAULT_RATE)
+        force = bool(data.get("force", False))
 
         try:
-            # 先查缓存
-            cached = get_cached_audio(text, voice, rate)
-            if cached:
-                print(f"  ✅ 缓存命中: {len(text)} 字 -> {len(cached)//1024} KB")
-                self.send_response(200)
-                self.send_header("Content-Type", "audio/mp3")
-                self.send_header("Content-Length", str(len(cached)))
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.send_header("X-Cache", "HIT")
-                self.end_headers()
-                self.wfile.write(cached)
-                return
+            # 先查缓存（force=True 时跳过）
+            if not force:
+                cached = get_cached_audio(text, voice, rate)
+                if cached:
+                    print(f"  ✅ 缓存命中: {len(text)} 字 -> {len(cached)//1024} KB")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "audio/mp3")
+                    self.send_header("Content-Length", str(len(cached)))
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.send_header("X-Cache", "HIT")
+                    self.end_headers()
+                    self.wfile.write(cached)
+                    return
 
             audio_data = asyncio.run(self._generate(text, voice, rate))
             save_cached_audio(text, voice, rate, audio_data)
