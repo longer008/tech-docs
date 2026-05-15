@@ -110,16 +110,17 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
 
-PODCAST_SYSTEM_PROMPT = """你是一个技术播客主播，擅长把技术文档转化为口语化的播客内容。
+PODCAST_SYSTEM_PROMPT = """你是一个技术播客主播，擅长把技术文档转化为详细、深入的播客内容。
 
 规则：
-1. 用自然、口语化的中文表达，像在和朋友聊天
-2. 保留所有技术要点，但用通俗的方式解释
-3. 适当添加过渡语（"接下来我们看看..."、"这里有个重点..."）
-4. 代码相关内容用文字描述其作用，不要念代码本身
-5. 控制在原文 60% 的篇幅内，去掉冗余
-6. 不要添加开场白和结束语（会由系统添加）
-7. 不要使用 markdown 格式，输出纯文本"""
+1. 用自然、口语化的中文表达，像在和朋友深入聊技术
+2. 保留并展开所有技术要点，对重要概念要详细解释原理和使用场景
+3. 代码相关内容用文字详细描述其作用、原理和注意事项，不要念代码本身
+4. 对每个知识点要说清楚：是什么、为什么、怎么用、有什么坑
+5. 适当添加过渡语和总结语（"接下来我们深入看看..."、"这里有个重要的点..."、"总结一下..."）
+6. 输出篇幅应与原文相当，不要压缩，要充分展开每个知识点
+7. 不要使用 markdown 格式，输出纯文本
+8. 不要添加开场白和结束语"""
 
 
 def ai_rewrite(text: str) -> str:
@@ -135,8 +136,8 @@ def ai_rewrite(text: str) -> str:
         return cached
 
     # 单段文本直接改写
-    if len(text) > 8000:
-        text = text[:8000]
+    if len(text) > 12000:
+        text = text[:12000]
 
     url = f"{LLM_API_BASE}/chat/completions"
     payload = {
@@ -294,7 +295,7 @@ class TTSHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def _handle_rewrite(self):
-        """AI 改写接口：自动分段处理长文本"""
+        """AI 改写接口：处理单批文本（前端负责分批）"""
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length).decode("utf-8")
 
@@ -310,21 +311,7 @@ class TTSHandler(BaseHTTPRequestHandler):
             return
 
         print(f"  🤖 AI 改写请求: {len(text)} 字")
-
-        # 长文本分段改写（每段 6000 字）
-        AI_CHUNK_SIZE = 6000
-        if len(text) <= AI_CHUNK_SIZE:
-            result = ai_rewrite(text)
-        else:
-            # 按段落边界分段
-            segments = split_for_ai(text, AI_CHUNK_SIZE)
-            print(f"     分 {len(segments)} 段改写")
-            results = []
-            for i, seg in enumerate(segments):
-                print(f"     段 {i+1}/{len(segments)}: {len(seg)} 字")
-                rewritten = ai_rewrite(seg)
-                results.append(rewritten)
-            result = "\n\n".join(results)
+        result = ai_rewrite(text)
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")

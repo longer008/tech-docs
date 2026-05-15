@@ -386,7 +386,7 @@ async function handleGenerate() {
     console.debug(`[PodcastPlayer] 原始文本: ${rawText.length} 字符`)
 
     // 按 3000 字分批 AI 改写，改写完立即 TTS
-    const AI_BATCH = 3000
+    const AI_BATCH = 5000
     const batches = splitIntoBatches(rawText, AI_BATCH)
     console.debug(`[PodcastPlayer] 分 ${batches.length} 批 AI 改写`)
 
@@ -483,24 +483,38 @@ async function handleGenerate() {
 
 function splitIntoBatches(text: string, maxChars: number): string[] {
   if (text.length <= maxChars) return [text]
+
+  // 按段落边界切分，避免在句子中间断开
   const paras = text.split(/\n{2,}/)
   const batches: string[] = []
   let cur = ''
+
   for (const p of paras) {
-    if (!p.trim()) continue
-    if (cur.length + p.length + 2 > maxChars) {
+    const para = p.trim()
+    if (!para) continue
+
+    if (cur.length + para.length + 2 > maxChars) {
       if (cur) batches.push(cur.trim())
-      // 单段超长时强制截断
-      if (p.length > maxChars) {
-        for (let i = 0; i < p.length; i += maxChars) {
-          batches.push(p.slice(i, i + maxChars))
+      // 单段超长时按句子切分
+      if (para.length > maxChars) {
+        const sentences = para.split(/([。！？；\n])/)
+        let sentBuf = ''
+        for (let i = 0; i < sentences.length - 1; i += 2) {
+          const s = sentences[i] + (sentences[i + 1] ?? '')
+          if (sentBuf.length + s.length > maxChars) {
+            if (sentBuf) batches.push(sentBuf.trim())
+            sentBuf = s
+          } else {
+            sentBuf += s
+          }
         }
+        if (sentBuf.trim()) batches.push(sentBuf.trim())
         cur = ''
       } else {
-        cur = p
+        cur = para
       }
     } else {
-      cur += (cur ? '\n\n' : '') + p
+      cur += (cur ? '\n\n' : '') + para
     }
   }
   if (cur.trim()) batches.push(cur.trim())
