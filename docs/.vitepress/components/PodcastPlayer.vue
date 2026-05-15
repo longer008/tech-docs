@@ -360,7 +360,7 @@ function extractPageText(): string {
 
 // ============ 生成音频 ============
 
-async function handleGenerate() {
+async function handleGenerate(force = false) {
   if (isGenerating.value) return  // 防止重复触发
   errorMsg.value = ''
 
@@ -392,7 +392,6 @@ async function handleGenerate() {
 
     const allAudioChunks: Uint8Array[] = []
     let firstChunkPlayed = false
-    let ttsChunkIndex = 0
     let rewrittenFull = ''  // 收集所有改写结果，用于缓存
 
     for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
@@ -402,7 +401,7 @@ async function handleGenerate() {
         const rewriteRes = await authFetch(`${TTS_SERVER}/rewrite`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: batchScript }),
+          body: JSON.stringify({ text: batchScript, force }),
           signal: AbortSignal.timeout(60000),
         })
         if (rewriteRes.ok) {
@@ -419,43 +418,85 @@ async function handleGenerate() {
 
       rewrittenFull += (rewrittenFull ? '\n\n' : '') + batchScript
 
-      // 2. 对改写结果分段 TTS
+      // 2. 对改写结果分段 TTS（并行请求，按顺序追加）
       const ttsSegments = splitIntoBatches(batchScript, 500)
-      for (const seg of ttsSegments) {
-        const response = await authFetch(`${TTS_SERVER}/tts`, {
+
+      if (batchIdx === 0 && !firstChunkPlayed) {
+        // 第一批：第一段单独先请求，快速开始播放
+        const firstSeg = ttsSegments[0]
+        const firstRes = await authFetch(`${TTS_SERVER}/tts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: seg }),
+          body: JSON.stringify({ text: firstSeg, force }),
           signal: AbortSignal.timeout(60000),
         })
-        if (!response.ok) continue
+        if (firstRes.ok) {
+          const buf = await firstRes.arrayBuffer()
+          const chunk = new Uint8Array(buf)
+          if (chunk.length >= 100) {
+            const startTime = 0
+            const segDuration = chunk.length / 6000
+            allAudioChunks.push(chunk)
+            segments.value.push({ text: firstSeg, startTime, endTime: segDuration })
+            firstChunkPlayed = true
+            setupAudio(new Blob(allAudioChunks, { type: 'audio/mp3' }))
+          }
+        }
 
-        const arrayBuffer = await response.arrayBuffer()
-        const chunk = new Uint8Array(arrayBuffer)
-        if (chunk.length < 100) continue
+        // 剩余段并行请求
+        const restSegs = ttsSegments.slice(1)
+        if (restSegs.length > 0) {
+          const results = await Promise.all(
+            restSegs.map(seg =>
+              authFetch(`${TTS_SERVER}/tts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: seg, force }),
+                signal: AbortSignal.timeout(60000),
+              }).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+            )
+          )
+          for (let i = 0; i < results.length; i++) {
+            if (!results[i]) continue
+            const chunk = new Uint8Array(results[i]!)
+            if (chunk.length < 100) continue
+            const prev = segments.value[segments.value.length - 1]
+            const startTime = prev ? prev.endTime : 0
+            segments.value.push({ text: restSegs[i], startTime, endTime: startTime + chunk.length / 6000 })
+            allAudioChunks.push(chunk)
+          }
+        }
+      } else {
+        // 后续批次：全部并行请求，按顺序追加
+        const results = await Promise.all(
+          ttsSegments.map(seg =>
+            authFetch(`${TTS_SERVER}/tts`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: seg, force }),
+              signal: AbortSignal.timeout(60000),
+            }).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+          )
+        )
+        for (let i = 0; i < results.length; i++) {
+          if (!results[i]) continue
+          const chunk = new Uint8Array(results[i]!)
+          if (chunk.length < 100) continue
+          const prev = segments.value[segments.value.length - 1]
+          const startTime = prev ? prev.endTime : 0
+          segments.value.push({ text: ttsSegments[i], startTime, endTime: startTime + chunk.length / 6000 })
+          allAudioChunks.push(chunk)
+        }
+      }
 
-        // 估算音频时长（MP3 48kbps, 24kHz）
-        // 48kbps = 6000 bytes/sec
-        const segDuration = chunk.length / 6000
-
-        allAudioChunks.push(chunk)
-
-        // 记录段落时间信息
-        const startTime = segments.value.length > 0
-          ? segments.value[segments.value.length - 1].endTime
-          : 0
-        segments.value.push({
-          text: seg,
-          startTime,
-          endTime: startTime + segDuration,
-        })
-
-        ttsChunkIndex++
-
-        // 第一段完成立即播放
-        if (!firstChunkPlayed) {
-          firstChunkPlayed = true
-          setupAudio(new Blob(allAudioChunks, { type: 'audio/mp3' }))
+      // 每批完成后更新播放器（保持播放位置）
+      if (allAudioChunks.length > 0 && firstChunkPlayed) {
+        const currentPos = audio ? audio.currentTime : 0
+        const wasPlaying = isPlaying.value
+        setupAudio(new Blob(allAudioChunks, { type: 'audio/mp3' }))
+        if (audio && currentPos > 0) {
+          audio.currentTime = currentPos
+          if (wasPlaying) audio.play().catch(() => {})
         }
       }
     }
@@ -659,16 +700,11 @@ function seekToSegment(idx: number) {
 }
 
 async function handleRegenerate() {
-  const cacheKey = getCacheKey()
-  try {
-    const db = await openDB()
-    const tx = db.transaction(STORE_NAME, 'readwrite')
-    tx.objectStore(STORE_NAME).delete(cacheKey)
-  } catch {}
   audioReady.value = false
   isPlaying.value = false
+  segments.value = []
   if (audio) audio.pause()
-  await handleGenerate()
+  await handleGenerate(true)  // force=true 跳过服务端缓存
 }
 
 // 路由变化时重置
@@ -782,60 +818,69 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* ── 容器 ─────────────────────────────────────────── */
 .podcast-player {
-  margin: 16px 0;
+  margin: 16px 0 24px;
   border: 1px solid var(--vp-c-border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--vp-c-bg-soft);
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+}
+.podcast-player:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* ── 未生成状态 ───────────────────────────────────── */
 .player-idle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 14px;
+  padding: 14px 20px;
 }
 
 .btn-generate {
-  padding: 8px 20px;
-  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  border-radius: 24px;
   border: none;
-  background: var(--vp-c-brand-1);
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-brand-2));
   color: white;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
 }
 .btn-generate:hover {
-  transform: scale(1.05);
-  background: var(--vp-c-brand-2);
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
+.btn-generate:active { transform: translateY(0); }
 
 .idle-hint {
   font-size: 12px;
   color: var(--vp-c-text-3);
 }
 
+/* ── 生成中 ───────────────────────────────────────── */
 .player-generating {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 14px 20px;
 }
-.generating-icon {
-  animation: pulse 1.5s ease-in-out infinite;
-}
+.generating-icon { font-size: 16px; animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
 }
-.generating-text {
-  font-size: 13px;
-  color: var(--vp-c-text-2);
-}
+.generating-text { font-size: 13px; color: var(--vp-c-text-2); }
 
+/* ── 播放器主栏 ───────────────────────────────────── */
 .player-bar {
   display: flex;
   align-items: center;
@@ -844,51 +889,71 @@ onUnmounted(() => {
 }
 
 .btn-play {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
   background: var(--vp-c-brand-1);
   color: white;
-  font-size: 16px;
+  font-size: 17px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s;
   flex-shrink: 0;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
-.btn-play:hover { transform: scale(1.1); }
+.btn-play:hover {
+  background: var(--vp-c-brand-2);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.btn-play:active { transform: scale(0.96); }
 
 .player-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
   flex-shrink: 0;
+  min-width: 80px;
 }
-.player-title { font-size: 13px; font-weight: 600; color: var(--vp-c-text-1); }
-.player-time { font-size: 11px; color: var(--vp-c-text-3); font-variant-numeric: tabular-nums; }
+.player-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  letter-spacing: 0.3px;
+}
+.player-time {
+  font-size: 11px;
+  color: var(--vp-c-text-3);
+  font-variant-numeric: tabular-nums;
+}
 
+/* ── 进度条 ───────────────────────────────────────── */
 .progress-bar {
   flex: 1;
-  height: 6px;
+  height: 5px;
   background: var(--vp-c-divider);
   border-radius: 3px;
   cursor: pointer;
   min-width: 60px;
+  position: relative;
+  transition: height 0.15s;
 }
-.progress-bar:hover { height: 8px; }
+.progress-bar:hover { height: 7px; }
 .progress-fill {
   height: 100%;
-  background: var(--vp-c-brand-1);
+  background: linear-gradient(90deg, var(--vp-c-brand-1), var(--vp-c-brand-2));
   border-radius: 3px;
   transition: width 0.1s linear;
 }
 
+/* ── 控制按钮 ─────────────────────────────────────── */
 .player-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
 }
 .btn-skip, .btn-rate {
@@ -896,116 +961,130 @@ onUnmounted(() => {
   background: transparent;
   color: var(--vp-c-text-2);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 5px 8px;
+  border-radius: 8px;
   font-size: 12px;
+  transition: background 0.15s, color 0.15s;
 }
-.btn-skip:hover, .btn-rate:hover { background: var(--vp-c-bg-mute); }
-.btn-rate { font-weight: 600; min-width: 36px; text-align: center; }
+.btn-skip:hover, .btn-rate:hover {
+  background: var(--vp-c-bg-mute);
+  color: var(--vp-c-text-1);
+}
+.btn-rate { font-weight: 700; min-width: 38px; text-align: center; }
 
+/* ── 展开面板 ─────────────────────────────────────── */
 .player-panel {
-  padding: 12px 16px;
+  padding: 10px 16px 12px;
   border-top: 1px solid var(--vp-c-divider);
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
+  background: var(--vp-c-bg-alt);
 }
 .panel-section { display: flex; align-items: center; gap: 8px; }
-.panel-label { font-size: 12px; color: var(--vp-c-text-3); }
+.panel-label { font-size: 11px; color: var(--vp-c-text-3); font-weight: 500; }
 
 .rate-buttons { display: flex; gap: 4px; }
 .rate-buttons button {
-  padding: 4px 10px;
+  padding: 3px 9px;
   border: 1px solid var(--vp-c-border);
   border-radius: 6px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-2);
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
+  transition: all 0.15s;
 }
 .rate-buttons button:hover { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); }
-.rate-buttons button.active { background: var(--vp-c-brand-1); border-color: var(--vp-c-brand-1); color: white; }
+.rate-buttons button.active {
+  background: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  color: white;
+  font-weight: 600;
+}
 
 .volume-slider {
   width: 80px; height: 4px;
   -webkit-appearance: none; appearance: none;
-  background: var(--vp-c-divider); border-radius: 2px; outline: none;
+  background: var(--vp-c-divider); border-radius: 2px; outline: none; cursor: pointer;
 }
 .volume-slider::-webkit-slider-thumb {
   -webkit-appearance: none; width: 14px; height: 14px;
   border-radius: 50%; background: var(--vp-c-brand-1); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
-.btn-regenerate {
+.btn-regenerate, .btn-transcript {
   padding: 4px 12px;
   border: 1px solid var(--vp-c-border);
   border-radius: 6px;
   background: var(--vp-c-bg);
   color: var(--vp-c-text-2);
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
+  transition: all 0.15s;
 }
-.btn-regenerate:hover { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); }
+.btn-regenerate:hover, .btn-transcript:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+.btn-regenerate:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── 文字同步展示 ─────────────────────────────────── */
+.transcript {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 16px 20px;
+  border-top: 1px solid var(--vp-c-divider);
+  scroll-behavior: smooth;
+  background: var(--vp-c-bg);
+}
+.transcript::-webkit-scrollbar { width: 4px; }
+.transcript::-webkit-scrollbar-track { background: transparent; }
+.transcript::-webkit-scrollbar-thumb {
+  background: var(--vp-c-divider);
+  border-radius: 2px;
+}
+
+.transcript p {
+  margin: 0 0 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--vp-c-text-3);
+  cursor: pointer;
+  transition: all 0.25s;
+  border-left: 3px solid transparent;
+}
+.transcript p:hover {
+  background: var(--vp-c-bg-mute);
+  color: var(--vp-c-text-2);
+}
+.transcript p.active {
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-brand-soft);
+  border-left-color: var(--vp-c-brand-1);
+  font-weight: 500;
+}
+.transcript p.past { color: var(--vp-c-text-2); }
+
+/* ── 错误提示 ─────────────────────────────────────── */
 .player-error {
   padding: 8px 16px;
   font-size: 12px;
   color: var(--vp-c-danger-1);
   border-top: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-danger-soft);
 }
 
+/* ── 响应式 ───────────────────────────────────────── */
 @media (max-width: 640px) {
   .player-bar { flex-wrap: wrap; gap: 8px; }
   .progress-bar { order: 10; width: 100%; flex: none; }
   .player-info { flex: 1; }
-}
-
-/* 文字同步展示 */
-.transcript {
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 12px 16px;
-  border-top: 1px solid var(--vp-c-divider);
-  scroll-behavior: smooth;
-}
-
-.transcript p {
-  margin: 0;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--vp-c-text-3);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.transcript p:hover {
-  background: var(--vp-c-bg-mute);
-}
-
-.transcript p.active {
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-brand-soft);
-  font-weight: 500;
-}
-
-.transcript p.past {
-  color: var(--vp-c-text-2);
-}
-
-.btn-transcript {
-  padding: 4px 12px;
-  border: 1px solid var(--vp-c-border);
-  border-radius: 6px;
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-2);
-  font-size: 12px;
-  cursor: pointer;
-}
-.btn-transcript:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+  .transcript { max-height: 280px; }
 }
 </style>
