@@ -427,7 +427,7 @@ async function handleGenerate(force = false) {
         const firstRes = await authFetch(`${TTS_SERVER}/tts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: firstSeg, force }),
+          body: JSON.stringify({ text: firstSeg, force, page_path: page.value.relativePath }),
           signal: AbortSignal.timeout(60000),
         })
         if (firstRes.ok) {
@@ -451,7 +451,7 @@ async function handleGenerate(force = false) {
               authFetch(`${TTS_SERVER}/tts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: seg, force }),
+                body: JSON.stringify({ text: seg, force, page_path: page.value.relativePath }),
                 signal: AbortSignal.timeout(60000),
               }).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
             )
@@ -473,7 +473,7 @@ async function handleGenerate(force = false) {
             authFetch(`${TTS_SERVER}/tts`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: seg, force }),
+              body: JSON.stringify({ text: seg, force, page_path: page.value.relativePath }),
               signal: AbortSignal.timeout(60000),
             }).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
           )

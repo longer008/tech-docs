@@ -99,6 +99,35 @@ def save_cached_rewrite(text: str, result: str):
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"text": result}, f, ensure_ascii=False)
     print(f"    💾 改写缓存: {os.path.basename(path)}")
+
+
+# 页面级缓存索引：记录每个页面路径对应的音频文件列表
+PAGE_INDEX_PATH = os.path.join(CACHE_DIR, "_page_index.json")
+
+
+def load_page_index() -> dict:
+    if os.path.exists(PAGE_INDEX_PATH):
+        with open(PAGE_INDEX_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def save_page_index(index: dict):
+    with open(PAGE_INDEX_PATH, "w", encoding="utf-8") as f:
+        json.dump(index, f, ensure_ascii=False, indent=2)
+
+
+def register_page_audio(page_path: str, audio_files: list):
+    """记录页面路径对应的音频文件"""
+    index = load_page_index()
+    index[page_path] = audio_files
+    save_page_index(index)
+
+
+def get_page_audio_files(page_path: str) -> list:
+    """获取页面对应的音频文件列表"""
+    index = load_page_index()
+    return index.get(page_path, [])
 DEFAULT_VOICE = "zh-CN-XiaoxiaoNeural"
 DEFAULT_RATE = "+5%"
 CHUNK_SIZE = 500
@@ -277,6 +306,33 @@ class TTSHandler(BaseHTTPRequestHandler):
                 "auth_required": bool(ADMIN_TOKEN),
             }
             self.wfile.write(json.dumps(resp).encode())
+        elif self.path.startswith("/cache/check"):
+            # 检查页面缓存是否存在
+            # 用法: GET /cache/check?page=/frontend/vue/vue3-interview
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            page_path = params.get("page", [""])[0]
+
+            if not page_path:
+                self.send_response(400)
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "page param required"}).encode())
+                return
+
+            audio_files = get_page_audio_files(page_path)
+            # 验证文件是否真实存在
+            existing = [f for f in audio_files if os.path.exists(os.path.join(CACHE_DIR, f))]
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "cached": len(existing) > 0,
+                "files": existing,
+            }).encode())
         else:
             self.send_response(404)
             self.end_headers()
@@ -339,6 +395,7 @@ class TTSHandler(BaseHTTPRequestHandler):
         voice = data.get("voice", DEFAULT_VOICE)
         rate = data.get("rate", DEFAULT_RATE)
         force = bool(data.get("force", False))
+        page_path = data.get("page_path", "")  # 页面路径，用于索引
 
         try:
             # 先查缓存（force=True 时跳过）
@@ -357,6 +414,17 @@ class TTSHandler(BaseHTTPRequestHandler):
 
             audio_data = asyncio.run(self._generate(text, voice, rate))
             save_cached_audio(text, voice, rate, audio_data)
+
+            # 注册到页面索引
+            if page_path:
+                cache_filename = os.path.basename(get_cache_path(text, voice, rate))
+                index = load_page_index()
+                files = index.get(page_path, [])
+                if cache_filename not in files:
+                    files.append(cache_filename)
+                    index[page_path] = files
+                    save_page_index(index)
+
             self.send_response(200)
             self.send_header("Content-Type", "audio/mp3")
             self.send_header("Content-Length", str(len(audio_data)))
