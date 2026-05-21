@@ -306,6 +306,42 @@ class TTSHandler(BaseHTTPRequestHandler):
                 "auth_required": bool(ADMIN_TOKEN),
             }
             self.wfile.write(json.dumps(resp).encode())
+        elif self.path.startswith("/cache/audio"):
+            # 返回页面缓存的所有音频（合并为一个 MP3）
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            page_path = params.get("page", [""])[0]
+
+            if not page_path:
+                self.send_response(400)
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                return
+
+            audio_files = get_page_audio_files(page_path)
+            existing = [f for f in audio_files if os.path.exists(os.path.join(CACHE_DIR, f))]
+
+            if not existing:
+                self.send_response(404)
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                return
+
+            # 合并所有音频文件
+            combined = b""
+            for fname in existing:
+                with open(os.path.join(CACHE_DIR, fname), "rb") as f:
+                    combined += f.read()
+
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mp3")
+            self.send_header("Content-Length", str(len(combined)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("X-Cache", "HIT")
+            self.end_headers()
+            self.wfile.write(combined)
+            print(f"  ✅ 缓存音频: {page_path} ({len(existing)} 段, {len(combined)//1024} KB)")
         elif self.path.startswith("/cache/check"):
             # 检查页面缓存是否存在
             # 用法: GET /cache/check?page=/frontend/vue/vue3-interview
@@ -332,6 +368,7 @@ class TTSHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({
                 "cached": len(existing) > 0,
                 "files": existing,
+                "count": len(existing),
             }).encode())
         else:
             self.send_response(404)

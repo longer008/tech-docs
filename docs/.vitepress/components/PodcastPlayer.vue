@@ -382,21 +382,61 @@ async function handleGenerate(force = false) {
   segments.value = []
   currentSegmentIndex.value = -1
 
+  // 非强制刷新时，先检查服务端是否有页面级缓存
+  let pageHasCache = false
+  if (!force) {
+    try {
+      const pagePath = page.value.relativePath?.replace(/\.md$/, '') || route.path
+      const checkRes = await authFetch(
+        `${TTS_SERVER}/cache/check?page=${encodeURIComponent(pagePath)}`,
+        { signal: AbortSignal.timeout(5000) }
+      )
+      if (checkRes.ok) {
+        const { cached, count } = await checkRes.json()
+        if (cached && count > 0) {
+          console.debug(`[PodcastPlayer] 页面有缓存（${count} 段），直接拉取`)
+          // 直接拉取合并后的缓存音频
+          isGenerating.value = true
+          segments.value = []
+          currentSegmentIndex.value = -1
+          try {
+            const audioRes = await authFetch(
+              `${TTS_SERVER}/cache/audio?page=${encodeURIComponent(pagePath)}`,
+              { signal: AbortSignal.timeout(30000) }
+            )
+            if (audioRes.ok) {
+              const buf = await audioRes.arrayBuffer()
+              const blob = new Blob([buf], { type: 'audio/mp3' })
+              setupAudio(blob)
+              return
+            }
+          } catch (e) {
+            console.warn('[PodcastPlayer] 拉取缓存音频失败，走正常流程')
+          } finally {
+            isGenerating.value = false
+          }
+        }
+      }
+    } catch {
+      // 检查失败不影响继续
+    }
+  }
+
   try {
     console.debug(`[PodcastPlayer] 原始文本: ${rawText.length} 字符`)
 
-    // 按 3000 字分批 AI 改写，改写完立即 TTS
     const AI_BATCH = 5000
     const batches = splitIntoBatches(rawText, AI_BATCH)
-    console.debug(`[PodcastPlayer] 分 ${batches.length} 批 AI 改写`)
+    console.debug(`[PodcastPlayer] 分 ${batches.length} 批处理`)
 
     const allAudioChunks: Uint8Array[] = []
     let firstChunkPlayed = false
-    let rewrittenFull = ''  // 收集所有改写结果，用于缓存
+    let rewrittenFull = ''
 
     for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
-      // 1. AI 改写当前批次
       let batchScript = batches[batchIdx]
+
+      // AI 改写当前批次
       try {
         const rewriteRes = await authFetch(`${TTS_SERVER}/rewrite`, {
           method: 'POST',
@@ -412,7 +452,6 @@ async function handleGenerate(force = false) {
           }
         }
       } catch (e: any) {
-        // AI 超时或失败，用原文继续
         console.warn(`[PodcastPlayer] AI 改写失败: ${e.message}，使用原文`)
       }
 
