@@ -358,6 +358,50 @@ function extractPageText(): string {
   return text
 }
 
+// ============ IndexedDB 本地缓存 ============
+
+const DB_NAME = 'podcast-cache'
+const STORE_NAME = 'audio'
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1)
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(STORE_NAME)
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function getLocalCache(key: string): Promise<Blob | null> {
+  try {
+    const db = await openDB()
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const req = tx.objectStore(STORE_NAME).get(key)
+      req.onsuccess = () => resolve(req.result || null)
+      req.onerror = () => resolve(null)
+    })
+  } catch { return null }
+}
+
+async function setLocalCache(key: string, blob: Blob): Promise<void> {
+  try {
+    const db = await openDB()
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    tx.objectStore(STORE_NAME).put(blob, key)
+  } catch {}
+}
+
+async function deleteLocalCache(key: string): Promise<void> {
+  try {
+    const db = await openDB()
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    tx.objectStore(STORE_NAME).delete(key)
+  } catch {}
+}
+
 // ============ 生成音频 ============
 
 async function handleGenerate(force = false) {
@@ -381,6 +425,17 @@ async function handleGenerate(force = false) {
   isGenerating.value = true
   segments.value = []
   currentSegmentIndex.value = -1
+
+  // 非强制刷新时，先检查 IndexedDB 本地缓存
+  if (!force) {
+    const localBlob = await getLocalCache(getCacheKey())
+    if (localBlob) {
+      console.debug('[PodcastPlayer] IndexedDB 本地缓存命中')
+      setupAudio(localBlob)
+      isGenerating.value = false
+      return
+    }
+  }
 
   // 非强制刷新时，先检查服务端是否有页面级缓存
   let pageHasCache = false
@@ -407,6 +462,8 @@ async function handleGenerate(force = false) {
             if (audioRes.ok) {
               const buf = await audioRes.arrayBuffer()
               const blob = new Blob([buf], { type: 'audio/mp3' })
+              // 存入 IndexedDB，下次直接本地读取
+              await setLocalCache(getCacheKey(), blob)
               setupAudio(blob)
               return
             }
@@ -544,7 +601,7 @@ async function handleGenerate(force = false) {
       throw new Error('未生成任何音频，请检查 TTS 服务')
     }
 
-    // 替换为完整音频（不再缓存到浏览器，服务端已缓存）
+    // 替换为完整音频并存入 IndexedDB
     const fullBlob = new Blob(allAudioChunks, { type: 'audio/mp3' })
     const currentPos = audio ? audio.currentTime : 0
     const wasPlaying = isPlaying.value
@@ -553,6 +610,8 @@ async function handleGenerate(force = false) {
       audio.currentTime = currentPos
       if (wasPlaying) audio.play().catch(() => {})
     }
+    // 后台存入 IndexedDB，不阻塞播放
+    setLocalCache(getCacheKey(), fullBlob)
 
   } catch (e: any) {
     errorMsg.value = e.message || '生成失败，请重试'
@@ -743,7 +802,9 @@ async function handleRegenerate() {
   isPlaying.value = false
   segments.value = []
   if (audio) audio.pause()
-  await handleGenerate(true)  // force=true 跳过服务端缓存
+  // 清除本地缓存
+  await deleteLocalCache(getCacheKey())
+  await handleGenerate(true)
 }
 
 // 路由变化时重置
