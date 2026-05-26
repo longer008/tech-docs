@@ -1,8 +1,8 @@
 # HTML5 面试题集
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
 > HTML5 核心知识点与高频面试题
+> 
+> 更新时间：2026-05
 
 ## A. 面试宝典
 
@@ -980,3 +980,68 @@ for await (const entry of dirHandle.values()) {
      sizes="(max-width: 600px) 480px, 800px"
      src="medium.jpg" alt="描述">
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### HTML 新元素与属性
+
+#### `<dialog>` 元素
+
+```html
+<dialog id="myModal">
+  <h2>确认操作</h2>
+  <form method="dialog">
+    <button value="yes">确认</button>
+    <button value="no">取消</button>
+  </form>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('myModal')
+  dialog.showModal() // 模态弹出
+  dialog.show()      // 非模态弹出
+  dialog.addEventListener('close', () => {
+    console.log(dialog.returnValue) // "yes" 或 "no"
+  })
+</script>
+```
+
+#### `<search>` 元素
+
+```html
+<search>
+  <form action="/search">
+    <input type="search" name="q" placeholder="搜索...">
+    <button type="submit">搜索</button>
+  </form>
+</search>
+```
+
+#### Popover 属性
+
+```html
+<button popovertarget="info">更多信息</button>
+<div id="info" popover>这是一段补充说明</div>
+```
+
+#### `loading="lazy"` 扩展支持
+
+```html
+<!-- 图片懒加载（已广泛支持） -->
+<img src="large-image.jpg" loading="lazy" alt="描述">
+
+<!-- iframe 懒加载 -->
+<iframe src="widget.html" loading="lazy"></iframe>
+```
+
+### 面试新增考点
+
+Q: **dialog 元素和传统 div 弹窗有什么区别？**
+
+A: `<dialog>` 是原生语义元素，showModal() 自动处理焦点管理、Escape 键关闭、背景锁定（::backgrop）、Accessibility（role=dialog），无需 JS 库实现这些行为。传统 div 弹窗需手动实现以上所有功能。
+
+Q: **popover 和 dialog 有什么区别？**
+
+A: popover 是轻量弹出层（非模态，不锁定背景），适合 tooltip、菜单等；dialog.showModal() 是模态对话框（锁定背景、焦点陷阱）。两者都提供原生 ARIA 和键盘交互支持。

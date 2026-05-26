@@ -2,7 +2,7 @@
 
 > Vue 3、Vue Router 4、Pinia 完整 API 参考与代码示例
 > 
-> 📅 **更新时间**: 2025-02
+> 📅 **更新时间**: 2026-05
 > 
 > 📚 **内容来源**: Vue 3 官方文档、Vue Router 4 官方文档、Pinia 官方文档（基于 MCP Context7 最新数据）
 
@@ -44,8 +44,11 @@
   <div :id="dynamicId"></div>
   
   <!-- 动态属性名 -->
-  <div :[attributeName]=
-# Class 绑定
+  <div :[attributeName]="dynamicValue"></div>
+</template>
+```
+
+### Class 绑定
 
 ```vue
 <template>
@@ -2104,7 +2107,33 @@ const toggleTheme = inject('toggleTheme')
 
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05
 
 **文档质量**: 基于 Vue 3、Vue Router 4、Pinia 官方文档（MCP Context7 最新数据），包含 100+ 个代码示例，涵盖所有核心 API 和最佳实践。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vue 3.5+ API 新增
+
+- **useTemplateRef**：替代手动 `ref(null)` 模板引用
+- **Reactive Props Destructure**：Props 解构保持响应性
+- **onServerPrefetch**：SSR 中预取数据（Composition API 版本）
+
+### Pinia 3.x 变化
+
+Pinia 3.x 已移除 Vue 2 支持，仅兼容 Vue 3.3+：
+
+```typescript
+// Pinia 3.x - 移除 Vue 2 支持
+import { createPinia } from 'pinia'
+
+// 不再需要 Vue 2 适配器
+// 新增：$subscribe 返回 unsubscribe 函数
+const unsubscribe = store.$subscribe((mutation, state) => {
+  console.log(mutation.type, mutation.storeId)
+})
+unsubscribe() // 清理订阅
+```
 

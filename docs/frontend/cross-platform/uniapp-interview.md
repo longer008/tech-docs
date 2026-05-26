@@ -1,6 +1,6 @@
 # Uniapp 面试题集
 
-> Uniapp 跨端开发核心知识点与高频面试题
+> Uniapp 跨端开发核心知识点与高频面试题（含 uni-app x / 2025-2026 最新变化）
 
 ## A. 面试宝典
 
@@ -142,10 +142,15 @@ export default {
 | H5 | Web |
 | APP-PLUS | App（包含 nvue） |
 | APP-NVUE | App nvue |
+| APP-ANDROID | uni-app x Android 端 |
+| APP-IOS | uni-app x iOS 端 |
 | MP-WEIXIN | 微信小程序 |
 | MP-ALIPAY | 支付宝小程序 |
 | MP-BAIDU | 百度小程序 |
 | MP-TOUTIAO | 字节跳动小程序 |
+| VUE3-VAPOR | uni-app x 蒸汽模式 |
+
+> uni-app x 新增了 `APP-ANDROID`、`APP-IOS` 条件编译标识，可针对不同原生平台编写特定代码。蒸汽模式 `VUE3-VAPOR` 用于区分蒸汽模式和非蒸汽模式的代码逻辑。
 
 ---
 
@@ -262,6 +267,9 @@ export default request
 | CSS 支持 | 完整 | 有限（Flexbox 为主） |
 | 组件支持 | 完整 | 部分组件不支持 |
 | 适用场景 | 普通页面 | 长列表、高性能需求页面 |
+| 定位 | 当前主流 | 已进入维护期，建议迁移至 uvue |
+
+> **重要变化**：nvue（基于 Weex）已进入维护期。uni-app x 推出了 uvue 原生渲染引擎，作为 nvue 的替代方案。uvue 基于 uts 语言，编译为平台原生代码，性能更强且跨平台一致性更好。新项目建议使用 uni-app x + uvue。
 
 ```vue
 <!-- nvue 页面 -->
@@ -404,3 +412,43 @@ uni.chooseImage({ count: 9, success(res) { } })
 uni.previewImage({ urls: [], current: 0 })
 uni.chooseVideo({ success(res) { } })
 ```
+
+---
+
+## 最新知识补充（2024-2026）
+
+### uni-app x 与 uvue
+
+uni-app x 是 DCloud 推出的下一代跨端框架，使用 **uts**（Uni Type Script）语言替代 JavaScript：
+
+- **uvue 渲染引擎**：替代 nvue（基于 Weex），基于 uts 编译为平台原生代码，性能更强
+- **nvue 已进入维护期**：新项目建议使用 uni-app x + uvue
+- **条件编译新增标识**：`APP-ANDROID`、`APP-IOS`、`VUE3-VAPOR`
+- **鸿蒙原生适配**：uni-app x 已适配鸿蒙原生
+
+### 条件编译新增标识
+
+```javascript
+// #ifdef APP-ANDROID
+// 仅 Android 原生端执行
+// #endif
+
+// #ifdef APP-IOS
+// 仅 iOS 原生端执行
+// #endif
+
+// #ifdef VUE3-VAPOR
+// 仅蒸汽模式执行
+// #endif
+```
+
+### 跨平台框架横向对比
+
+| 框架 | 最新版本 | 核心方向 | 关键变化 |
+|------|---------|---------|---------|
+| React Native | 0.85 | 后桥接时代 | Hermes V1 默认、共享动画后端、旧架构移除 |
+| Flutter | 3.44 | AI+原生 | Material 分离、SwiftPM、Impeller Vulkan |
+| Taro | 5.0/4.2 | 一码五端 | C++ React 引擎、鸿蒙 C-API |
+| KMP+CMP | 1.11 | 全平台稳定 | iOS 稳定、Web Beta、Swift Export |
+
+---

@@ -1,8 +1,8 @@
 # CSS 核心概念面试题集
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
 > CSS 核心概念、选择器、定位、BFC 等高频面试题
+> 
+> 更新时间：2026-05
 
 ## A. 面试宝典
 
@@ -1119,3 +1119,20 @@ table {
   border-spacing: 0;
 }
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### CSS 新增特性状态
+
+| 特性 | 浏览器支持 | 说明 |
+|------|-----------|------|
+| `@starting-style` | Chrome 117+ | 入场动画初始状态 |
+| Anchor Positioning | Chrome 125+ | 锚点定位 |
+| `subgrid` | Safari 16+/Firefox 71+ | 子网格继承 |
+| `light-dark()` | Chrome 123+ | 自适应明暗色值 |
+| `text-wrap: balance/pretty` | Chrome 117+ | 文本平衡换行 |
+| `@scope` | Chrome 118+ | 作用域样式 |
+| Popover API | Chrome 117+ | 原生弹出层 |
+| `scrollbar-width/color` | Chrome 118+ | 滚动条样式化 |

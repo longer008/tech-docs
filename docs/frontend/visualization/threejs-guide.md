@@ -1,6 +1,6 @@
 # Three.js 完全指南
 
-> Three.js 3D 场景开发与实战 | 更新时间：2025-02
+> Three.js 3D 场景开发与实战 | 更新时间：2026-05
 
 ## 目录
 
@@ -1163,8 +1163,25 @@ class StarField {
       sizeAttenuation: true
     });
 
-    return new THREE.Points(geometry, mater
-ee.js 性能？**
+    return new THREE.Points(geometry, material);
+  }
+}
+```
+
+---
+
+## 面试要点
+
+**Q1：Three.js 的核心架构是什么？**
+
+Three.js 由三大核心模块组成：
+1. **场景（Scene）**：容纳所有物体的容器
+2. **相机（Camera）**：决定观察视角和投影方式（透视/正交）
+3. **渲染器（Renderer）**：将场景和相机组合渲染到画布
+
+渲染流程：`renderer.render(scene, camera)` → 场景图遍历 → 几何体+材质 → WebGL 绘制
+
+**Q2：如何优化 Three.js 性能？**
 
 1. 几何体合并：减少 draw call
 2. 实例化网格：绘制大量相同物体
@@ -1205,3 +1222,32 @@ ee.js 性能？**
 - [Drei](https://github.com/pmndrs/drei) - Three.js 辅助库
 - [Cannon.js](https://github.com/schteppe/cannon.js) - 物理引擎
 - [Ammo.js](https://github.com/kripken/ammo.js/) - 物理引擎
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Three.js r160+ 更新
+
+- **WebGPU 渲染器**（实验性）：替代 WebGLRenderer 的下一代渲染器
+- **TSL（Three Shading Language）**：新的着色器语言，类似 GLSL 但跨渲染器兼容
+- NodeMaterial 系统：基于节点的材质构建，更适合 WebGPU
+
+### 面试新增考点
+
+Q: **WebGPU 和 WebGL 有什么区别？**
+
+A: WebGPU 是下一代图形 API：
+- 更贴近 GPU 硬件，计算着色器支持并行计算
+- 更低开销的命令提交（Command Buffer vs 即时调用）
+- 支持 Compute Shader，可用于 AI 推理、粒子系统等
+- Three.js WebGPURenderer 正在开发中，未来将替代 WebGLRenderer
+
+Q: **Three.js 性能优化核心策略？**
+
+A: 1. 使用 BufferGeometry 替代 Geometry
+2. 合并几何体（merge geometries）减少 draw call
+3. LOD（Level of Detail）远处简化模型
+4. 实例化渲染（InstancedMesh）大量相同物体
+5. 纹理压缩（KTX2/Basis 格式）
+6. 视锥体剔除（Frustum Culling）

@@ -2,7 +2,7 @@
 
 > Nuxt.js 框架核心知识点与高频面试题
 > 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -1738,19 +1738,57 @@ function navigate() {
 </script>
 ```
 
-### Nuxt 4 展望
+### Nuxt 4（已发布）
 
-Nuxt 4 计划中的重大变化：
+Nuxt 4 于 2025 年 7 月正式发布，当前最新版本 v4.4.x。重大变化：
 
 | 变化 | 说明 |
 |------|------|
-| 默认目录结构变更 | `server/` 目录移至根级别，与 `app/` 目录并列 |
-| Vue 3.5+ 为最低版本 | 更好地利用 Vue 3.5 新特性（响应式 Props 解构等） |
-| 改进的模块系统 | 更严格的模块规范，更好的类型安全 |
-| 更好的 Nitro v3 集成 | 更快的服务端性能 |
-| 兼容性升级 | 不再支持 Node.js 18 以下版本 |
+| 新 `app/` 目录结构 | `srcDir` 默认为 `app/`，组件/页面/composables 等都在 `app/` 下 |
+| 新 `shared/` 目录 | Vue 应用和 Nitro 服务端共享代码，`shared/utils/` 和 `shared/types/` 自动导入 |
+| Vue Router v5 | 路由系统升级，类型更安全 |
+| `createUseFetch` / `createUseAsyncData` | v4.4 新增工厂函数，多组件可共享同一 key 数据 |
+| `useAnnouncer` | v4.4 新增无障碍组合式函数 |
+| 更好的 TypeScript 支持 | app/server/shared/config 分离，类型推断更精确 |
+| 不再支持 Node.js 18 以下版本 | |
 
-> **迁移提示**：Nuxt 4 将提供平滑的迁移路径，大部分 Nuxt 3 项目只需少量修改即可升级。
+```bash
+# 自动迁移到 Nuxt 4 目录结构
+npx codemod@latest nuxt/4/file-structure
+```
+
+Nuxt 4 默认目录结构：
+
+```sh
+app/                    # 主要源码目录
+  assets/
+  components/
+  composables/
+  layouts/
+  middleware/
+  pages/
+  plugins/
+  utils/
+  app.config.ts
+  app.vue
+  router.options.ts
+shared/                 # 前后端共享
+  types/
+  utils/
+server/                 # 服务端（移至根级别）
+  api/
+  middleware/
+  plugins/
+  routes/
+  utils/
+content/
+layers/
+modules/
+public/
+nuxt.config.ts
+```
+
+> **迁移提示**：Nuxt 4 会自动检测现有结构，大部分 Nuxt 3 项目只需少量修改即可升级。可设置 `srcDir: '.'` 强制使用 v3 目录结构。
 
 ---
 
@@ -1804,3 +1842,25 @@ Nuxt 4 计划中的重大变化：
 - 模块开发
 - 部署上线
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Nuxt 4进展
+
+Nuxt 4 正在开发中，核心变化：
+
+- **目录结构简化**：`app/` 成为默认源码目录（替代根目录散落文件）
+- **兼容性改进**：Node.js 18+ 支持，Vite 8/Rolldown 适配
+- **Nuxt Studio**：可视化编辑器，实时预览 Nuxt Content 页面
+
+### 面试新增考点
+
+Q: **Nuxt 3 和 Nuxt 4 的主要区别？**
+
+A: Nuxt 4 主要是目录结构重构（`app/` 目录约定）和工具链升级（Vite 8 + Rolldown），API 层面变化不大。迁移成本低，现有 Nuxt 3 项目可通过兼容模式渐进升级。
+
+Q: **Nuxt 3 的 SSR 和混合渲染怎么选？**
+
+A: `routeRules` 按路由配置渲染模式：营销页用 SSR（SEO 优先），交互页用 CSR（性能优先），静态页用 SWR（缓存优先）。

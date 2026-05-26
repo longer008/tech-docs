@@ -1,6 +1,6 @@
 # Vue 3 编译器原理深入解析
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -908,8 +908,48 @@ console.log(code)
 - 如何实现编译时优化？
 - 运行时编译和构建时编译的区别？
 
+## Vapor Mode — 无虚拟 DOM 编译（Vue 3.6 beta）
+
+> Vapor Mode 是 Vue 3.6 引入的全新编译模式，跳过虚拟 DOM 层，直接生成 DOM 操作代码。
+
+### 核心原理
+
+传统 Vue 编译流程：模板 → render 函数 → 虚拟 DOM → 真实 DOM
+
+Vapor Mode 编译流程：模板 → **直接 DOM 操作代码**（跳过虚拟 DOM）
+
+### 优势
+
+- **性能提升**：接近原生 DOM 操作速度，避免虚拟 DOM diff 的开销
+- **内存节省**：无需创建和维护虚拟 DOM 树
+- **渐进采用**：可与虚拟 DOM 模式共存，按组件选择编译模式
+
+### 当前状态
+
+- Vue 3.6 beta（v3.6.0-beta.10），功能已完成但标记为不稳定
+- 仅建议在简单场景和性能对比测试中使用
+- 生产环境暂不建议采用
+
 ## 参考资料
 
 - [Vue 3 编译器源码](https://github.com/vuejs/core/tree/main/packages/compiler-core)
 - [Vue 3 模板编译原理](https://cn.vuejs.org/guide/extras/rendering-mechanism.html)
 - [Vue.js 设计与实现 - 编译器篇](https://book.douban.com/subject/35768338/)
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vapor Mode 进展
+
+Vapor Mode 已在 Vue 3.6 beta 中可用，核心变化：
+
+- 编译产物从虚拟 DOM render 函数变为直接 DOM 操作指令
+- 性能基准显示：Vapor 模式组件比虚拟 DOM 模式快 50-100%
+- 可与虚拟 DOM 模式混合使用（同一应用中按组件选择编译模式）
+
+### 面试新增考点
+
+Q: **Vapor Mode 和 Svelte 的编译策略有什么区别？**
+
+A: Svelte 编译为纯命令式 DOM 操作代码，无运行时框架开销；Vapor Mode 仍保留 Vue 响应式系统（effect/ref/reactive），只是跳过虚拟 DOM diff。Svelte 代码量更小但放弃响应式抽象，Vapor 兼顾响应式便利性和性能。

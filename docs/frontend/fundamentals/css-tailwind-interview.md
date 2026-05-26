@@ -459,3 +459,29 @@ html {
 | 阴影 | `shadow shadow-lg shadow-none` |
 | 响应式 | `sm: md: lg: xl: 2xl:` |
 | 状态 | `hover: focus: active: disabled: dark:` |
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Tailwind CSS 4.0 叇化
+
+Tailwind CSS 4.0 主要变化：
+
+- **基于 Rust 的 Oxide 引擎**：构建速度提升 10 倍以上
+- **CSS-first 配置**：用 `@theme` 替代 `tailwind.config.js`
+- **零配置自动检测**：扫描源码自动生成所需类名
+
+```css
+/* Tailwind 4.0 CSS-first 配置 */
+@theme {
+  --color-primary: #3b82f6;
+  --font-family-display: "Inter", sans-serif;
+}
+```
+
+### 面试新增考点
+
+Q: **Tailwind CSS 和传统 CSS 方案怎么选？**
+
+A: Tailwind 适合快速开发、设计约束明确的项目（后台管理、内部工具）；传统 CSS 方案适合设计高度定制、品牌感强的项目。核心争议是可维护性：Tailwind 类名集中易读但 HTML 臃肿，传统 CSS 结构清晰但样式分散。

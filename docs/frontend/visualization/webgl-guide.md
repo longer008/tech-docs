@@ -1,6 +1,6 @@
 # WebGL 完全指南
 
-> WebGL 3D 图形编程与着色器开发 | 更新时间：2025-02
+> WebGL 3D 图形编程与着色器开发 | 更新时间：2026-05
 
 ## 目录
 
@@ -1055,3 +1055,42 @@ class ParticleSystemWebGL {
 - [Three.js](https://threejs.org/) - 3D 库
 - [Babylon.js](https://www.babylonjs.com/) - 游戏引擎
 - [PixiJS](https://pixijs.com/) - 2D 渲染引擎
+
+---
+
+## 最新知识补充（2025-2026）
+
+### WebGPU 取代 WebGL 趋势
+
+WebGPU 是 WebGL 的下一代标准，基于 GPU API（Vulkan/Metal/D3D12），提供更低层级的 GPU 控制。
+
+```typescript
+// WebGPU 初始化
+const adapter = await navigator.gpu.requestAdapter();
+const device = await adapter.requestDevice();
+const context = canvas.getContext('webgpu');
+context.configure({
+  device,
+  format: navigator.gpu.getPreferredCanvasFormat(),
+});
+```
+
+**WebGPU vs WebGL**：
+
+| 特性 | WebGL | WebGPU |
+|------|-------|---------|
+| 基于 | OpenGL ES | Vulkan/Metal/D3D12 |
+| 计算着色器 | 不支持 | 原生支持 |
+| 多线程 | 不支持 | 支持 |
+| 性能 | 中等 | 显著更高 |
+| 浏览器支持 | 全平台 | Chrome 113+/Firefox 实验性 |
+
+### 面试新增考点
+
+Q: **WebGPU 和 WebGL 的核心区别？**
+
+A: WebGL 基于 OpenGL ES，是状态机模型；WebGPU 基于 Modern GPU API，是命令缓冲模型。WebGPU 支持 Compute Shader（GPU 通用计算）、多线程命令提交、更精细的资源管理，性能潜力远超 WebGL。
+
+Q: **现有 WebGL 项目如何过渡到 WebGPU？**
+
+A: 不建议直接迁移，推荐使用 Three.js/Babylon.js 等引擎（内部适配 WebGPU）。Three.js r160+ 已提供 WebGPU 渲染器实验版本，业务代码不变，只需切换渲染器。

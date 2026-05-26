@@ -1,6 +1,6 @@
 # 微前端架构
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -1131,3 +1131,43 @@ start({
 ---
 
 > 💡 **学习建议**：微前端是一种架构模式，需要结合实际项目理解。建议先学习 qiankun 基础，然后通过实战项目积累经验，最后深入学习原理和优化。重点关注应用拆分、通信机制、样式隔离、性能优化等核心知识点。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### 微前端框架变化
+
+- **qiankun**：仍在维护但更新频率降低，社区转向更轻量方案
+- **micro-app**：京东方案持续迭代，支持 Vue 3/React 18/Vite
+- **无界(wujie)**：WebComponent + iframe 隔离方案，天然适配 Vite
+
+### Module Federation 独立化
+
+Module Federation 从 webpack 5 特性扩展为独立标准：
+
+```javascript
+// Vite + Module Federation
+import federation from '@originjs/vite-plugin-federation'
+
+export default defineConfig({
+  plugins: [
+    federation({
+      name: 'host',
+      remotes: {
+        remoteApp: 'http://localhost:3001/remoteEntry.js',
+      },
+      shared: ['vue', 'vue-router']
+    })
+  ]
+})
+```
+
+### 面试新增考点
+
+Q: **微前端在 Vite 项目中有什么特殊问题？**
+
+A: qiankun 基于 webpack JS 入口方式与 Vite ESM 开发模式不兼容（Vite 开发环境不生成 UMD bundle）。解决方案：
+1. **无界(wujie)**：WebComponent + iframe 隔离
+2. **vite-plugin-qiankun**：适配插件
+3. **Module Federation**：基于模块共享而非应用加载

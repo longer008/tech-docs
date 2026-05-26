@@ -1,6 +1,6 @@
 # API 设计与调用完全指南
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -829,7 +829,30 @@ input.addEventListener('input', (e) => {
       } else {
         console.error('搜索失败:', error)
       }
-(this.running >= this.concurrency || this.queue.length === 0) {
+    }
+  }, 300)
+})
+```
+
+#### 3. 请求队列（并发控制）
+
+```javascript
+class RequestQueue {
+  constructor({ concurrency = 3 }) {
+    this.concurrency = concurrency
+    this.queue = []
+    this.running = 0
+  }
+
+  add(requestFn) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ requestFn, resolve, reject })
+      this.process()
+    })
+  }
+
+  async process() {
+    if (this.running >= this.concurrency || this.queue.length === 0) {
       return
     }
     
@@ -1495,3 +1518,54 @@ const performanceOptimization = {
 ---
 
 > 💡 **提示**：良好的 API 设计是前后端协作的基础，遵循 RESTful 规范可以提高 API 的可维护性和可扩展性。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### SSE（Server-Sent Events）流式 API
+
+AI 场景下 SSE 广泛用于流式响应：
+
+```javascript
+// 前端接收 SSE 流式数据
+const response = await fetch('/api/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ prompt: '...' })
+})
+
+const reader = response.body.getReader()
+const decoder = new TextDecoder()
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  const chunk = decoder.decode(value, { stream: true })
+  // 逐块处理流式文本
+  processChunk(chunk)
+}
+```
+
+### Fetch API 增强
+
+```javascript
+// AbortController 取消请求
+const controller = new AbortController()
+fetch('/api/data', { signal: controller.signal })
+controller.abort() // 取消请求
+
+// Request/Response 对象克隆
+const clonedRequest = new Request(originalRequest, {
+  headers: { 'Authorization': 'Bearer xxx' }
+})
+```
+
+### GraphQL 与 REST 对比更新
+
+| 维度 | REST | GraphQL |
+|------|------|---------|
+| 数据获取 | 固定结构，可能过度获取 | 按需查询，精确获取 |
+| 缓存 | HTTP 缓存天然支持 | 需要 Apollo Cache 等方案 |
+| 学习成本 | 低 | 中（Schema、Resolver） |
+| 适合场景 | 简单 CRUD | 复杂关联数据查询 |

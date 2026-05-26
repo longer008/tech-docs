@@ -1,6 +1,6 @@
 # 前端埋点系统设计与实现
 
-> 用户行为追踪、数据采集与分析 | 更新时间：2025-02
+> 用户行为追踪、数据采集与分析 | 更新时间：2026-05
 
 ## 目录
 
@@ -994,3 +994,38 @@ class PerformanceTracker {
 - [前端埋点方案设计](https://juejin.cn/post/6844904195131375623)
 - [无埋点技术原理](https://zhuanlan.zhihu.com/p/69784219)
 - [数据采集 SDK 设计](https://tech.meituan.com/2017/03/02/mt-mobile-analytics-practice.html)
+
+---
+
+## 最新知识补充（2025-2026）
+
+### 前端监控新标准
+
+- **INP 替代 FID**：Core Web Vitals 交互指标已更新
+- **Long Animation Frames API**：替代 Long Tasks API，提供更细粒度性能数据
+
+```javascript
+// 监测 INP
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    reportMetric({ name: 'INP', value: entry.duration })
+  }
+})
+observer.observe({ type: 'event', buffered: true })
+```
+
+### Web Vitals JS 库
+
+```javascript
+import { onINP, onLCP, onCLS, onFCP, onTTFB } from 'web-vitals'
+
+onINP(({ value }) => sendMetric('INP', value))
+onLCP(({ value }) => sendMetric('LCP', value))
+onCLS(({ value }) => sendMetric('CLS', value))
+```
+
+### Sentry 前端监控进展
+
+- Performance Monitoring：自动追踪页面加载和 API 请求耗时
+- Session Replay：用户操作回放，辅助复现 bug
+- Source Map 自动上传：生产环境错误还原到源码

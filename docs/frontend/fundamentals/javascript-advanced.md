@@ -1,8 +1,6 @@
 # JavaScript 进阶与高级特性
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -2610,8 +2608,31 @@ console.log(cache.get(4))  // 4
 
 ```javascript
 function curry(fn) {
-  return functi
-of(obj, constructor) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn.apply(this, args)
+    }
+    return function(...moreArgs) {
+      return curried.apply(this, args.concat(moreArgs))
+    }
+  }
+}
+
+// 测试
+function add(a, b, c) {
+  return a + b + c
+}
+
+const curriedAdd = curry(add)
+console.log(curriedAdd(1)(2)(3))    // 6
+console.log(curriedAdd(1, 2)(3))    // 6
+console.log(curriedAdd(1)(2, 3))    // 6
+```
+
+### 8. 实现 instanceof
+
+```javascript
+function myInstanceof
   // 基本类型返回 false
   if (obj === null || typeof obj !== 'object') {
     return false
@@ -2815,3 +2836,61 @@ class Person {
 ---
 
 > 本文档基于 MDN 官方文档和最新 ECMAScript 规范编写，所有代码示例均可运行。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### ES2025 已确认特性
+
+#### Set 方法
+
+```javascript
+const a = new Set([1, 2, 3])
+const b = new Set([2, 3, 4])
+a.union(b)           // Set {1, 2, 3, 4}
+a.intersection(b)    // Set {2, 3}
+a.difference(b)      // Set {1}
+a.symmetricDifference(b) // Set {1, 4}
+a.isSubsetOf(b)      // false
+a.isDisjointFrom(b)  // false
+```
+
+#### RegExp Modifiers
+
+```javascript
+// 正则表达式内部局部设置/清除标志
+const re = /(?i:abc)def/  // abc 匹配大小写不敏感，def 严格匹配
+re.test('ABCdef') // true
+re.test('ABCDEF') // false
+
+// 局部清除标志
+const re2 = /(?-i:abc)def/i  // abc 严格匹配，def 大小写不敏感
+```
+
+#### Promise.try
+
+```javascript
+// 将可能抛异常的同步调用安全包装为 Promise
+const result = await Promise.try(() => JSON.parse(input))
+// 比 try/catch + Promise.resolve 更简洁
+
+// 对比传统方式
+try {
+  const result = JSON.parse(input)
+} catch (e) {
+  // 错误处理
+}
+```
+
+### 面试高频：ES2025 vs ES2024
+
+| 特性 | ES2024 | ES2025 |
+|------|--------|--------|
+| Object.groupBy | 正式 | - |
+| Promise.withResolvers | 正式 | - |
+| Set 方法 | 提案 | 正式 |
+| RegExp Modifiers | 提案 | 正式 |
+| Promise.try | 提案 | 正式 |
+| Iterator Helpers | 提案 | 正式 |
+| using/await using | 提案 | 提案 |

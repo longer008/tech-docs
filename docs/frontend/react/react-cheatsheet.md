@@ -2,7 +2,7 @@
 
 > React 18/19 常用语法与 API 快速参考
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -665,6 +665,70 @@ function useOnlineStatus() {
   
   return isOnline
 }
+
+// React 19 新增：use() - 读取 Promise 或 Context（可在条件语句中调用）
+import { use, Suspense } from 'react'
+
+function UserProfile({ userPromise }) {
+  const user = use(userPromise)  // 挂起直到 Promise resolve
+  return <p>{user.name}</p>
+}
+
+// React 19 新增：useActionState - 表单 Action 状态管理
+import { useActionState } from 'react'
+
+function Form() {
+  const [state, submitAction, isPending] = useActionState(
+    async (prevState, formData) => {
+      const result = await submitForm(formData)
+      return result
+    },
+    null  // 初始状态
+  )
+  
+  return (
+    <form action={submitAction}>
+      <input name="email" />
+      <button disabled={isPending}>
+        {isPending ? '提交中...' : '提交'}
+      </button>
+      {state?.error && <p>{state.error}</p>}
+    </form>
+  )
+}
+
+// React 19 新增：useOptimistic - 乐观更新
+import { useOptimistic } from 'react'
+
+function MessageList({ messages, sendMessage }) {
+  const [optimisticMessages, addOptimistic] = useOptimistic(
+    messages,
+    (state, newMessage) => [...state, { ...newMessage, pending: true }]
+  )
+  
+  async function handleSubmit(formData) {
+    const text = formData.get('text')
+    addOptimistic({ text })  // 立即显示
+    await sendMessage(text)  // 实际发送
+  }
+  
+  return (
+    <form action={handleSubmit}>
+      {optimisticMessages.map(msg => (
+        <p style={{ opacity: msg.pending ? 0.5 : 1 }}>{msg.text}</p>
+      ))}
+      <input name="text" />
+    </form>
+  )
+}
+
+// React 19：ref 可直接作为 prop 传递（无需 forwardRef）
+function Input({ ref, ...props }) {
+  return <input ref={ref} {...props} />
+}
+// 使用
+const inputRef = useRef(null)
+<Input ref={inputRef} />
 ```
 
 ---
@@ -2066,4 +2130,4 @@ imrs   // import React, { useState } from 'react'
 
 ---
 
-**内容来源**: 基于 [React 官方文档](https://react.dev/) 和实战经验整理（2025-02）
+**内容来源**: 基于 [React 官方文档](https://react.dev/) 和实战经验整理（2026-05）

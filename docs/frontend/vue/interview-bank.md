@@ -2,7 +2,7 @@
 
 > 精选高频面试题及详细解答
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -715,8 +715,12 @@ function updateChildren(oldChildren, newChildren) {
       newStartVNode = newChildren[++newStartIdx]
     }
     // 2. 旧尾 vs 新尾
-    else if (sameVNode(oldEndVNode, newEndVN
-atch(oldEndVNode, newStartVNode)
+    else if (sameVNode(oldEndVNode, newEndVNode)) {
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newEndVNode = newChildren[--newEndIdx]
+    }
+    // 3. 旧头 vs 新尾
+    else if (sameVNode(oldStartVNode, newEndVNode)) {
       // 移动节点
       insertBefore(oldEndVNode.el, oldStartVNode.el)
       oldEndVNode = oldChildren[--oldEndIdx]
@@ -1020,8 +1024,14 @@ function updateValue(e) {
   <input :value="model" @input="updateValue">
 </template>
 
-<!-- 或者
-= defineModel('email')
+<!-- 或者使用 defineModel 的简写 -->
+<input v-model="model">
+
+<!-- 多个 v-model -->
+<script setup>
+const firstName = defineModel('firstName')
+const lastName = defineModel('lastName')
+const email = defineModel('email')
 </script>
 
 <template>
@@ -1556,8 +1566,10 @@ export default createStore({
   }
 })
 
-// 使
-!user.value)
+// 使用 Pinia Setup Store（推荐）
+const useCounterStore = defineStore('counter', () => {
+  const count = ref(0)
+  const user = ref(null)
   
   // Actions
   function increment() {
@@ -1847,8 +1859,8 @@ const handleScroll = useThrottleFn(() => {
 **问题示例**：
 - 团队目前使用 Vue 2 还是 Vue 3？有升级计划吗？
 - 使用哪个 UI 组件库？Element Plus、Ant Design Vue 还是自研？
-- 状态管理使用 Vuex 还是 Pinia？
-- 构建工具是 Webpack 还是 Vite？
+- 状态管理使用 Vuex 还是 Pinia？（注意 Pinia 3.x 已移除 Vue 2 支持）
+- 构建工具是 Webpack 还是 Vite？（注意 Vite 8 已使用 Rolldown 统一打包器）
 - 有统一的代码规范和 ESLint 配置吗？
 - 使用 TypeScript 吗？覆盖率如何？
 
@@ -1872,7 +1884,28 @@ const handleScroll = useThrottleFn(() => {
 
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05
 
-**文档质量**: 包含 8 道精选面试题，每题都有详细解答和可运行代码示例，涵盖 Vue 2/3 核心概念、实战场景和最佳实践。
+**文档质量**: 包含 8 精选面试题，每题都有详细解答和可运行代码示例，涵盖 Vue 2/3 核心概念、实战场景和最佳实践。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vue 生态变化
+
+- **Vue 2 终态**：已于 2023 年底停止维护，Vue 3 成唯一官方版本
+- **Pinia 3.x**：移除 Vue 2 支持，仅兼容 Vue 3.3+
+- **Vue 3.5+**：Props 解构响应性、useTemplateRef、Lazy Hydration
+- **Vapor Mode**：Vue 3.6 beta，跳过虚拟 DOM 直接 DOM 操作
+
+### 面试新增考点
+
+Q: **Vue 3.5 Props 解构为什么不再丢失响应性？**
+
+A: 编译器对 `defineProps` 解构做特殊处理，内部仍追踪原始 props 对象，解构变量自动保持响应链。
+
+Q: **Vapor Mode 和虚拟 DOM 模式可以共存吗？**
+
+A: 可以。同一应用中可按组件选择编译模式，核心组件用 Vapor 优化性能，复杂组件仍用虚拟 DOM。这是渐进式采用策略的关键。
 

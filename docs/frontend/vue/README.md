@@ -2,7 +2,7 @@
 
 > 渐进式 JavaScript 框架，易学易用，性能出色，适用场景丰富
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -16,7 +16,7 @@
 
 - **定位**: 渐进式前端框架，适用于 SPA、SSR 与复杂前端应用
 - **适用场景**: 单页应用、服务端渲染、静态站点生成、移动端混合应用
-- **版本范围**: Vue 3.x（本文档基于 Vue 3.4+，向下兼容 Vue 3.0+）
+- **版本范围**: Vue 3.x（本文档基于 Vue 3.5+，向下兼容 Vue 3.0+）
 - **相关生态**: Vue Router 4、Pinia、Vite、Nuxt 3、VueUse
 - **官方文档**: [https://vuejs.org/](https://vuejs.org/) | [中文文档](https://cn.vuejs.org/)
 
@@ -608,7 +608,9 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 // Props
-in
+const props = defineProps({
+  count: { type: Number, default: 0 }
+})
 function increment() {
   localCount.value++
 }
@@ -969,4 +971,35 @@ const HeavyComponent = defineAsyncComponent(() =>
 
 ---
 
-**内容来源**: 基于 [Vue 官方文档](https://vuejs.org/) 和最新面试题库整理，使用 Context7 MCP 验证最新特性（2025-02）
+**内容来源**: 基于 [Vue 官方文档](https://vuejs.org/) 和最新面试题库整理，使用 Context7 MCP 验证最新特性（2026-05）
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vue 3.5+ 新特性
+
+- **Reactive Props Destructure**：Props 解构保持响应性
+- **useTemplateRef**：替代手动 `ref(null)` 模板引用模式
+- **Lazy Hydration**：SSR 异步组件延迟水合
+
+### Vue 3.6 Vapor Mode
+
+- 跳过虚拟 DOM，直接生成 DOM 操作代码
+- 性能提升 50-100%
+- 可与虚拟 DOM 模式混合使用（按组件选择编译模式）
+
+### Pinia 3.x
+
+- 移除 Vue 2 支持，仅兼容 Vue 3.3+
+- `$subscribe` 返回 unsubscribe 函数
+
+### 面试新增考点
+
+Q: **Vue 3.5 Props 解构为什么不再丢失响应性？**
+
+A: 编译器对 `defineProps` 解构做特殊处理，内部追踪原始 props 对象，解构变量自动保持响应链。
+
+Q: **Vapor Mode 和虚拟 DOM 模式可以共存吗？**
+
+A: 可以。同一应用中按组件选择编译模式，核心组件用 Vapor 优化性能，复杂组件仍用虚拟 DOM。

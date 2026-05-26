@@ -1,6 +1,6 @@
 # 前端资源优化完全指南
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -1519,3 +1519,30 @@ function monitorResourceSize() {
 - [MDN - 预加载内容](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Preloading_content)
 - [Webpack - 代码分割](https://webpack.js.org/guides/code-splitting/)
 - [Chrome DevTools - 性能分析](https://developer.chrome.com/docs/devtools/performance/)
+
+---
+
+## 最新知识补充（2025-2026）
+
+### 资源加载新特性
+
+- **`loading="lazy"` iframe 支持**：iframe 也可延迟加载，减少初始资源消耗
+- **Speculation Rules API**：预取/预渲染下一页（比 `<link rel="prerender">` 更智能）
+
+```html
+<script type="speculationrules">
+{
+  "prerender": [
+    { "urls": ["/next-page"], "where": { "referrer_matches": ["/*"] } }
+  ]
+}
+</script>
+```
+
+- **Fetch Priority**：`fetchpriority="high/low/auto"` 控制资源加载优先级
+
+### 面试新增考点
+
+Q: **Speculation Rules 和传统 prefetch/prerender 有什么区别？**
+
+A: Speculation Rules 是声明式 JSON 配置，支持 URL 匹配规则和动态预渲染；传统 `<link rel="prerender">` 是固定 URL。Speculation Rules 可与 Chrome 地址栏预测联动，只在高概率导航时才预渲染，避免浪费带宽。

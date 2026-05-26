@@ -1,6 +1,6 @@
 # 前端性能优化进阶指南
 
-> Web 性能优化与小程序性能优化实战 | 更新时间：2025-02
+> Web 性能优化与小程序性能优化实战 | 更新时间：2026-05
 
 ## 目录
 
@@ -94,10 +94,13 @@ this.setData({
 // Good: 只更新变化的字段
 this.setData({
   'userInfo.name': newName,
-  'userInfo.avatar': ne
-">
-    <view>{{item.text}}</view>
-  </recycle-item>
+  'userInfo.avatar': newAvatar
+})
+
+// 2. 长列表优化 - 使用 recycle-view
+```html
+<recycle-view batch="{{batchSetRecycleData}}" id="recycleId">
+  <recycle-item wx:for="{{recycleList}}" wx:key="id">
   <view slot="after">长列表后面的内容</view>
 </recycle-view>
 ```
@@ -918,3 +921,29 @@ const lazyLoad = new LazyLoad({
 1. **初级**：理解性能指标、使用 DevTools
 2. **中级**：掌握优化技巧、实现监控系统
 3. **高级**：性能架构设计、自动化优化
+
+---
+
+## 最新知识补充（2025-2026）
+
+### INP 优化策略
+
+INP 替代 FID 后，交互响应优化成为重点：
+
+- **scheduler.yield**：主动让出主线程，避免长任务阻塞交互
+- **isInputPending**：检测是否有待处理的用户输入，适时中断长任务
+- **避免同步布局读取**：读写分离，减少强制重排
+
+```typescript
+// scheduler.yield 优化长任务
+async function processLargeData() {
+  for (const chunk of data) {
+    processChunk(chunk)
+    await scheduler.yield() // 让出主线程，处理待处理输入
+  }
+}
+```
+
+### Vite 8/Rolldown 影响
+
+Vite 8 使用 Rolldown 统一开发和生产构建管道，消除了 esbuild（开发）+ Rollup（生产）的双架构差异，打包产物更一致，调试更简单。

@@ -2,7 +2,7 @@
 
 > 精选高频面试题及详细解答
 > 
-> 📅 **更新时间**: 2025-02
+> 📅 **更新时间**: 2026-05
 > 
 > 📚 **内容来源**: Vue 3 官方文档、Pinia 官方文档、Vue Router 4 官方文档
 
@@ -16,7 +16,7 @@
 - [进阶题（重要）](#进阶题重要)
 - [高级题（加分）](#高级题加分)
 - [场景题（实战）](#场景题实战)
-- [Vue 3.4+ 新特性（重要）](#vue-34-新特性重要)
+- [Vue 3.4/3.5+ 新特性（重要）](#vue-3435-新特性重要)
 - [反问环节](#反问环节)
 
 ---
@@ -2835,7 +2835,7 @@ const timestamp = import.meta.env.SSR
 
 ---
 
-## Vue 3.4+ 新特性（重要）
+## Vue 3.4/3.5+ 新特性（重要）
 
 ### 1. defineModel 宏（Vue 3.4+）
 
@@ -3130,7 +3130,7 @@ const { count = 0, message = 'Hello' } = defineProps(['count', 'message'])
 
 ---
 
-### 5. 其他 Vue 3.4+ 改进
+### 5. 其他 Vue 3.4/3.5+ 改进
 
 **1. 更好的 Hydration 错误提示**
 ```vue
@@ -3251,6 +3251,9 @@ const id = ref('app')
   - A: 更新依赖，检查 breaking changes，测试应用
 - Q: Vue 3.5 有哪些新特性？
   - A: 响应式 Props 解构、useTemplateRef、useId、更好的 SSR 支持、性能优化
+- Q: Vue 3.6 有哪些新特性？
+  - A: Vapor Mode（无虚拟 DOM 编译模式）、alien-signals 响应式重构、性能和内存显著改善
+  - 注意：Vue 3.6 目前处于 beta 阶段，Vapor Mode 功能已完成但标记为不稳定
 
 ---
 
@@ -3370,4 +3373,40 @@ const id = ref('app')
 
 ---
 
-**最后更新**: 2025-02
+## 最新知识补充（2025-2026）
+
+### Vue 3.5+ 新特性
+
+- **Reactive Props Destructure**：Props 解构保持响应性
+- **useTemplateRef**：替代手动 `ref(null)` + 模板 `ref="xxx"` 模式
+- **Lazy Hydration**：SSR 异步组件延迟水合（`hydrateLazy`）
+
+```typescript
+// useTemplateRef（Vue 3.5+）
+const inputEl = useTemplateRef<HTMLInputElement>('input')
+// 自动绑定 <input ref="input">
+
+// Lazy Hydration
+const AsyncComp = defineAsyncComponent({
+  loader: () => import('./Heavy.vue'),
+  hydrateLazy: true, // 延迟水合，提升 SSR 首屏性能
+})
+```
+
+### Vapor Mode
+
+Vue 3.6 beta 引入 Vapor Mode（无虚拟 DOM 编译模式），性能提升 50-100%，可与虚拟 DOM 模式混合使用。
+
+### 面试新增考点
+
+Q: **Vue 3.5 Props 解构为什么不再丢失响应性？**
+
+A: 编译器对 `defineProps` 解构做特殊处理，内部追踪原始 props 对象，解构变量自动保持响应链，无需 `toRefs` 包装。
+
+Q: **Vapor Mode 和虚拟 DOM 模式可以共存吗？**
+
+A: 可以。同一应用中按组件选择编译模式，核心组件用 Vapor 优化性能，复杂组件仍用虚拟 DOM。
+
+---
+
+**最后更新**: 2026-05

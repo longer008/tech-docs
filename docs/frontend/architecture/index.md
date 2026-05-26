@@ -1,6 +1,6 @@
 # 前端架构
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -175,3 +175,23 @@
 ---
 
 > 💡 **学习建议**：前端架构是高级前端工程师的必备技能。建议先学习微前端和监控系统，然后通过实战项目积累经验。重点关注架构设计、性能优化、工程化等核心知识点。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### 微前端趋势
+
+- **qiankun**：维护频率降低，社区转向更轻量方案
+- **无界(wujie)**：WebComponent + iframe 隔离，天然适配 Vite
+- **Module Federation**：从 webpack 5 特性扩展为独立标准，支持 Vite
+
+### 测试趋势
+
+- **Vitest**：Vue/Vite 项目首选测试框架，browser mode、in-source testing
+- **Playwright**：E2E 测试主流，替代 Cypress 趋势明显
+
+### 监控趋势
+
+- **INP** 替代 FID 成为 Core Web Vitals
+- **Sentry**：Session Replay、Performance Monitoring 持续增强

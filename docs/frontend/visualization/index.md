@@ -1,8 +1,6 @@
 # 前端可视化技术
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
-> WebGL、Three.js、ECharts、Canvas 数据可视化与图形渲染 | 更新时间：2025-02
+> WebGL、Three.js、ECharts、Canvas 数据可视化与图形渲染 | 更新时间：2026-05
 
 ## 目录
 
@@ -769,13 +767,51 @@ const lineOption = {
 myChart.setOption(lineOption);
 ```
 
-### 3. ECh
+### 3. ECharts 地图可视化
 
-> ⚠️ 以下内容截断，待补充完整。请参考 [ECharts 官方文档](https://echarts.apache.org/zh/) 获取最新信息。
+```typescript
+// 地图配置
+const mapOption = {
+  title: {
+    text: '全国数据分布'
+  },
+  tooltip: {
+    trigger: 'item'
+  },
+  visualMap: {
+    min: 0,
+    max: 100,
+    left: 'left',
+    top: 'bottom',
+    text: ['高', '低'],
+    inRange: {
+      color: ['#e0ffff', '#006edd']
+    }
+  },
+  series: [
+    {
+      name: '数据',
+      type: 'map',
+      map: 'china',
+      roam: true,
+      label: {
+        show: true
+      },
+      data: [
+        { name: '北京', value: 95 },
+        { name: '上海', value: 88 },
+        { name: '广东', value: 80 }
+      ]
+    }
+  ]
+};
+
+myChart.setOption(mapOption);
+```
 
 ---
 
-## 最新知识补充（2024-2025）
+## 最新知识补充（2024-2026）
 
 ### 1. Three.js 导入路径变更（r160+）
 
@@ -855,3 +891,20 @@ self.onmessage = (e) => {
   // ...
 }
 ```
+
+### 5. Three.js r168+ 与 WebGPU 稳定化
+
+Three.js 最新版本（r168+）持续改进 WebGPU 渲染器：
+
+- WebGPURenderer 更加稳定，支持更多材质和后处理
+- TSL（Three Shading Language）节点系统成熟，替代传统 ShaderMaterial
+- 新增 Compute Shader 支持，可用于 GPU 粒子、物理模拟等
+
+### 6. ECharts 5.6+ 更新
+
+ECharts 5.6+ 新增特性：
+
+- SVG 渲染器性能优化
+- 地图数据更新
+- 改进的大数据渲染模式
+- 更好的 TypeScript 类型定义

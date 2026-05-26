@@ -585,3 +585,68 @@ app.use(session({
   }
 }));
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### 浏览器安全新特性
+
+#### Permissions Policy（原 Feature Policy）
+
+```html
+<!-- 控制页面可使用的浏览器功能 -->
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(self), geolocation=(self https://example.com)">
+```
+
+```javascript
+// 检查权限状态
+navigator.permissions.query({ name: 'camera' }).then(result => {
+  if (result.state === 'granted') {
+    // 已授权
+  }
+})
+```
+
+#### Trusted Types API
+
+防止 DOM XSS 的新型安全机制：
+
+```javascript
+// 启用 Trusted Types（CSP 配置）
+// Content-Security-Policy: require-trusted-types-for 'script'
+
+// 创建 Trusted Type 策略
+const policy = trustedTypes.createPolicy('myPolicy', {
+  createHTML: (input) => DOMPurify.sanitize(input),
+  createScript: (input) => input, // 仅允许安全脚本
+})
+
+// 使用 Trusted Type 者代替原始字符串
+element.innerHTML = policy.createHTML(userInput) // 安全
+element.innerHTML = userInput // 抛出 TypeError！
+```
+
+#### 跨域隔离与 SharedArrayBuffer
+
+```html
+<!-- 启用跨域隔离以使用 SharedArrayBuffer -->
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+```
+
+```javascript
+// 跨域隔离后可用
+const sab = new SharedArrayBuffer(1024)
+// 非隔离页面下 SharedArrayBuffer 不可用（安全限制）
+```
+
+### 面试新增考点
+
+Q: **什么是 Permissions Policy？和 CSP 有什么区别？**
+
+A: Permissions Policy 控制页面可使用的浏览器功能（摄像头、麦克风、定位等），CSP 控制资源加载策略。两者互补：CSP 防 XSS 和数据注入，Permissions Policy 防功能滥用。
+
+Q: **Trusted Types 如何防止 DOM XSS？**
+
+A: Trusted Types 要求 innerHTML、eval 等危险 API 只接受 Trusted Type 对象而非原始字符串。开发者通过 createPolicy 定义安全转换策略，原始字符串直接传入会抛 TypeError。

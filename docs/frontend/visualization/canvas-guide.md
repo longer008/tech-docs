@@ -1,6 +1,6 @@
 # Canvas 完全指南
 
-> Canvas 2D 图形绘制与动画开发 | 更新时间：2025-02
+> Canvas 2D 图形绘制与动画开发 | 更新时间：2026-05
 
 ## 目录
 
@@ -340,9 +340,33 @@ class Animation {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // 绘制内容
- = radius;
-    this.color = color;
-  }
+    this.balls.forEach(ball => {
+      ball.update(this.canvas);
+      ball.draw(this.ctx);
+    });
+
+    // 继续动画循环
+    this.animationId = requestAnimationFrame(this.animate);
+  };
+}
+
+// 球体类
+class Ball {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  color: string;
+  gravity: number = 0.5;
+  bounce: number = 0.7;
+
+  constructor(x: number, y: number, vx: number, vy: number, radius: number, color: string) {
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+    this.radius = radius;
 
   update(canvas: HTMLCanvasElement) {
     // 应用重力
@@ -684,10 +708,31 @@ class ObjectPool<T> {
 
   constructor(createFn: () => T, resetFn: (obj: T) => void, initialSize: number = 10) {
     this.createFn = createFn;
-    this.resetF
- },
-  100
-);
+    this.resetFn = resetFn;
+
+    // 预创建对象
+    for (let i = 0; i < initialSize; i++) {
+      this.pool.push(createFn());
+    }
+  }
+
+  // 获取对象
+  acquire(): T {
+    if (this.pool.length > 0) {
+      return this.pool.pop()!;
+    }
+    return this.createFn();
+  }
+
+  // 释放对象
+  release(obj: T): void {
+    this.resetFn(obj);
+    this.pool.push(obj);
+  }
+}
+
+// 使用示例
+const particlePool = new ObjectPool(
 
 // 获取粒子
 const particle = particlePool.acquire();
@@ -1036,3 +1081,40 @@ function setupHDCanvas(canvas: HTMLCanvasElement) {
 - [Fabric.js](http://fabricjs.com/) - Canvas 对象模型库
 - [Konva.js](https://konvajs.org/) - 2D Canvas 框架
 - [Paper.js](http://paperjs.org/) - 矢量图形脚本框架
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Canvas 新 API
+
+**OffscreenCanvas**：将 Canvas 渲染移至 Worker 线程，避免阻塞主线程。
+
+```typescript
+// 主线程
+const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const offscreen = canvas.transferControlToOffscreen();
+worker.postMessage({ canvas: offscreen }, [offscreen]);
+
+// Worker 线程
+const ctx = offscreen.getContext('2d');
+ctx.fillRect(0, 0, 100, 100);
+```
+
+**Canvas 上下文 `roundRect`**：原生圆角矩形绘制（Chrome 99+）。
+
+```typescript
+ctx.beginPath();
+ctx.roundRect(10, 10, 150, 100, [15]);  // [topLeft, topRight, bottomRight, bottomLeft]
+ctx.fill();
+```
+
+### 面试新增考点
+
+Q: **Canvas 和 SVG 怎么选？**
+
+A: Canvas 适合高频刷新、大量元素场景（游戏、数据可视化、图像处理）；SVG 适合交互丰富、DOM 可访问场景（图标、地图、图表）。核心差异：Canvas 是位图模式（像素操作），SVG 是矢量模式（DOM 节点）。
+
+Q: **OffscreenCanvas 解决什么问题？**
+
+A: 传统 Canvas 渲染在主线程执行，复杂绘图会阻塞 UI 交互。OffscreenCanvas 将绘制逻辑移至 Worker，主线程只负责显示，解决大场景/动画卡顿问题。

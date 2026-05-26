@@ -1,8 +1,6 @@
 # Vite 配置与优化进阶指南
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
-> Vite 深度配置、性能优化与最佳实践 | 更新时间：2025-02
+> Vite 深度配置、性能优化与最佳实践 | 更新时间：2026-05
 
 ## 目录
 
@@ -113,8 +111,10 @@ export default defineConfig({
   build: {
     target: 'es2015',
     outDir: 'dist',
-    a
-       assetFileNames: '[ext]/[name]-[hash].[ext]'
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: '[ext]/[name]-[hash].[ext]'
       }
     },
     
@@ -245,21 +245,17 @@ export default defineConfig({
 ### 3. 图片优化
 
 ```typescript
-// ⚠️ vite-plugin-imagemin 已停止维护，构建时常报错
-// 推荐使用 unplugin-imagemin 替代：
-// import imagemin from 'unplugin-imagemin/vite'
-//
-// export default defineConfig({
-//   plugins: [
-//     imagemin({
-//       // 默认使用 sharp，无需安装系统依赖
-//     })
-//   ]
-// })
+// 推荐：使用 unplugin-imagemin 替代已停维的 vite-plugin-imagemin
+import imagemin from 'unplugin-imagemin/vite'
 
-// 以下为旧版 vite-plugin-imagemin 配置（已不推荐）：
-// import viteImagemin from 'vite-plugin-imagemin'
-// ...
+export default defineConfig({
+  plugins: [
+    imagemin({
+      // 默认使用 sharp，无需安装系统依赖
+      // 支持 WebP、AVIF 等现代格式自动转换
+    })
+  ]
+})
 ```
 
 ### 4. Gzip 压缩
@@ -826,7 +822,7 @@ export default defineConfig({
 
 ---
 
-## 最新知识补充（2024-2025）
+## 最新知识补充（2024-2026）
 
 ### 1. Vite 6 Environment API
 
@@ -908,3 +904,46 @@ export default defineConfig({
 **推荐替代**：
 - **unplugin-imagemin**：基于 sharp，无需系统依赖，跨平台兼容
 - **vite-plugin-static-copy** + 外部压缩：CI 中单独处理图片
+
+### 6. Vite 7 过渡版本（2025 年 6 月 - 2026 年 1 月）
+
+Vite 7 是 Vite 6 到 Vite 8 之间的过渡版本，主要变化：
+
+- Node.js 20+ 为最低要求
+- Environment API 进一步完善
+- 为 Rolldown 集成做准备
+- 生命周期较短，已被 Vite 8 替代
+
+### 7. Vite 8 — Rolldown 统一打包器（2026 年 3 月）
+
+> Vite 8 是自 Vite 2 以来最重大的架构变更。
+
+Vite 8（2026 年 3 月发布）将 **Rolldown** 作为唯一的统一打包器，替代了此前 esbuild（开发）+ Rollup（生产）的双打包器架构：
+
+**核心变化**：
+- **统一打包管线**：开发和生产共享同一个 Rust 打包器，消除了长期存在的行为差异
+- **极快的构建速度**：比 Rollup 快 10-30 倍，与 esbuild 性能持平
+- **插件兼容**：Rolldown 支持 Rollup/Vite 插件 API，大多数现有插件无需修改即可使用
+- **兼容层**：Vite 8 内置兼容层，自动转换 `esbuild` 和 `rollupOptions` 配置
+- Node.js 20.19+ / 22.12+ 为最低要求
+
+```typescript
+// 检测是否运行在 Rolldown 模式（Vite 8+）
+function versionCheckPlugin(): Plugin {
+  return {
+    name: 'version-check',
+    buildStart() {
+      if (this.meta.rolldownVersion) {
+        // Rolldown 模式下的特定逻辑
+      } else {
+        // Rollup 模式下的逻辑
+      }
+    },
+  }
+}
+```
+
+**迁移建议**：
+- 大多数项目可直接升级，Vite 8 内置兼容层自动处理配置转换
+- 大型/复杂项目建议先在 Vite 7 上使用 `rolldown-vite` 包测试，再升级到 Vite 8
+- 这样可以更容易区分问题是来自 Vite 本身还是 Rolldown

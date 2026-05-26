@@ -510,3 +510,48 @@ wx.makePhoneCall({ phoneNumber: '10086' })
 wx.scanCode({ success(res) { } })
 wx.getLocation({ type: 'gcj02', success(res) { } })
 ```
+
+---
+
+## 跨平台框架最新变化（2024-2026）
+
+### 微信小程序
+
+- **Skyline 渲染引擎** v1.4.17：原生渲染替代 Webview，启动耗时降低 20%，跳页耗时降低 50%，鸿蒙 OS 版已灰度支持
+- **基础库 v3.14-3.16**：隐私弹窗与授权弹窗耦合（v3.14）、iOS 画中画（v3.15）、NFC 接口（v3.16）
+- **隐私变化**：`wx.getUserInfo` / `wx.getUserProfile` 已回收，需用 `button` open-type 获取头像昵称
+
+### React Native
+
+- **0.85.0**（2026-04）：首个完全后桥接时代的稳定版
+  - Hermes V1 默认引擎，旧架构代码完全移除
+  - 共享动画后端（Shared Animation Backend）：统一 Animated 和 Reanimated
+  - Fabric 渲染器：同步布局读取、支持 React 19 并发特性
+  - 冷启动速度提升 43%，渲染速度提升 39%，内存占用降低 26%
+
+### Flutter
+
+- **3.44.0**（2026-05）：Google I/O 2026 发布
+  - Material/Cupertino 库从核心 SDK 分离，独立版本化
+  - SwiftPM 取代 CocoaPods
+  - Impeller Vulkan 渲染引擎（Android 10+ 纯 Impeller）
+  - Agentic Hot Reload：AI 编码代理可自动触发 Hot Reload
+
+### Taro
+
+- **5.0 架构版**：WebOnNative 三层架构，C++ 重写 React 18+ 核心，一码五端（小程序、H5、Android、iOS、鸿蒙）
+- **4.2.0 稳定版**（2026-04）：鸿蒙 C-API 适配完善
+
+### Kotlin Multiplatform + Compose Multiplatform
+
+- **Compose 1.11.0**（2026-05）：iOS 原生文本输入、并发渲染默认启用、Web 进入 Beta
+
+### 面试新增考点
+
+Q: **Skyline 渲染引擎和 WebView 渲染有什么区别？**
+
+A: Skyline 是微信原生渲染引擎，跳过 WebView 层直接用客户端渲染组件，冷启动更快、内存更低、滚动更流畅。但部分 CSS 特性（如 position:fixed）支持不完整，需要渐进式迁移。
+
+Q: **跨端框架（uni-app/Taro/RN/Flutter）怎么选？**
+
+A: 优先考虑团队技术栈：JS/Vue 团队选 uni-app/Taro；React 团队选 RN；需要极致性能和 UI 一致性选 Flutter；Kotlin 团队选 KMP+CMP。核心取舍：开发效率 vs 渲染性能 vs 跨端一致性。

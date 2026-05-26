@@ -970,7 +970,22 @@ module.exports = {
           }
         ]
       }
-    ]
-  }
+    }
 }
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### CSS 预处理器趋势
+
+- **Sass**：官方推荐 Dart Sass（已弃用 Ruby Sass 和 LibSass），`@use` 替代 `@import`
+- **Less**：维护频率降低，新项目优先选择 Sass
+- **CSS 原生增强**：`@scope`、CSS Nesting、`light-dark()` 等原生特性逐步替代预处理器的核心功能
+
+### 面试新增考点
+
+Q: **CSS Nesting 和 Sass 嵌套有什么区别？**
+
+A: CSS 原生嵌套（`&` 语法）已获主流浏览器支持，与 Sass 嵌套语法几乎一致，但原生嵌套无需编译步骤，运行时直接生效。未来简单项目可不用预处理器，但 Sass 的变量、mixin、函数等高级功能原生 CSS 尚未完全替代。

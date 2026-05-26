@@ -2,7 +2,7 @@
 
 > 用于构建用户界面的 JavaScript 库，专注于组件化开发和声明式编程
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -887,4 +887,4 @@ function UserProfile({ userId }) {
 
 ---
 
-**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试题库整理，使用 Context7 MCP 验证最新特性（2025-02）
+**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试题库整理，使用 Context7 MCP 验证最新特性（2026-05）

@@ -1,10 +1,8 @@
 # 浏览器原理面试题集
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
 > 浏览器工作原理、渲染机制、网络协议与高频面试题
 > 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -97,8 +95,7 @@
 │  7. 浏览器解析                                              │
 │     └─▶ HTML → DOM 树                                       │
 │     └─▶ CSS → CSSOM 树                                      │
-│     └─▶ DO
-                     │
+│     └─▶ DOM + CSSOM → 渲染树                                │
 │      └─▶ 多图层合成、GPU 加速                               │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
@@ -576,9 +573,14 @@ request.onupgradeneeded = (e) => {
 
 request.onsuccess = (e) => {
   const db = e.target.result
-  const tx = db.transaction(
-│
-│  ──────────────────────────────────────────────────────────│
+  const tx = db.transaction('users', 'readwrite')
+  const store = tx.objectStore('users')
+  store.add({ id: 1, name: '张三' })
+  store.get(1).onsuccess = (e) => {
+    console.log(e.target.result)
+  }
+}
+```
 │  - 测量主要内容加载完成的时间                               │
 │  - 良好: < 2.5s                                             │
 │  - 需要改进: 2.5s ~ 4s                                      │
@@ -923,3 +925,61 @@ const assertion = await navigator.credentials.get({
 5. 搭建性能监控系统
 6. 参与开源项目性能优化
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Rendering Pipeline 变化
+
+Chrome 渲染管线已从传统 5 步（Parse -> Style -> Layout -> Paint -> Composite）演进为更精细的管线：
+
+```
+DOM -> Style -> Layout -> Pre-paint -> Paint -> Composite
+                          ↑            ↑
+                     更新 Paint树    分层绘制
+```
+
+- **Pre-paint 步骤**：构建 Paint Tree（显示列表），分离布局与绘制准备
+- **Composite 步骤**：独立线程合成，不阻塞主线程
+
+### INP 替代 FID
+
+2024 年 3 月起，INP（Interaction to Next Paint）正式替代 FID 成为 Core Web Vitals 指标：
+
+- **FID**：仅测量首次输入延迟（忽略后续交互）
+- **INP**：测量所有交互的完整响应时间（包括输入延迟、处理时间、绘制时间）
+- **良好标准**：INP < 200ms
+
+```javascript
+// 监测 INP
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log('INP:', entry.duration, 'ms')
+  }
+})
+observer.observe({ type: 'event', buffered: true })
+```
+
+### Long Animation Frames API
+
+替代 Long Tasks API，更精确地检测性能瓶颈：
+
+```javascript
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log('Long animation frame:', entry.duration)
+    // 包含渲染时间、样式计算、布局等信息
+    for (const script of entry.scripts) {
+      console.log('脚本耗时:', script.duration, script.name)
+    }
+  }
+})
+observer.observe({ type: 'long-animation-frame', buffered: true })
+```
+
+### 面试新增考点
+
+Q: **INP 和 FID 有什么区别？为什么要替代？**
+
+A: FID 只衡量首次交互的输入延迟，忽略后续交互和渲染时间。INP 衡量所有交互从输入到下一帧绘制的完整时长，更真实反映用户体验。现代 SPA 应用有大量后续交互，FID 无法覆盖。

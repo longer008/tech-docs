@@ -427,3 +427,19 @@ export default defineConfig({
   }
 })
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vite 8（Rolldown 统一打包器）
+
+- 开发 + 生产环境统一使用 Rolldown
+- 替代 esbuild（开发）+ Rollup（生产）双架构
+- Rolldown 基于 Rust，兼具 esbuild 速度 + Rollup 兼容性
+
+### 面试新增考点
+
+Q: **Vite 为什么从 esbuild+Rollup 切换到 Rolldown？**
+
+A: 双架构导致开发/生产行为不一致（插件兼容性、代码分割逻辑差异）。Rolldown 统一后：开发/生产行为一致，单一 Rust 实现，插件只需适配一套 API。

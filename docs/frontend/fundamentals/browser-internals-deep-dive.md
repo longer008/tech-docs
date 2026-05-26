@@ -1,6 +1,6 @@
 # 浏览器原理深入解析
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -90,8 +90,8 @@ function buildRenderTree(dom, cssom) {
 
 // 4. 布局（Layout / Reflow）
 // 计算每个元素的位置和大小
-function layout(renderTree, v
-ee.forEach(item => {
+function layout(renderTree, viewport) {
+  viewport.forEach(item => {
     const { node, style, box } = item
     
     // 绘制背景
@@ -2342,3 +2342,40 @@ const frequentQuestions = [
 ---
 
 > 💡 **提示**：浏览器原理是前端面试的重点，建议结合实际项目经验，深入理解每个概念的原理和应用场景。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### 渲染流水线演进
+
+Chrome 渲染管线从 5 步扩展为 6 步（新增 Pre-paint）：
+
+```
+Style → Layout → Pre-paint → Paint → Composite
+                    ↑ 新增：计算合成层属性和优先级
+```
+
+Pre-paint 步骤提前确定合成层属性，减少 Paint 阶段的不确定性，提升渲染效率。
+
+### INP 与 Long Animation Frames API
+
+- INP 替代 FID 成为 Core Web Vitals（<200ms 良好）
+- Long Animation Frames API 替代 Long Tasks API，提供更细粒度的帧级性能分析
+
+```typescript
+// Long Animation Frames API
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log('帧耗时:', entry.duration, 'ms')
+    console.log('脚本耗时:', entry.scripts?.at(0)?.duration, 'ms')
+  }
+})
+observer.observe({ type: 'long-animation-frame', buffered: true })
+```
+
+### 面试新增考点
+
+Q: **Long Animation Frames API 和 Long Tasks API 有什么区别？**
+
+A: Long Tasks API 只报告超过 50ms 的独立任务；Long Animation Frames API 报告整帧耗时，包含同一帧内多个任务的累计影响，并附带 scripts 详情（URL、类型、耗时），更适合定位 INP 问题。

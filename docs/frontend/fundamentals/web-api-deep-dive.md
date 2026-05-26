@@ -1,6 +1,6 @@
 # Web API 深入解析
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -2782,3 +2782,111 @@ const value = Atomics.load(array, 0)
 ---
 
 > 💡 **提示**：掌握 Web API 可以实现强大的离线功能、文件处理、多线程计算等高级特性，提升 Web 应用的能力。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### View Transitions API
+
+View Transitions API 提供原生页面过渡动画，无需复杂 CSS/JS：
+
+```javascript
+// 同页面视图切换（SPA）
+document.startViewTransition(() => {
+  // 更新 DOM 状态
+  updateView()
+})
+
+// 跨页面导航（MPA，Chrome 111+）
+// <meta name="view-transition" content="same-origin">
+// 自动在导航间触发视图过渡
+```
+
+```css
+/* 自定义过渡动画 */
+::view-transition-old(root) {
+  animation: fade-out 0.3s ease;
+}
+::view-transition-new(root) {
+  animation: fade-in 0.3s ease;
+}
+
+/* 元素级别过渡 */
+::view-transition-old(hero-image) {
+  animation: shrink 0.5s ease;
+}
+::view-transition-new(hero-image) {
+  animation: grow 0.5s ease;
+}
+```
+
+### Popover API
+
+原生弹出层 API，无需 JS 库管理定位和焦点：
+
+```html
+<button popovertarget="menu">打开菜单</button>
+<div id="menu" popover>
+  <ul>
+    <li>选项 1</li>
+    <li>选项 2</li>
+  </ul>
+</div>
+```
+
+```javascript
+// JS 控制
+popover.showPopover()
+popover.hidePopover()
+popover.togglePopover()
+
+// 事件监听
+popover.addEventListener('beforetoggle', (e) => {
+  if (e.newState === 'open') console.log('即将打开')
+})
+```
+
+### dialog 元素增强
+
+```html
+<dialog id="confirmDialog">
+  <form method="dialog">
+    <button value="confirm">确认</button>
+    <button value="cancel">取消</button>
+  </form>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('confirmDialog')
+  dialog.showModal() // 模态对话框
+  dialog.addEventListener('close', (e) => {
+    console.log(dialog.returnValue) // "confirm" 或 "cancel"
+  })
+</script>
+```
+
+### CSS scrollbar 样式化
+
+```css
+/* Chrome 118+ / Safari 支持自定义滚动条样式 */
+.scrollable {
+  scrollbar-width: thin;        /* auto | thin | none */
+  scrollbar-color: #4b5563 #1f2937; /* 滑块颜色 轨道颜色 */
+}
+
+/* scrollbar-width: none 替代 overflow:hidden 方案 */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+```
+
+### 其他 2025-2026 新 API
+
+| API | 状态 | 说明 |
+|-----|------|------|
+| `navigator.scheduling.isInputPending()` | Chrome 已实现 | 检测用户是否正在输入，优化长任务调度 |
+| `CSS @starting-style` | Chrome 117+ | 入场动画初始状态定义 |
+| `CSS text-wrap: balance` | Chrome 117+ | 文本行数自动平衡 |
+| `CSS scrollbar-gutter` | 稳定 | 防止滚动条出现/消失导致布局跳动 |
+| `Worker.parseModule()` | Chrome 117+ | Worker 内解析 ES Module |

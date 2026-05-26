@@ -1,6 +1,6 @@
 # ECharts 数据可视化指南
 
-> ECharts 图表库完全指南 | 更新时间：2025-02
+> ECharts 图表库完全指南 | 更新时间：2026-05
 
 ## 目录
 
@@ -1026,4 +1026,28 @@ window.addEventListener('resize', () => {
 - [echarts-for-react](https://github.com/hustcc/echarts-for-react) - React 封装
 - [vue-echarts](https://github.com/ecomfe/vue-echarts) - Vue 封装
 - [echarts-gl](https://github.com/ecomfe/echarts-gl) - 3D 扩展
+
+---
+
+## 最新知识补充（2025-2026）
+
+### ECharts 5.5+ 更新
+
+- SVG 渲染器性能优化，大数据量场景更流畅
+- `bindload` / `bindrendered` 事件监听图表状态
+- 增强树图和桑基图交互能力
+
+### 数据可视化面试考点
+
+Q: **ECharts SVG 渲染和 Canvas 渲染怎么选？**
+
+A: Canvas 适合大数据量（万级数据点）、频繁刷新场景；SVG 适合交互丰富、数据量适中、需要精确事件触发的场景。移动端优先 Canvas（内存更低）。
+
+Q: **如何处理大数据量图表渲染性能问题？**
+
+A: 关键策略：
+1. 大数据量用 `large: true` 模式（跳过非必要动画和交互）
+2. `sampling` 降采样策略（lttb/average/max/min）
+3. `progressive` 渐进式渲染（分块绘制避免卡顿）
+4. 数据缩放（dataZoom）限制可视区域数据量
 

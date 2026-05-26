@@ -2,7 +2,7 @@
 
 > 精选高频面试题及详细解答
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -86,9 +86,13 @@ class Counter extends React.Component {
   - A: React.memo 用于函数组件，PureComponent 用于 Class 组件，都是浅比较 props
 - Q: Hooks 如何替代生命周期方法？
   - A: useEffect 可以模拟 componentDidMount、componentDidUpdate、componentWillUnmount
-- Q: 为什么函数组件
-k
-    const theme = useContext(ThemeContext)
+- Q: 为什么函数组件不能在条件语句中使用 Hook？
+
+**错误示例**：
+```jsx
+function Bad({ cond }) {
+  if (cond) {
+    const theme = useContext(ThemeContext) // ❌ 不能在条件中调用 Hook
   }
 }
 ```
@@ -519,8 +523,9 @@ function SearchResults() {
     const value = e.target.value
     setQuery(value) // 紧急更新：立即更新输入框
     
-    startTransiti
-edQuery
+    startTransition(() => {
+      setDeferredQuery(value) // 非紧急更新：可以延迟
+    })
   
   return (
     <>
@@ -1200,16 +1205,33 @@ function TodoList() {
 
 function TodoItem({ todo }) {
   const [editing, setEditing] = useState(false)
-  const [text, setText] = useState(todo.
-oved] = newTodos.splice(from, 1)
+  const [text, setText] = useState(todo.text)
+
+  return editing ? (
+    <input value={text} onChange={e => setText(e.target.value)} />
+  ) : (
+    <span>{todo.text}</span>
+  )
+}
+
+// 正确示例：
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'Learn React', done: false },
+    { id: 2, text: 'Build App', done: false },
+  ])
+
+  const moveTodo = (from, to) => {
+    const newTodos = [...todos]
+    const [moved] = newTodos.splice(from, 1)
     newTodos.splice(to, 0, moved)
     setTodos(newTodos)
   }
-  
+
   return (
     <ul>
       {todos.map(todo => (
-        // ✅ 正确：使用唯一 ID
+        // 正确：使用唯一 ID
         <TodoItem key={todo.id} todo={todo} />
       ))}
     </ul>
@@ -1604,4 +1626,4 @@ function FilteredList({ items }) {
 
 ---
 
-**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试经验整理，使用 Context7 MCP 验证最新特性（2025-02）
+**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试经验整理，使用 Context7 MCP 验证最新特性（2026-05）

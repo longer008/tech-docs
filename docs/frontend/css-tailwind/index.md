@@ -2,7 +2,7 @@
 
 > 现代 CSS 与原子化工具类完全指南
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -113,7 +113,7 @@ module.exports = {
 </button>
 ```
 
-### 主题定制
+### 主题定制（v3）
 
 ```javascript
 // tailwind.config.js
@@ -137,6 +137,122 @@ module.exports = {
 
 ---
 
+### Tailwind CSS v4（2025 年 1 月发布）
+
+v4 是架构级重写，核心变化：**CSS 优先配置**，不再需要 `tailwind.config.js`。
+
+**安装（Vite 项目）**：
+
+```bash
+npm install tailwindcss @tailwindcss/vite
+```
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [tailwindcss()]
+})
+```
+
+**CSS 入口文件**：
+
+```css
+/* 替代 v3 的三行 @tailwind 指令 */
+@import "tailwindcss";
+
+/* CSS 优先主题配置（替代 tailwind.config.js） */
+@theme {
+  --color-primary: #3B82F6;
+  --color-secondary: #10B981;
+  --font-sans: 'Inter', sans-serif;
+  --spacing-128: 32rem;
+}
+```
+
+**v3 vs v4 对比**：
+
+| 特性 | v3 | v4 |
+|------|----|----|
+| 配置文件 | `tailwind.config.js` | 可选，CSS `@theme` 优先 |
+| 入口指令 | `@tailwind base/components/utilities` | `@import "tailwindcss"` |
+| 主题变量 | JS 对象 | CSS 变量（`--color-*`） |
+| 内容检测 | 需配置 `content` 数组 | 自动检测 |
+| 构建工具 | PostCSS 插件 | 原生 Vite/PostCSS 插件 |
+| 构建速度 | 基准 | 快 5-10x（Rust 引擎） |
+
+**v4 新增工具类**：
+
+```html
+<!-- 文字阴影 -->
+<p class="text-shadow-sm text-shadow-blue-500/50">阴影文字</p>
+
+<!-- 3D 变换 -->
+<div class="rotate-x-45 perspective-500">3D 旋转</div>
+
+<!-- 遮罩 -->
+<div class="mask-radial-from-black">渐变遮罩</div>
+
+<!-- 输入框自适应高度 -->
+<textarea class="field-sizing-content">自动高度</textarea>
+```
+
+### Tailwind CSS v4.1-4.3 新特性
+
+**v4.1**（2025 年 4 月）新增：
+
+- **text-shadow 工具类**：`text-shadow-sm`、`text-shadow-lg`、`text-shadow-2xs` 等，支持颜色修饰符
+- **mask 工具类扩展**：更多遮罩选项
+- **彩色 drop-shadow**：支持带颜色的 `drop-shadow`
+- **`pointer-*`/`any-pointer-*` 变体**：设备指针类型响应式变体
+- **`safe` 对齐修饰符**：`safe-center`、`safe-start` 等安全对齐
+
+```html
+<!-- text-shadow（v4.1） -->
+<button class="text-sky-950 text-shadow-2xs text-shadow-sky-300">Book a demo</button>
+
+<!-- 响应式 text-shadow -->
+<p class="text-shadow-none md:text-shadow-lg lg:text-shadow-xl">响应式阴影</p>
+```
+
+**v4.2**（2025 年 10 月）新增：
+
+- **一流的 webpack 插件**：`tailwindcss-webpack-plugin`，不再依赖 PostCSS
+- 更多逻辑属性工具类
+- `font-features-*` 工具类
+- 新颜色调色板：mauve / olive / mist / taupe
+- `@source not` 和 `@source inline(…)` 指令
+
+**v4.3**（2026 年 5 月）新增：
+
+- **scrollbar 工具类**：原生 CSS scrollbar API 支持
+- **`scrollbar-gutter-*`**：防止滚动条出现时布局偏移
+- **`@container-size`**：容器尺寸查询
+- **`zoom-*`** 工具类
+- **`tab-*`** 工具类
+- 堆叠+复合 `@variant` 语法
+
+```html
+<!-- scrollbar（v4.3） -->
+<div class="scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+  滚动内容
+</div>
+
+<!-- 防止布局偏移 -->
+<div class="scrollbar-gutter-stable">稳定布局</div>
+```
+
+**从 v3 迁移**：
+
+```bash
+# 官方迁移工具（自动处理大部分变更）
+npx @tailwindcss/upgrade
+```
+
+---
+
 ## 📚 参考资源
 
 - [MDN CSS 文档](https://developer.mozilla.org/zh-CN/docs/Web/CSS)
@@ -145,4 +261,23 @@ module.exports = {
 
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05
+
+---
+
+## 最新知识补充（2025-2026）
+
+### CSS 原生增强
+
+CSS 原生特性正在替代预处理器核心功能：
+
+- **CSS Nesting**：原生嵌套规则，与 Sass 嵌套语法一致，无需编译
+- **`@scope`**：限定样式作用范围，替代 BEM 命名约定
+- **`light-dark()`**：自动切换亮暗色值
+- **CSS Anchor Positioning**：元素相对于锚点定位，替代 JS 弹窗定位计算
+
+### Tailwind CSS 4.0
+
+- Rust-based Oxide 引擎，构建速度提升 10 倍
+- CSS-first 配置（`@theme` 替代 JS 配置文件）
+- 零配置自动内容检测

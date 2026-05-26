@@ -2,7 +2,7 @@
 
 > JavaScript 的超集，为大型应用提供静态类型检查
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -85,8 +85,8 @@ let c: Color = Color.Green
 
 // Any - 任意类型（尽量避免使用）
 let notSure: any = 4
-notSure = "mayb
-pescript
+notSure = "maybe a string"
+notSure = false
 // 对象字面量类型
 let obj: { name: string; age: number } = {
   name: "John",
@@ -742,8 +742,8 @@ function liveDangerously(x?: number | null) {
 {
   "compilerOptions": {
     /* 语言和环境 */
-    "target": "ES2020",                    // 编译目标
-    "lib": ["ES2020", "DOM"],              // 包含的库文件
+    "target": "ES2022",                    // 编译目标
+    "lib": ["ES2022", "DOM"],              // 包含的库文件
     "jsx": "react-jsx",                    // JSX 支持
     "experimentalDecorators": true,        // 装饰器支持
     "emitDecoratorMetadata": true,         // 装饰器元数据
@@ -809,9 +809,9 @@ function liveDangerously(x?: number | null) {
 // 1. Node.js 项目配置
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2020"],
+    "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -829,8 +829,8 @@ function liveDangerously(x?: number | null) {
 // 2. React 项目配置
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -855,9 +855,9 @@ function liveDangerously(x?: number | null) {
 // 3. 库项目配置
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2020"],
+    "lib": ["ES2022"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -1362,6 +1362,47 @@ function handleError(error: unknown): string {
 - [Type Challenges](https://github.com/type-challenges/type-challenges)
 - [TypeScript 中文网](https://www.tslang.cn/)
 
+## TypeScript 6.0 重要变更（2026 年 3 月）
+
+> TypeScript 6.0 是"桥接版本"，为即将到来的 **TypeScript 7.0**（Go 语言原生重写版）做准备。
+
+### 核心变化
+
+1. **废弃 ES5 目标**：`target: "ES5"` 在 TS 6.0 中废弃，TS 7.0 将移除。需在 tsconfig 中添加 `"ignoreDeprecations": "6.0"` 抑制错误
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "ignoreDeprecations": "6.0"
+  }
+}
+```
+
+2. **废弃 `outFile` 和 `moduleResolution: classic`**：这些旧选项在 TS 6.0 中废弃，TS 7.0 将移除
+
+3. **API 兼容性**：TS 6.0 保持与 TS 5.9 的 API 兼容，主要包含与 TS 7.0 对齐的废弃和类型改进
+
+4. **TypeScript 7.0 预览**：基于 Go 语言原生重写，预计数月内发布，性能大幅提升（编译速度提升约 10 倍），VS Code 扩展和 npm 预览版已可用
+
+### 迁移建议
+
+- 大多数项目无需修改代码即可升级到 TS 6.0
+- 如使用 ES5 target 或 outFile，添加 `"ignoreDeprecations": "6.0"` 抑制废弃警告
+- 关注 TS 7.0 发布进度，提前评估迁移影响
+
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05
+
+---
+
+## 最新知识补充（2025-2026）
+
+### TypeScript 6.0/7.0 演进
+
+上述内容已涵盖 TS 6.0 桥接版本和 7.0 Go 重写的关键信息。补充要点：
+
+- **TS 7.0 Go 重写**：编译速度约 10 倍提升，语言服务响应更快，内存占用更低
+- **VS Code 扩展预览版**：已可安装使用 Go 重写的 TS 语言服务
+- **社区影响**：第三方工具（ts-node、ts-loader 等）需要适配新的 API 变化

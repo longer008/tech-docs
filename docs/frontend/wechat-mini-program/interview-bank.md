@@ -1,6 +1,6 @@
 # 微信小程序面试题库
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -108,8 +108,8 @@ A: 适合轻量级、高频、低门槛的场景：
 }
 ```
 
-```javascript
-// i
+```text
+// 小程序双线程架构示意
 
 ┌─────────────────┐         ┌─────────────────┐
 │   视图层 View    │         │  逻辑层 Logic   │
@@ -664,8 +664,8 @@ Page({
 // 3. selectComponent - 获取组件实例
 Page({
   onReady() {
-    const custom = this.selectComponent('.c
-法
+    const custom = this.selectComponent('.custom')
+    custom.someMethod()
 });
 ```
 
@@ -3527,6 +3527,93 @@ Page({
     }
   }
 })
+```
+
+---
+
+## 最新知识补充（2024-2026）
+
+### 1. Skyline 渲染引擎
+
+**核心概念**：Skyline 是微信小程序的新一代渲染引擎，替代传统 Webview 渲染，采用原生渲染方案。
+
+**关键进展（截至 2026-05）**：
+- 当前版本：**1.4.17**
+- 接入量同比增长 17 倍，PV 同比增长 4 倍
+- 小程序启动耗时降低 20%，跳页耗时降低 50%
+- 微信鸿蒙 OS 版已灰度支持 Skyline（OHOS 客户端 1.0.10+）
+- glass-easel 组件框架在 Skyline 下建树耗时降低 30%-40%，setData 无通信开销
+- WXSS 预编译为二进制文件（预编译较运行时解析快 5 倍以上）
+
+**面试高频考点**：
+
+Q: **Skyline 和 Webview 渲染有什么区别？**
+
+A: Skyline 采用原生渲染而非 Webview，核心优势：
+- **单线程模型**：逻辑层和渲染层在同一线程，setData 无跨线程通信开销
+- **原生组件**：list-builder、grid-builder、nested-scroll-header 等高性能原生组件
+- **预编译**：WXSS 编译为二进制，解析速度提升 5 倍以上
+- **启动优化**：无 Webview 初始化开销，启动耗时降低 20%
+
+Q: **如何迁移到 Skyline？**
+
+A: 在 `app.json` 中配置：
+```json
+{
+  "renderer": "skyline",
+  "lazyCodeLoading": "requiredComponents"
+}
+```
+逐步迁移：可逐页设置 `"renderer": "skyline"`，与 Webview 页面混用，但同页面内不可混用。
+
+### 2. 基础库 v3.14-3.16 新变化
+
+**v3.16.0**（2026-04）：小游戏离线模式、安卓交通卡 NFC 接口、`wx.batchGetStorageSync` 支持插件调用
+
+**v3.15.x**（2026-02~03）：Skyline 支持 selection、glass-easel 链式调用增强、video/live-player 支持 iOS 画中画
+
+**v3.14.0**（2025-12）：重点变化
+- **隐私弹窗与授权弹窗耦合**：有授权弹窗的隐私接口不再单独弹出隐私弹窗，而是在授权弹窗上增加"隐私勾选"
+- WebSocket 网络组件升级
+- `image` 组件新增 `forceHttps` 属性
+- 云托管支持 SSE/Chunked
+
+### 3. 隐私协议最新变化
+
+**核心变化（v3.14.0 起）**：隐私弹窗与授权弹窗耦合
+
+- **有授权弹窗的隐私接口**（如 `wx.getLocation`）：不再弹官方隐私弹窗，在授权弹窗上增加"隐私勾选"，一步完成
+- **无授权弹窗的隐私接口**（如 `wx.getClipboardData`）：保留官方隐私弹窗
+
+**相关 API**：
+```javascript
+// 查询隐私设置
+wx.getPrivacySetting({
+  success(res) {
+    console.log(res.needAuthorization) // 是否需要用户授权隐私协议
+  }
+})
+
+// 监听隐私授权事件
+wx.onNeedPrivacyAuthorization((resolve, eventInfo) => {
+  // 弹出自定义隐私弹窗，用户同意后调用 resolve
+  resolve({ buttonId: 'agree-btn', event: 'tap' })
+})
+
+// 打开隐私协议全文
+wx.openPrivacyContract({
+  success() { console.log('用户阅读了隐私协议') }
+})
+```
+
+**面试高频考点**：
+
+Q: **wx.getUserInfo 和 wx.getUserProfile 还能用吗？**
+
+A: 已回收。获取头像昵称需使用 `button` 组件：
+```html
+<button open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">获取头像</button>
+<input type="nickname" bindblur="onNicknameBlur" placeholder="请输入昵称"/>
 ```
 
 ---

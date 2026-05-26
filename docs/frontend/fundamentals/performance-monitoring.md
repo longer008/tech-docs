@@ -1,6 +1,6 @@
 # 前端性能监控与分析完全指南
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -833,8 +833,12 @@ memoryMonitor.start(5000) // 每 5 秒采样一次
 window.addEventListener('beforeunload', () => {
   const stats = memoryMonitor.getStats()
   console.log('内存统计:', stats)
-  memoryMonitor.sto
-gs: {
+  memoryMonitor.stop()
+})
+
+// Lighthouse 配置
+const lighthouseConfig = {
+  settin
     // 模拟移动设备
     formFactor: 'mobile',
     // 模拟 3G 网络
@@ -1608,7 +1612,16 @@ class MonitorErrorHandler {
     }
   }
 }
-  return urlObj.toString()
+
+// 数据脱敏工具
+class DataSanitizer {
+  // 脱敏 URL
+  sanitizeUrl(url) {
+    try {
+      const urlObj = new URL(url)
+      urlObj.searchParams.delete('token')
+      urlObj.searchParams.delete('session_id')
+      return urlObj.toString()
     } catch {
       return url
     }
@@ -1798,3 +1811,34 @@ Timing-Allow-Origin: *
 ---
 
 > 💡 **提示**：性能监控是持续优化的基础，建立完善的监控体系可以帮助我们及时发现和解决性能问题，提升用户体验。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### INP 替代 FID
+
+INP（Interaction to Next Paint）已于 2024 年 3 月正式替代 FID 成为 Core Web Vitals 指标：
+
+- FID 仅测量首次输入延迟，忽略后续交互
+- INP 测量页面生命周期内所有交互的响应延迟
+- 阈值：<200ms 良好，200-500ms 需改进，>500ms 较差
+
+### web-vitals 库
+
+```typescript
+import { onINP, onLCP, onCLS } from 'web-vitals'
+
+onINP((metric) => {
+  // 发送到监控服务
+  reportMetric({ name: 'INP', value: metric.value, rating: metric.rating })
+})
+onLCP((metric) => reportMetric({ name: 'LCP', value: metric.value }))
+onCLS((metric) => reportMetric({ name: 'CLS', value: metric.value }))
+```
+
+### 面试新增考点
+
+Q: **为什么 INP 替代 FID？**
+
+A: FID 只关注首次点击延迟，对持续交互的页面（表单、拖拽、滚动）无法反映真实体验。INP 覆盖所有交互，更准确衡量用户感知的响应速度。

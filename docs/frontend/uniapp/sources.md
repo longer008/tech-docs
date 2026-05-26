@@ -1,6 +1,6 @@
 ﻿# uni-app 学习资源
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -60,8 +60,7 @@
 ### UI 组件库
 
 **1. uni-ui（官方）**
-- [官网](https://uniapp.dcloud.net.cn/component/uniui/uni-ui.ht
-e.hcoder.net/)
+- [官网](https://uniapp.dcloud.net.cn/component/uniui/uni-ui.html)
 - 特点：组件丰富、支持多端
 - 使用：通过插件市场导入
 

@@ -1,8 +1,6 @@
 # 前端测试体系
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -311,11 +309,12 @@ describe('fetchUser', () => {
 ### 5. Mock 和 Spy
 
 ```javascript
-impo
+import { vi } from 'vitest'
 
-    
-    expect(spy).toHaveBeenCalled()
-  })
+test('spy example', () => {
+  const spy = vi.spyOn(object, 'method')
+  object.method()
+  expect(spy).toHaveBeenCalled()
 })
 ```
 
@@ -715,3 +714,38 @@ test('example', () => {
 ---
 
 > 💡 **学习建议**：前端测试是保证代码质量的重要手段。建议先学习单元测试，然后学习集成测试和 E2E 测试。重点关注测试原则、测试覆盖率、测试隔离等核心知识点。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vitest 进展
+
+Vitest 已成为 Vue/Vite 项目首选测试框架：
+
+- **Vitest 2.x/3.x**：支持 Vite 8 Rolldown、browser mode、coverage 改进
+- **Browser Mode**：在真实浏览器中运行测试（而非 jsdom）
+- **in-source testing**：直接在源码文件中写测试
+
+```typescript
+// src/utils.ts - 源码内联测试
+export function add(a: number, b: number) { return a + b }
+
+// Vitest in-source testing
+if (import.meta.vitest) {
+  const { test, expect } = import.meta.vitest
+  test('add', () => { expect(add(1, 2)).toBe(3) })
+}
+```
+
+### Playwright 成为 E2E 主流
+
+- Playwright 已成为 E2E 测试首选（替代 Cypress 趋势明显）
+- 支持 Chromium/Firefox/WebKit 三引擎
+- Component Testing：直接测试 Vue/React/Svelte 组件
+
+### 面试新增考点
+
+Q: **Vitest 和 Jest 有什么区别？为什么要选 Vitest？**
+
+A: Vitest 基于 Vite 配置，与 Vite 项目无缝集成（共享 vite.config.ts、同一 transform pipeline）。Jest 需要 babel/swc 额外配置。Vitest 优势：ESM 天然支持、更快的 watch 模式、browser mode、in-source testing。

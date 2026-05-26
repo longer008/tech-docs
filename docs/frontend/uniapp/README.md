@@ -1,6 +1,6 @@
 ﻿# uni-app 跨端开发指南
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -1228,7 +1228,10 @@ com/dcloudio/uni-app)
 - [uni-app 官方文档](https://uniapp.dcloud.net.cn/)
 - [uni-app 插件市场](https://ext.dcloud.net.cn/)
 - [DCloud 社区](https://ask.dcloud.net.cn/)
-- [uni-app GitHub](https://github.
+- [uni-app GitHub](https://github.com/dcloudio/uni-app)
+
+---
+
 **解决**：
 - 使用 rpx 单位（响应式像素）
 - 避免使用非标准 CSS
@@ -1338,8 +1341,16 @@ export default {
       uni.makePhoneCall({
         phoneNumber
       })
-      // #e
-      method: 'POST',
+      // #endif
+      ```
+      
+      ### 错误上报
+      
+      ```javascript
+      // 错误上报配置
+      uni.request({
+        url: '/api/log',
+        method: 'POST',
       data: {
         error: err,
         page: getCurrentPages().pop().route,
@@ -2067,6 +2078,35 @@ App.onShow → Page.onShow
 - [uni-app 中文社区](https://ask.dcloud.net.cn/explore/) - 问答社区
 - [uni-app 插件开发](https://uniapp.dcloud.net.cn/plugin/) - 插件开发指南
 - [uni-app 性能优化](https://uniapp.dcloud.net.cn/tutorial/performance.html) - 官方优化指南
+
+---
+
+## 最新知识补充（2024-2026）
+
+### uni-app x 与 uvue
+
+uni-app x 是 DCloud 推出的下一代跨端框架，使用 **uts**（Uni Type Script）语言替代 JavaScript，编译为平台原生代码：
+
+- **uvue 渲染引擎**：替代 nvue（基于 Weex），uvue 基于 uts 编译为原生代码，性能更强
+- **nvue 已进入维护期**：新项目建议使用 uni-app x + uvue
+- **条件编译标识**：新增 `APP-ANDROID`、`APP-IOS`、`VUE3-VAPOR`
+- **鸿蒙原生适配**：uni-app x 已适配鸿蒙原生
+
+### 条件编译新增标识
+
+```javascript
+// #ifdef APP-ANDROID
+// 仅 Android 原生端执行
+// #endif
+
+// #ifdef APP-IOS
+// 仅 iOS 原生端执行
+// #endif
+
+// #ifdef VUE3-VAPOR
+// 仅蒸汽模式执行
+// #endif
+```
 
 ---
 

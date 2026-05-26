@@ -2,7 +2,7 @@
 
 > 精选构建工具核心面试题
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -72,7 +72,13 @@ export default {
   }
 }
 ```
-- 为什么 Vite 生产环境用 Rollup？
+
+**追问：为什么 Vite 生产环境用 Rollup？**
+
+A: Vite 开发环境用 esbuild（极快但不兼容 Rollup 插件生态），生产环境用 Rollup 是因为：
+- Rollup 插件生态成熟，兼容性好
+- Rollup 的代码分割和 Tree Shaking 更可靠
+- esbuild 对某些高级打包特性（如动态导入、自定义 chunk 分割）支持不足
 
 ---
 
@@ -108,7 +114,7 @@ module.exports = {
   mode: 'production',
   optimization: {
     usedExports: true,
-    sideEffects: false
+    sideEffects: true // 让 Webpack 读取 package.json 中的 sideEffects 字段
   }
 }
 ```
@@ -167,12 +173,6 @@ npm install --save-dev webpack-bundle-analyzer
 
 # 生成分析报告
 npx webpack-bundle-analyzer dist/main.js
-```
-{
-      template: './index.html'
-    })
-  ]
-}
 ```
 
 **追问点**：
@@ -249,7 +249,6 @@ module.exports = {
   ]
 }
 ```
-- Loader 的执行顺序？
 
 **Q3: Loader 的执行顺序？**
 
@@ -1500,6 +1499,28 @@ module.exports = {
 
 ---
 
+## Vite 8 / Rolldown 面试高频考点
+
+### Q1: Vite 8 最大的架构变更是什么？
+
+A: Vite 8 将 **Rolldown**（基于 Rust）作为唯一统一打包器，替代了此前 esbuild（开发）+ Rollup（生产）的双打包器架构。这是自 Vite 2 以来最重大的架构变更，消除了开发与生产之间的行为差异，构建速度提升 10-30 倍。
+
+### Q2: Vite 8 如何保证插件兼容性？
+
+A: Rolldown 实现了与 Rollup 相同的插件 API，大多数 Vite 插件无需修改即可使用。同时 Vite 8 内置兼容层，自动转换现有的 `esbuild` 和 `rollupOptions` 配置。可通过 `this.meta.rolldownVersion` 检测是否运行在 Rolldown 模式。
+
+### Q3: 如何迁移到 Vite 8？
+
+A: 大多数项目可直接升级（内置兼容层自动处理配置转换）。大型/复杂项目建议先在 Vite 7 上使用 `rolldown-vite` 包隔离测试打包器相关问题，再升级到 Vite 8，便于区分问题来源。
+
+### Q4: Vite 6 -> 7 -> 8 的版本演进路线是什么？
+
+- **Vite 6**（2024.11）：Environment API、Node.js 18+
+- **Vite 7**（2025.06 - 2026.01）：过渡版本、Node.js 20+、为 Rolldown 集成做准备
+- **Vite 8**（2026.03）：Rolldown 统一打包器、Node.js 20.19+/22.12+
+
+---
+
 ## 📚 参考资源
 
 - [Webpack 官方文档](https://webpack.js.org/)
@@ -1508,4 +1529,23 @@ module.exports = {
 
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05
+
+---
+
+## 最新知识补充（2025-2026）
+
+上述 Vite 8/Rolldown 面试考点已涵盖核心变化。补充关键信息：
+
+### Vite 8 正式发布
+
+- **Rolldown 统一打包器**：开发和生产使用同一打包引擎，消除 esbuild + Rollup 双架构差异
+- **Node.js 20.19+/22.12+** 最低要求
+- **兼容层**：自动转换 esbuild 和 rollupOptions 配置
+- **迁移建议**：大型项目先在 Vite 7 使用 `rolldown-vite` 包测试
+
+### Webpack 现状
+
+- Webpack 仍在维护但社区活跃度下降
+- 大量新项目选择 Vite，Webpack 主要用于遗留大型项目
+- Webpack 6 开发计划已搁置

@@ -1,6 +1,6 @@
 # Vue 3 响应式原理深入解析
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -254,7 +254,7 @@ function effect(fn) {
     // 设置当前正在执行的副作用函数
     activeEffect = effectFn
     // 执行原始函数
-    effectFn()
+    fn()
   }
 
   return effectFn
@@ -1229,6 +1229,27 @@ const expensive = computed(() => {
 })
 ```
 
+## Vue 3.6 响应式系统重构（beta）
+
+> Vue 3.6 目前处于 beta 阶段（v3.6.0-beta.10），核心变化是响应式系统基于 **alien-signals** 重构。
+
+### 1. alien-signals 响应式引擎
+
+Vue 3.6 将响应式系统的底层实现替换为 **alien-signals**，带来显著的性能和内存改善：
+
+- 更快的依赖收集和触发速度
+- 更低的内存占用
+- 更简洁的响应式实现代码
+
+### 2. Vapor Mode（无虚拟 DOM）
+
+Vapor Mode 是 Vue 3.6 引入的编译模式，跳过虚拟 DOM 层，直接生成 DOM 操作代码：
+
+- 编译器将模板直接编译为 DOM 创建和更新指令
+- 性能接近原生 DOM 操作，内存占用更低
+- 目前功能已完成但仍标记为不稳定，仅建议在简单场景和性能对比测试中使用
+- 可与现有虚拟 DOM 模式共存，按组件选择使用
+
 ## 面试要点
 
 ### 核心问题
@@ -1267,3 +1288,25 @@ const expensive = computed(() => {
 - [Vue 3 源码解析 - 响应式系统](https://github.com/vuejs/core/tree/main/packages/reactivity)
 - [Vue.js 设计与实现](https://book.douban.com/subject/35768338/)
 - [深入理解 Vue 3 响应式原理](https://juejin.cn/post/7001999813344493581)
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vue 3.5+ 响应式改进
+
+- **Reactive Props 解构**：`const { x, y } = reactiveProps` 保持响应性（不再丢失）
+- **Shallow Reactive 优化**：`shallowReactive` 性能提升，减少深层 Proxy 创建开销
+- **Effect Scope 改进**：`onScopeDispose` 更可靠的清理机制
+
+```typescript
+// Vue 3.5+ Props 解构保持响应性
+const { count, message } = defineProps<{ count: number; message: string }>()
+// count 和 message 直接是响应式的，无需 toRefs 包装
+```
+
+### 面试新增考点
+
+Q: **Vue 3.5 Props 解构为什么不再丢失响应性？**
+
+A: Vue 3.5 编译器对 `defineProps` 解构做了特殊处理，编译产物使用 `__propsDestructureDefault` 和代理追踪，解构出的变量内部仍关联原始 props 对象。之前版本解构会断开响应链，需要 `toRefs` 包装。

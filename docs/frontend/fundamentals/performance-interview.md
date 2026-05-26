@@ -1,8 +1,6 @@
 # 前端性能优化面试题集
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
-> 前端性能优化策略与高频面试题 | 更新时间：2025-02
+> 前端性能优化策略与高频面试题 | 更新时间：2026-05
 
 ## 目录
 
@@ -669,3 +667,49 @@ module.exports = {
   ]
 };
 ```
+
+---
+
+## 最新知识补充（2025-2026）
+
+### INP 替代 FID（2024-03 正式生效）
+
+INP（Interaction to Next Paint）已成为 Core Web Vitals 交互延迟指标：
+
+- **良好**：< 200ms | **需要改进**：200-500ms | **较差**：> 500ms
+- INP 测量所有交互的完整响应时间（输入延迟+处理+绘制），FID 仅测首次输入延迟
+
+```javascript
+// 监测 INP
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log('INP:', entry.duration)
+  }
+})
+observer.observe({ type: 'event', buffered: true })
+```
+
+### Long Animation Frames API
+
+替代 Long Tasks API，提供更细粒度的性能分析：
+
+```javascript
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    for (const script of entry.scripts) {
+      console.log(script.invokerType, script.duration)
+    }
+  }
+})
+observer.observe({ type: 'long-animation-frame', buffered: true })
+```
+
+### 面试新增考点
+
+Q: **如何优化 INP？**
+
+A: 关键策略：
+1. **拆分长任务**：任务 > 50ms 时使用 `scheduler.yield()` 或 `requestIdleCallback` 拆分
+2. **减少主线程阻塞**：避免同步布局读取
+3. **优化事件处理**：`isInputPending()` 检测用户输入时主动让出主线程
+4. **预编译**：减少运行时计算

@@ -1,8 +1,6 @@
 # JavaScript 核心面试题集
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -961,8 +959,7 @@ child1.colors.push('green')
 console.log(child2.colors)  // ['red', 'blue']
 
 // 缺点：无法继承原型方法
-con
-rs)  // ['red', 'blue']
+console.log(child2.colors)  // ['red', 'blue']
 console.log(child1.getName())  // 'John'
 
 // 缺点：调用了两次父类构造函数
@@ -2518,3 +2515,67 @@ console.log(unique4(arr))  // [1, 2, 3, 4, 5]
 - [ES6 入门教程 - 阮一峰](https://es6.ruanyifeng.com/)
 - [You Don't Know JS](https://github.com/getify/You-Dont-Know-JS)
 - [JavaScript 高级程序设计（第 4 版）](https://book.douban.com/subject/35175321/)
+
+---
+
+## 最新知识补充（2025-2026）
+
+### ES2025 新特性
+
+#### Set 方法（ES2025 已确认）
+
+```javascript
+const set1 = new Set([1, 2, 3, 4])
+const set2 = new Set([3, 4, 5, 6])
+
+set1.union(set2)        // Set {1, 2, 3, 4, 5, 6}
+set1.intersection(set2) // Set {3, 4}
+set1.difference(set2)   // Set {1, 2}
+set1.symmetricDifference(set2) // Set {1, 2, 5, 6}
+set1.isSubsetOf(set2)   // false
+set1.isSupersetOf(set2) // false
+set1.isDisjointFrom(set2) // false
+```
+
+#### RegExp Modifiers（ES2025）
+
+```javascript
+// 在正则表达式内部局部启用/禁用标志
+const re = /(?i:hello) world/  // hello 匹配大小写不敏感，world 严格匹配
+re.test('HELLO world')  // true
+re.test('HELLO WORLD')  // false
+```
+
+#### Promise.try（ES2025）
+
+```javascript
+// 安全包装可能抛异常的同步函数为 Promise
+const result = await Promise.try(() => someSyncFn())
+// 等价于 Promise.resolve().then(() => someSyncFn())，但更简洁
+```
+
+#### Iterator Helpers 正式化（ES2025）
+
+```javascript
+// Iterator Helpers 从 ES2024 提案升为 ES2025 正式标准
+function* naturals() {
+  let i = 0
+  while (true) yield i++
+}
+
+const result = naturals()
+  .filter(x => x % 2 === 0)
+  .map(x => x * x)
+  .take(5)
+  .toArray()
+// [0, 4, 16, 36, 64]
+```
+
+### ES2026 提案前瞻
+
+| 提案 | 状态 | 说明 |
+|------|------|------|
+| Pattern Matching | Stage 1 | 模式匹配语法 `match(val) { when(x) {} }` |
+| Type Annotations | Stage 1 | JS 类型注释（不运行时检查） |
+| Records & Tuples | Stage 2 | 不可变数据结构 `#{x: 1}` |
+| Decimal | Stage 3 | 高精度十进制数 `0.1m` |

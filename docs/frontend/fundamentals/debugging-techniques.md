@@ -1,6 +1,6 @@
 # 前端调试技巧完全指南
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -271,8 +271,8 @@ detector.detectLeak(() => {
 // - Commit duration：提交耗时
 
 // 4. 查看渲染原因
-// 点击组件 → 
-. 使用 useCallback 缓存函数
+// 点击组件 → 查看 "Why did this render?" 面板
+// 常见原因：props changed、state changed、parent re-rendered、hooks changed
 function ParentComponent() {
   const [count, setCount] = useState(0)
   
@@ -684,3 +684,40 @@ const bestPractices = {
 ---
 
 > 💡 **提示**：掌握调试技巧可以大大提高开发效率，快速定位和解决问题。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Chrome DevTools 新功能
+
+- **Long Animation Frames 面板**：替代 Long Tasks，可视化每帧的渲染/脚本耗时
+- **Performance Insights**：AI 驱动的性能分析建议
+- **Recorder 面板**：录制用户交互流程，自动生成 Puppeteer/Playwright 测试脚本
+- **CSS Overview 面板**：分析页面所有 CSS 属性使用情况和冲突
+
+### React DevTools 变化
+
+- React 19.x DevTools 支持 Activity 组件可视化
+- Profiler 支持 Server Components 渲染时间追踪
+
+### 调试最佳实践
+
+```javascript
+// 使用 console.trace() 替代 console.log 追踪调用链
+console.trace('函数调用追踪')
+
+// 使用 console.group() 组织复杂日志
+console.group('API 调试')
+console.log('请求参数:', params)
+console.log('响应数据:', response)
+console.groupEnd()
+
+// 使用 console.table() 展示结构化数据
+console.table([{ name: 'Alice', score: 95 }, { name: 'Bob', score: 88 }])
+
+// 使用 console.time/timeEnd 测量耗时
+console.time('数据处理')
+processData()
+console.timeEnd('数据处理')
+```

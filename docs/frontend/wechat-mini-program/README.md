@@ -1,6 +1,6 @@
 ﻿# 微信小程序开发指南
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -1652,10 +1652,19 @@ Page({
       success: (res) => {
         this.setData({ data: res.data });
       },
-      fail: (e
-{
-  title: '提示',
-  content: '确定要删除吗？',
+      fail: (err) => {
+        wx.hideLoading();
+        console.error(err);
+      }
+    });
+    ```
+    
+    **模态对话框**：
+    
+    ```javascript
+    wx.showModal({
+      title: '提示',
+      content: '确定要删除吗？',
   success: (res) => {
     if (res.confirm) {
       // 确认操作
@@ -1827,6 +1836,39 @@ Page({
 - [小程序开发指南](https://developers.weixin.qq.com/ebook?action=get_post_info&docid=0008aeea9a8978ab0086a685851c0a)
 - [小程序性能优化](https://developers.weixin.qq.com/miniprogram/dev/framework/performance/)
 - [云开发文档](https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html)
+- [基础库更新日志](https://developers.weixin.qq.com/miniprogram/dev/framework/release/)
+- [Skyline 更新日志](https://developers.weixin.qq.com/miniprogram/dev/framework/runtime/skyline/changelog.html)
+
+---
+
+## 最新知识补充（2024-2026）
+
+### Skyline 渲染引擎
+
+Skyline 是微信小程序新一代渲染引擎，替代传统 Webview 渲染：
+
+- 当前版本 1.4.17，接入量同比增长 17 倍
+- 启动耗时降低 20%，跳页耗时降低 50%
+- 鸿蒙 OS 版已灰度支持 Skyline
+- glass-easel 组件框架建树耗时降低 30%-40%
+
+启用方式：
+```json
+{
+  "renderer": "skyline",
+  "lazyCodeLoading": "requiredComponents"
+}
+```
+
+### 基础库 v3.14-3.16 新变化
+
+- v3.16（2026-04）：小游戏离线模式、NFC 接口
+- v3.15（2026-02~03）：iOS 画中画、Skyline selection 支持
+- v3.14（2025-12）：隐私弹窗与授权弹窗耦合、WebSocket 升级、image forceHttps
+
+### 隐私协议变化（v3.14.0 起）
+
+有授权弹窗的隐私接口（如 `wx.getLocation`）不再单独弹隐私弹窗，在授权弹窗上增加"隐私勾选"一步完成。`wx.getUserInfo` / `wx.getUserProfile` 已回收，需用 `button` 组件 `open-type="chooseAvatar"` + `type="nickname"` 获取头像昵称。
 
 ---
 

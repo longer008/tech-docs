@@ -1,6 +1,6 @@
 # 网络协议深入解析
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录
 
@@ -116,7 +116,16 @@ server.on('stream', (stream, headers) => {
   // 主请求
   if (headers[':path'] === '/') {
     // 推送 CSS 文件
-    stream.p
+    stream.pushStream(
+      { ':path': '/style.css' },
+      (pushStream) => {
+        pushStream.respond({
+          ':status': 200,
+          'content-type': 'text/css'
+        })
+        pushStream.end('body { margin: 0 }')
+      }
+    )
 
   }
 })
@@ -986,9 +995,11 @@ class RestAPI {
   // 获取用户列表
   async getUsers() {
     const response = await fetch(`${this.baseURL}/users`)
-    return 
-
-    const [user, posts, comments] = await Promise.all([
+    return response.json()
+  }
+  
+  // 批量请求（并行获取关联数据）
+  async getUserDetails(userId) {
       this.getUser(userId),
       this.getUserPosts(userId),
       this.getUserComments(userId)
@@ -1552,3 +1563,42 @@ const recommendation = {
 ---
 
 > 💡 **提示**：选择合适的网络协议和通信方案对应用性能和用户体验至关重要。根据实际场景选择最合适的技术方案。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### HTTP/3 与 QUIC 普及进展
+
+- Chrome/Firefox/Safari 全面支持 HTTP/3（2024 年起默认启用）
+- QUIC 协议核心优势：0-RTT 连接建立、无队头阻塞、连接迁移（网络切换不中断）
+- 云服务端支持：AWS ALB、Cloudflare、Google Cloud 均已支持
+
+```javascript
+// 检测 HTTP/3 支持与性能
+const entry = performance.getEntriesByName('https://example.com')[0]
+console.log('协议:', entry.nextHopProtocol) // "h3" 表示 HTTP/3
+```
+
+### Server-Sent Events（SSE）应用增多
+
+SSE 在 AI 流式输出场景广泛使用（ChatGPT、Claude 等）：
+
+```javascript
+const evtSource = new EventSource('/api/stream')
+
+evtSource.onmessage = (event) => {
+  const data = JSON.parse(event.data)
+  // 处理流式数据
+}
+
+evtSource.onerror = () => {
+  // 自动重连机制
+}
+```
+
+### 面试新增考点
+
+Q: **HTTP/3 解决了 HTTP/2 的什么问题？**
+
+A: HTTP/2 仍有队头阻塞（TCP 层面），一个包丢失阻塞所有流。HTTP/3 基于 QUIC（UDP），每个流独立，单包丢失仅影响一个流。0-RTT 连接建立显著减少延迟，连接迁移允许网络切换（WiFi->4G）不中断。

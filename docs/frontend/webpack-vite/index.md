@@ -1,10 +1,8 @@
 # Webpack & Vite
 
-> ⚠️ **本文档部分内容已过时**，正在更新中。请参考最新官方文档获取最新信息。
-
 > 现代前端构建工具完全指南
 
-**更新时间**: 2025-02
+**更新时间**: 2026-05
 
 ## 📋 目录
 
@@ -258,8 +256,19 @@ const routes = [
     component: () => import('./pages/About.vue')
   }
 ]
-``
+```
 
+### SplitChunks 分包策略
+
+```javascript
+// Webpack SplitChunks 配置
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        // 第三方库
+        react: {
           test: /[\\/]node_modules[\\/](react|react-dom|react-router-dom)[\\/]/,
           name: 'react',
           priority: 10
@@ -1110,16 +1119,14 @@ const LazyImage = ({ src, alt }) => {
   )
 }
 
-// ✅ 推荐：使用 WebP 格式
+// ✅ 推荐：使用 unplugin-imagemin（替代已停维的 vite-plugin-imagemin）
 // vite.config.js
-import viteImagemin from 'vite-plugin-imagemin'
+import imagemin from 'unplugin-imagemin/vite'
 
 export default defineConfig({
   plugins: [
-    viteImagemin({
-      webp: {
-        quality: 75
-      }
+    imagemin({
+      // 默认使用 sharp，无需安装系统依赖
     })
   ]
 })
@@ -1341,8 +1348,11 @@ npm audit fix
 - [深入浅出 Webpack](https://webpack.wuhaolin.cn/)
 
 **视频课程**：
-- [Webpack 5 完整教程](https://www.bilib
-ejs/plugin-react](https://github.com/vitejs/vite-plugin-react) - React 支持
+- [Webpack 5 完整教程](https://www.bilibili.com/video/BV1e7411j7T5)
+- [Vite 从入门到实战](https://www.bilibili.com/video/BV1GN4y1M7P5)
+
+**Vite 插件**：
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react) - React 支持
 - [@vitejs/plugin-vue](https://github.com/vitejs/vite-plugin-vue) - Vue 支持
 - [vite-plugin-compression](https://github.com/vbenjs/vite-plugin-compression) - 压缩
 - [vite-plugin-imagemin](https://github.com/vbenjs/vite-plugin-imagemin) - 图片优化
@@ -1428,7 +1438,7 @@ export default defineConfig({
 
 ---
 
-## 最新知识补充（2024-2025）
+## 最新知识补充（2024-2026）
 
 ### 1. Vite 6 重大更新
 
@@ -1521,6 +1531,48 @@ export default defineConfig({
 - `@vite-pwa/assets-generator`：PWA 场景下的图片处理
 - 构建前使用 sharp 脚本手动处理
 
+### 5. Vite 7 过渡版本（2025 年 6 月 - 2026 年 1 月）
+
+Vite 7 是 Vite 6 到 Vite 8 之间的过渡版本：
+- Node.js 20+ 为最低要求
+- Environment API 进一步完善
+- 为 Rolldown 集成做准备
+- 生命周期较短，已被 Vite 8 替代
+
+### 6. Vite 8 — Rolldown 统一打包器（2026 年 3 月）
+
+> Vite 8 是自 Vite 2 以来最重大的架构变更。
+
+Vite 8（2026 年 3 月发布）将 **Rolldown** 作为唯一统一打包器，替代了此前 esbuild（开发）+ Rollup（生产）的双打包器架构：
+
+**核心变化**：
+- **统一打包管线**：开发和生产共用同一个 Rust 打包器，消除了行为差异
+- **极快的构建速度**：比 Rollup 快 10-30 倍，与 esbuild 性能持平
+- **插件兼容**：Rolldown 支持 Rollup/Vite 插件 API，大多数现有插件无需修改
+- **内置兼容层**：自动转换 `esbuild` 和 `rollupOptions` 配置
+- Node.js 20.19+ / 22.12+ 为最低要求
+
+```javascript
+// 检测 Rolldown 模式（Vite 8+）
+function versionCheckPlugin(): Plugin {
+  return {
+    name: 'version-check',
+    buildStart() {
+      if (this.meta.rolldownVersion) {
+        // Rolldown 模式
+      } else {
+        // Rollup 模式
+      }
+    },
+  }
+}
+```
+
+**迁移建议**：
+- 大多数项目可直接升级，内置兼容层自动处理配置转换
+- 大型/复杂项目建议先在 Vite 7 上用 `rolldown-vite` 包测试
+- `@vitejs/plugin-react` v6 使用 Oxc 做 React Refresh 转换，不再依赖 Babel
+
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05

@@ -2,7 +2,7 @@
 
 > 详细对比 Vue 2.x 与 Vue 3.x 的核心差异与迁移指南
 > 
-> 📅 **更新时间**: 2025-02
+> 📅 **更新时间**: 2026-05
 > 
 > 📚 **内容来源**: Vue 3 官方文档、Vue 2 官方文档、Vue 3 迁移指南
 
@@ -602,7 +602,6 @@ const email = defineModel('email')
 > // modelValue 和 firstName 仍然是响应式的
 > </script>
 > ```
-```
 
 ### 3. 插槽变化
 
@@ -1587,6 +1586,28 @@ export default {
 
 ---
 
-**最后更新**: 2025-02
+**最后更新**: 2026-05
 
 **文档质量**: 基于 Vue 3 官方文档和迁移指南编写，包含 50+ 个代码示例，涵盖所有重要变化和迁移步骤。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### Vue 3.5+ 新特性
+
+- **Reactive Props Destructure**：Props 解构保持响应性
+- **Lazy Hydration**：异步组件支持 `hydrateLazy`，延迟水合提升 SSR 性能
+- **useTemplateRef**：替代 `ref="xxx"` + `const xxx = ref(null)` 模式
+
+```typescript
+// useTemplateRef（Vue 3.5+）
+const inputEl = useTemplateRef<HTMLInputElement>('input')
+// 自动绑定 <input ref="input">，无需手动声明 ref
+```
+
+### 面试新增考点
+
+Q: **Vue 3.5 Lazy Hydration 解决什么问题？**
+
+A: SSR 场景下所有组件水合后才能交互，但页面中大量非关键组件（评论区、推荐栏等）水合会阻塞首屏交互。Lazy Hydration 允许这些组件延迟水合（until-visible/idle/event 触发），减少首屏 TTI 时间。

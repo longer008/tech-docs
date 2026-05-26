@@ -1,6 +1,6 @@
 # uni-app 面试题库
 
-> 更新时间：2025-02
+> 更新时间：2026-05
 
 ## 目录导航
 
@@ -696,3 +696,21 @@ export default {
 ---
 
 > 本文档包含 10 道精选面试题，涵盖 uni-app 的核心知识点和实战场景。每题都包含核心答案、代码示例和追问点，帮助你全面掌握 uni-app 开发。
+
+---
+
+## 最新知识补充（2025-2026）
+
+### uni-app x 进展
+
+uni-app x 是 DCloud 推出的下一代 uni-app，使用 uts（Uni Type Script）替代 JS，uvue 替代 vue 文件：
+
+- uts 编译到各平台原生代码（Android Kotlin/iOS Swift/H5 JS）
+- 性能接近原生，不再依赖 WebView 渲染层
+- 鸿蒙适配已支持（HarmonyOS NEXT）
+
+### 面试新增考点
+
+Q: **uni-app x 和 uni-app 的核心区别？**
+
+A: uni-app 基于 WebView + JSBridge 模式，性能受限于 WebView；uni-app x 使用 uts 编译到原生代码，绕过 WebView 层。核心变化：渲染引擎从 WebView 变为原生渲染，语言从 JS 变为 uts（类型安全的 TypeScript 变体）。
