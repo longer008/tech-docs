@@ -1948,6 +1948,22 @@ A: TS 7.0 将使用 Go 语言从零重写编译器，编译速度预计提升约
 
 A: 在 tsconfig.json 中添加 `"ignoreDeprecations": "6.0"` 来抑制 ES5 target、outFile 等废弃选项的错误。同时应尽快将 target 升级到 ES2015+，并迁移到现代模块解析方式。
 
+### Q4: `erasableSyntaxOnly` 是什么？为什么重要？
+
+A: TS 6.0 新增的编译选项，限制只允许使用"可擦除"的 TypeScript 语法——即编译后不产生任何运行时代码的语法。启用后，普通 `enum`（生成运行时对象）、角括号类型断言 `<T>value`、CommonJS 模块语法 `import foo = require(...)` 都会报错。
+
+这个选项的背景是 Node.js 正在原生支持 TypeScript（通过 `--experimental-strip-types` 直接剥离类型注解运行 `.ts` 文件），但这种方式只能处理"可擦除"的语法。启用 `erasableSyntaxOnly` 可以提前检查代码是否兼容 Node.js 原生 TS 执行。
+
+```typescript
+// erasableSyntaxOnly: true 时报错
+enum Status { Active }        // ❌ 生成运行时代码
+const x = <string>value       // ❌ 角括号断言
+
+// 应改为
+const Status = { Active: 'ACTIVE' } as const  // ✅
+const x = value as string                      // ✅
+```
+
 ---
 
 **最后更新**: 2026-05

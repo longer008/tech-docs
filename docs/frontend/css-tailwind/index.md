@@ -76,17 +76,36 @@
 
 ### 快速开始
 
+**v4（推荐，当前版本）**：
+
 ```bash
-# 安装
+# Vite 项目
+npm install -D tailwindcss @tailwindcss/vite
+```
+
+```typescript
+// vite.config.ts
+import tailwindcss from '@tailwindcss/vite'
+export default { plugins: [tailwindcss()] }
+```
+
+```css
+/* CSS 入口文件 */
+@import "tailwindcss";
+```
+
+**v3（旧版，仍在维护）**：
+
+```bash
 npm install -D tailwindcss postcss autoprefixer
 npx tailwindcss init -p
+```
 
-# 配置 tailwind.config.js
+```javascript
+// tailwind.config.js
 module.exports = {
   content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
-  theme: {
-    extend: {}
-  },
+  theme: { extend: {} },
   plugins: []
 }
 ```
@@ -276,8 +295,10 @@ CSS 原生特性正在替代预处理器核心功能：
 - **`light-dark()`**：自动切换亮暗色值
 - **CSS Anchor Positioning**：元素相对于锚点定位，替代 JS 弹窗定位计算
 
-### Tailwind CSS 4.0
+### Tailwind CSS v4 系列进展
 
-- Rust-based Oxide 引擎，构建速度提升 10 倍
-- CSS-first 配置（`@theme` 替代 JS 配置文件）
-- 零配置自动内容检测
+v4.1-4.3 的新特性已在正文中详细说明。面试高频追问：
+
+- **v4 安装方式变了吗？** 是的，推荐用 `@tailwindcss/vite` 插件，不再依赖 PostCSS（v4.2 起也有 webpack 插件）
+- **v4 还需要 `tailwind.config.js` 吗？** 不需要，用 CSS `@theme` 块替代，但 v4 仍支持 JS 配置文件作为补充
+- **v4 的 CSS 变量主题有什么好处？** 可在运行时通过 JS 修改 CSS 变量实现动态主题，无需重新构建

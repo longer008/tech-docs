@@ -30,8 +30,8 @@
 - 下一代前端构建工具
 - 基于原生 ESM 的开发服务器
 - 极速的冷启动和热更新
-- 生产环境使用 Rollup 打包
-- Vite 6+ 引入 Environment API，计划使用 Rolldown 替代 Rollup
+- Vite 8（2026.03）起使用 **Rolldown**（Rust 实现）统一打包，替代原来的 esbuild + Rollup 双引擎架构
+- Vite 6 引入 Environment API，支持多环境（client/server/edge）并行构建
 
 **核心差异**：
 
@@ -50,7 +50,7 @@
 | 场景 | 推荐工具 | 原因 |
 |------|---------|------|
 | 新项目 | Vite | 开发体验好，配置简单 |
-| 大型项目 | Vite / Webpack | Vite 6+ 已大幅改善大型项目支持 |
+| 大型项目 | Vite / Webpack | Vite 8+ 已大幅改善大型项目支持 |
 | 库开发 | Rollup/Vite | 输出更小，支持多种格式 |
 | 老项目 | Webpack | 迁移成本低 |
 | 需要兼容 IE | Webpack | Vite 不支持 IE |
@@ -1474,22 +1474,21 @@ export default defineConfig({
 - 更好的 CSS 处理（支持 Lightning CSS）
 - 改进的 HMR 边界处理
 
-### 2. Rolldown：Vite 的未来打包器
+### 2. Rolldown：Vite 8 的统一打包器
 
-[Rolldown](https://rolldown.rs/) 是基于 Rust 的 JavaScript 打包器，计划替代 Vite 生产构建中的 Rollup：
+[Rolldown](https://rolldown.rs/) 是基于 Rust 的 JavaScript 打包器，**已在 Vite 8（2026.03）中正式成为默认打包器**，替代了原来的 esbuild + Rollup 双引擎架构：
 
-- **统一开发/生产管线**：开发环境使用 esbuild（快速），生产环境将使用 Rolldown（与 Rollup 兼容但更快）
-- **极快的构建速度**：Rust 实现，比 Rollup 快 10-100 倍
-- **Rollup 兼容**：保持与 Rollup 插件和配置的兼容性
-- **当前状态**：已进入可用阶段，Vite 计划在后续版本集成
+- **统一开发/生产管线**：开发和生产使用同一打包引擎，消除行为差异
+- **极快的构建速度**：Rust 实现，比 Rollup 快 10-30 倍
+- **Rollup 兼容**：保持与 Rollup 插件和配置的兼容性，大多数项目无需修改插件
+- **检测方式**：插件中可通过 `this.meta.rolldownVersion` 判断是否运行在 Rolldown 模式
 
 ```javascript
-// 未来 Vite 配置可能自动使用 Rolldown
-// 当前可通过实验性配置启用：
+// Vite 8 直接升级即可，无需额外配置
+// 如需渐进迁移，可先用 rolldown-vite 包测试
 export default defineConfig({
   build: {
-    // Rolldown 集成后，将无需手动配置
-    rollupOptions: { /* ... */ }
+    rollupOptions: { /* 现有配置兼容 Rolldown */ }
   }
 })
 ```

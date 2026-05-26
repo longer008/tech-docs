@@ -1381,14 +1381,31 @@ function handleError(error: unknown): string {
 
 2. **废弃 `outFile` 和 `moduleResolution: classic`**：这些旧选项在 TS 6.0 中废弃，TS 7.0 将移除
 
-3. **API 兼容性**：TS 6.0 保持与 TS 5.9 的 API 兼容，主要包含与 TS 7.0 对齐的废弃和类型改进
+3. **新增 `erasableSyntaxOnly` 编译选项**：限制只允许使用"可擦除"的 TypeScript 语法（即编译后不产生运行时代码的语法）。启用后，以下语法会报错：
+   - 普通 `enum`（会生成运行时对象，只允许 `const enum` 或 `declare enum`）
+   - 角括号类型断言 `<T>value`（应改用 `value as T`）
+   - CommonJS 模块语法 `import foo = require(...)` 和 `export = foo`
+   - 这个选项为 Node.js 原生 TypeScript 支持（`--experimental-strip-types`）做准备
 
-4. **TypeScript 7.0 预览**：基于 Go 语言原生重写，预计数月内发布，性能大幅提升（编译速度提升约 10 倍），VS Code 扩展和 npm 预览版已可用
+```typescript
+// erasableSyntaxOnly: true 时，以下写法会报错
+enum Status { Active, Inactive }  // ❌ 普通 enum 生成运行时代码
+const x = <string>value           // ❌ 角括号断言
+
+// 应改为
+const Status = { Active: 'ACTIVE', Inactive: 'INACTIVE' } as const  // ✅
+const x = value as string                                             // ✅
+```
+
+4. **API 兼容性**：TS 6.0 保持与 TS 5.9 的 API 兼容，主要包含与 TS 7.0 对齐的废弃和类型改进
+
+5. **TypeScript 7.0 预览**：基于 Go 语言原生重写，预计数月内发布，性能大幅提升（编译速度提升约 10 倍），VS Code 扩展和 npm 预览版已可用
 
 ### 迁移建议
 
 - 大多数项目无需修改代码即可升级到 TS 6.0
 - 如使用 ES5 target 或 outFile，添加 `"ignoreDeprecations": "6.0"` 抑制废弃警告
+- 如项目计划支持 Node.js 原生 TS 执行，可提前启用 `erasableSyntaxOnly: true` 检查兼容性
 - 关注 TS 7.0 发布进度，提前评估迁移影响
 
 ---

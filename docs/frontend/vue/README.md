@@ -16,8 +16,8 @@
 
 - **定位**: 渐进式前端框架，适用于 SPA、SSR 与复杂前端应用
 - **适用场景**: 单页应用、服务端渲染、静态站点生成、移动端混合应用
-- **版本范围**: Vue 3.x（本文档基于 Vue 3.5+，向下兼容 Vue 3.0+）
-- **相关生态**: Vue Router 4、Pinia、Vite、Nuxt 3、VueUse
+- **版本范围**: Vue 3.x（本文档基于 Vue 3.5+/3.6 beta，向下兼容 Vue 3.0+）
+- **相关生态**: Vue Router 4、Pinia 3.x、Vite 8、Nuxt 4、VueUse
 - **官方文档**: [https://vuejs.org/](https://vuejs.org/) | [中文文档](https://cn.vuejs.org/)
 
 ## 🎯 核心概念
@@ -102,17 +102,32 @@ onMounted(() => {
 
 **Props / Emits（父子通信）**：
 ```vue
-<!-- 父组件 -->
-<template>
-  <Child :message="msg" @update="handleUpdate" />
-</templ
+<!-- 子组件 Child.vue -->
+<script setup>
+const props = defineProps({ message: String })
+const emit = defineEmits(['update'])
+</script>
 
+<template>
+  <div>
+    <p>{{ props.message }}</p>
+    <button @click="emit('update', 'new value')">更新</button>
+  </div>
+</template>
+```
+
+**Provide / Inject（跨层级通信）**：
+```vue
+<!-- 祖先组件 -->
+<script setup>
+import { provide, ref } from 'vue'
+const theme = ref('dark')
+provide('theme', theme)
 </script>
 
 <!-- 后代组件 -->
 <script setup>
 import { inject } from 'vue'
-
 const theme = inject('theme')
 </script>
 ```

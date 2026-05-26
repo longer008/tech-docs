@@ -850,21 +850,34 @@ export default defineConfig({
 })
 ```
 
-### 2. Rolldown：统一开发与生产构建管线
+### 2. Rolldown：Vite 8 的统一打包器
 
-Vite 当前开发使用 esbuild、生产使用 Rollup，导致行为差异。**Rolldown**（基于 Rust 开发）将统一两端管线：
+**Rolldown**（基于 Rust 开发）已在 Vite 8（2026.03）中正式成为默认打包器，替代了原来的 esbuild（开发）+ Rollup（生产）双引擎架构：
 
-- 与 Rollup API 兼容
+- 与 Rollup API 兼容，大多数插件无需修改
 - 开发和生产共享同一打包器，消除行为差异
-- 预计在 Vite 未来版本中替代 Rollup 作为生产打包器
+- 构建速度比 Rollup 快 10-30 倍
 
 ```typescript
-// 未来 Vite 配置可能支持
+// Vite 8 直接升级即可，现有 rollupOptions 配置兼容 Rolldown
+// 插件中可检测是否运行在 Rolldown 模式：
 export default defineConfig({
   build: {
-    // rolldownMode: true, // 实验性，未来默认启用
+    rollupOptions: { /* 现有配置无需修改 */ },
   },
 })
+
+// 插件中检测 Rolldown
+function myPlugin() {
+  return {
+    name: 'my-plugin',
+    buildStart() {
+      if (this.meta.rolldownVersion) {
+        // 运行在 Rolldown 模式（Vite 8+）
+      }
+    }
+  }
+}
 ```
 
 ### 3. Lightning CSS 替代 PostCSS
