@@ -74,22 +74,22 @@
 
 ### P2 - React 模块（级内特性更新，优先级降低）
 
-- [ ] `react/README.md` 补充 React 19.2 新特性（Activity、useEffectEvent、cacheSignal）
-- [ ] `react/react-hooks-interview.md` 补充 19.2.x 新增 Hooks（useEffectEvent）
-- [ ] `react/react-cheatsheet.md` 补充 Activity、useEffectEvent
-- [ ] `react/interview-bank.md` 补充 19.2 新特性面试考点
-- [ ] `react/sources.md` 补充 React 19.2 更新链接
+- [x] `react/README.md` 补充 React 19.2 新特性（Activity、useEffectEvent、cacheSignal）
+- [x] `react/react-hooks-interview.md` 补充 19.2.x 新增 Hooks（useEffectEvent）
+- [x] `react/react-cheatsheet.md` 补充 Activity、useEffectEvent
+- [x] `react/interview-bank.md` 补充 19.2 新特性面试考点
+- [x] `react/sources.md` 补充 React 19.2 更新链接
 
 ### P2 - Next.js 模块（大版本 15->16，优先级降低）
 
-- [ ] `react/nextjs-interview.md` 补充 Next.js 16（Turbopack 默认、React Compiler、Cache Components、proxy.ts）
-- [ ] `react/sources.md` 补充 Next.js 16 链接
+- [x] `react/nextjs-interview.md` 补充 Next.js 16（Turbopack 默认、React Compiler、Cache Components、proxy.ts）
+- [x] `react/sources.md` 补充 Next.js 16 链接
 
 ### P2 - Electron 模块（大版本 30->42，优先级降低）
 
-- [ ] `desktop/electron/index.md` 补充 Electron 42（Chromium 148、Node v24、WebAuthn Touch ID）
-- [ ] `desktop/electron/interview-bank.md` 补充 Electron 42 面试考点
-- [ ] `desktop/electron/ipc-communication.md` 检查新版本 IPC 变化
+- [x] `desktop/electron/index.md` 补充 Electron 42（Chromium 148、Node v24、WebAuthn Touch ID）
+- [x] `desktop/electron/interview-bank.md` 补充 Electron 42 面试考点
+- [x] `desktop/electron/ipc-communication.md` 检查新版本 IPC 变化
 
 ---
 

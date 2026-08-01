@@ -881,17 +881,18 @@ class PerformanceTracker {
   }
 
   private trackPagePerformance() {
-    const timing = performance.timing;
+    // Navigation Timing Level 2，performance.timing 已废弃
+    const [navEntry] = performance.getEntriesByType('navigation');
 
     this.tracker.track({
       event: 'page_performance',
       category: 'performance',
       properties: {
-        dns: timing.domainLookupEnd - timing.domainLookupStart,
-        tcp: timing.connectEnd - timing.connectStart,
-        ttfb: timing.responseStart - timing.requestStart,
-        domReady: timing.domContentLoadedEventEnd - timing.navigationStart,
-        load: timing.loadEventEnd - timing.navigationStart
+        dns: navEntry.domainLookupEnd - navEntry.domainLookupStart,
+        tcp: navEntry.connectEnd - navEntry.connectStart,
+        ttfb: navEntry.responseStart - navEntry.requestStart,
+        domReady: navEntry.domContentLoadedEventEnd - navEntry.startTime,
+        load: navEntry.loadEventEnd - navEntry.startTime
       }
     });
   }

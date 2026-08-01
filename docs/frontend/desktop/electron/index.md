@@ -1,6 +1,6 @@
 # Electron 桌面应用开发完全指南
 
-> 更新时间：2026-05
+> 更新时间：2026-08
 
 ## 目录导航
 
@@ -2498,6 +2498,40 @@ const dataURL = canvas.toDataURL('image/png')
 - 如何实现多显示器截图？
 - 如何添加标注功能？
 - 如何优化截图性能？
+
+## 最新知识补充（2025-2026）
+
+> 本节补充 Electron 42（2026.5 发布，最新稳定版 42.2.0）带来的主要变化，帮助你跟上 Electron 的版本演进。
+
+### Electron 42 内核升级
+
+Electron 42 将内核升级为 Chromium 148、Node.js 24、V8 15，跟随上游每 8 周发布一个大版本的节奏。内核升级带来的能力：
+
+- WebGPU 等 Web 平台能力的进一步完善，适合 GPU 加速图形与计算场景
+- 新的 CSS / JS 特性，具体以 Chromium 支持进度为准
+- 渲染与运行时性能的持续提升
+
+### Node.js 24 与 ESM 支持增强
+
+- Electron 42 内置 Node.js 24，Node 大版本升级带来性能与 API 的更新
+- ESM（ECMAScript Modules）支持持续增强，主进程和预加载脚本可以更方便地使用 `import` 语法
+- 升级时注意 Node 版本差异对依赖原生模块和脚本行为的影响
+
+### WebAuthn 与生物认证（macOS）
+
+- Electron 42 支持通过 WebAuthn 集成 macOS Touch ID 等生物认证能力
+- 适用于本地解锁、敏感操作授权等场景，为桌面应用带来更原生的安全体验
+
+### 版本节奏与升级策略
+
+- Electron 每 8 周跟随 Chromium 发布一个大版本
+- 官方同时支持最新 3 个大版本，建议及时跟进并规划升级
+- 升级前重点阅读官方 Breaking Changes 文档，关注主进程 API、默认值和安全策略的变化
+
+### 移除与弃用项
+
+- 部分旧 API 逐步弃用，具体以官方 Breaking Changes 文档为准
+- 升级前建议排查应用中的 deprecated 警告，提前迁移
 
 ## 参考资料
 

@@ -2,7 +2,7 @@
 
 > 精选高频面试题及详细解答
 
-**更新时间**: 2026-05
+**更新时间**: 2026-08
 
 ## 📋 目录
 
@@ -1626,4 +1626,72 @@ function FilteredList({ items }) {
 
 ---
 
-**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试经验整理，使用 Context7 MCP 验证最新特性（2026-05）
+## 最新知识补充（2025-2026）
+
+> React 19.2.x（2026-05 发布，最新补丁 19.2.6）面试考点补充。
+
+### 考点 1: React 19.2 有哪些值得关注的新特性？
+
+**难度**: ⭐⭐⭐☆☆
+
+**问题**：
+React 19.2 相比 React 19 有哪些新特性？面试官常问哪些点？
+
+**答案**：
+
+**1. Activity API（后台渲染）**
+- 官方 `<Activity>` 组件，让异步 UI 在后台保持渲染与状态，即使当前未被展示
+- 可替代部分 Suspense fallback 场景，减少 Tab 切换、预渲染时的重复挂载开销
+- 与 React 并发渲染深度配合
+
+**2. useEffectEvent（稳定 Effect 事件）**
+- 用于 effect 内部的函数，不参与依赖数组
+- 解决闭包函数变化导致 effect 反复执行的问题
+
+**3. React Cache / cacheSignal（数据缓存）**
+- React Cache 提供基于请求作用域的缓存，配合 `use()` 使用
+- 缓存信号（cacheSignal）用于缓存失效与刷新
+- 典型场景：Server Components 中避免重复的数据请求
+
+**4. React Compiler（自动 memo 化）**
+- 编译期自动缓存组件渲染与计算结果，减少手动 `useMemo` / `useCallback`
+- 需在构建工具（Babel / Vite / Next.js）中启用对应插件
+
+**5. Actions 与服务端能力稳定化**
+- `useActionState` / `useOptimistic` / `useFormStatus` 稳定可用
+- Server Components 逐步成为默认方案，客户端组件需显式 `'use client'`
+
+**追问点**：
+- Q: Activity 和 Suspense 的区别？
+  - A: Suspense 在内容未就绪时展示 fallback；Activity 让已挂载的异步 UI 在后台保持渲染与状态，二者可以配合使用。
+- Q: useEffectEvent 为什么不需要加入依赖？
+  - A: 它是 effect 的"事件"，总能读取最新的 props/state，其本身不构成副作用来源，因此不参与依赖比较。
+
+### 考点 2: React Compiler 后还需要手动优化吗？
+
+**难度**: ⭐⭐⭐☆☆
+
+**问题**：
+团队引入了 React Compiler，是否还需要使用 useMemo / useCallback？
+
+**答案**：
+- React Compiler 在编译期自动记忆化，可覆盖大部分手动优化场景
+- 但仍需理解 `useMemo` / `useCallback` 的作用原理（源码阅读、面试推导）
+- 未启用 Compiler 的项目、第三方组件边界、特殊场景仍可能需要手动处理
+- Hooks 规则与"组件为纯函数"的约束不会因为 Compiler 而改变
+
+### 考点 3: Server Components 默认化对架构的影响？
+
+**难度**: ⭐⭐⭐⭐☆
+
+**问题**：
+Server Components 逐步成为默认方案，对项目架构有什么影响？
+
+**答案**：
+- 默认服务端渲染，客户端交互组件需显式 `'use client'` 标记
+- 减少发送到客户端的 JavaScript 体积，数据获取更贴近服务端
+- 需要注意组件边界划分：交互逻辑、状态、浏览器 API 只能在客户端组件中使用
+
+---
+
+**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试经验整理，使用 Context7 MCP 验证最新特性（2026-08）

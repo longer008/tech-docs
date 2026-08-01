@@ -850,37 +850,9 @@ export default defineConfig({
 })
 ```
 
-### 2. Rolldown：Vite 8 的统一打包器
+**Rolldown 检测**（Vite 8+）：插件中可通过 `this.meta.rolldownVersion` 判断是否运行在 Rolldown 模式。Rolldown 架构变化、压缩工具选型、Vite 7/8 迁移建议等详见 [index.md「最新知识补充」](./index.md#最新知识补充2024-2026)。
 
-**Rolldown**（基于 Rust 开发）已在 Vite 8（2026.03）中正式成为默认打包器，替代了原来的 esbuild（开发）+ Rollup（生产）双引擎架构：
-
-- 与 Rollup API 兼容，大多数插件无需修改
-- 开发和生产共享同一打包器，消除行为差异
-- 构建速度比 Rollup 快 10-30 倍
-
-```typescript
-// Vite 8 直接升级即可，现有 rollupOptions 配置兼容 Rolldown
-// 插件中可检测是否运行在 Rolldown 模式：
-export default defineConfig({
-  build: {
-    rollupOptions: { /* 现有配置无需修改 */ },
-  },
-})
-
-// 插件中检测 Rolldown
-function myPlugin() {
-  return {
-    name: 'my-plugin',
-    buildStart() {
-      if (this.meta.rolldownVersion) {
-        // 运行在 Rolldown 模式（Vite 8+）
-      }
-    }
-  }
-}
-```
-
-### 3. Lightning CSS 替代 PostCSS
+### 2. Lightning CSS 替代 PostCSS
 
 Vite 5.4+ 支持 `css.lightningcss` 选项，使用 Rust 编写的 Lightning CSS 替代 PostCSS 进行 CSS 转换，性能大幅提升：
 
@@ -902,61 +874,4 @@ export default defineConfig({
 })
 ```
 
-### 4. 压缩工具对比
-
-| 工具 | 构建速度 | 输出大小 | 说明 |
-|------|---------|---------|------|
-| **esbuild** | 极快（基准） | 较大 1-2% | Vite 默认，推荐大多数场景 |
-| **terser** | 慢 20-40 倍 | 最小 | 需极致压缩时使用 |
-| **Lightning CSS** | 极快 | 与 esbuild 相当 | 仅 CSS 压缩，Vite 5.4+ |
-
-### 5. vite-plugin-imagemin 已停止维护
-
-`vite-plugin-imagemin` 依赖系统级工具（gifsicle、optipng 等），安装时常出错且已停止维护。
-
-**推荐替代**：
-- **unplugin-imagemin**：基于 sharp，无需系统依赖，跨平台兼容
-- **vite-plugin-static-copy** + 外部压缩：CI 中单独处理图片
-
-### 6. Vite 7 过渡版本（2025 年 6 月 - 2026 年 1 月）
-
-Vite 7 是 Vite 6 到 Vite 8 之间的过渡版本，主要变化：
-
-- Node.js 20+ 为最低要求
-- Environment API 进一步完善
-- 为 Rolldown 集成做准备
-- 生命周期较短，已被 Vite 8 替代
-
-### 7. Vite 8 — Rolldown 统一打包器（2026 年 3 月）
-
-> Vite 8 是自 Vite 2 以来最重大的架构变更。
-
-Vite 8（2026 年 3 月发布）将 **Rolldown** 作为唯一的统一打包器，替代了此前 esbuild（开发）+ Rollup（生产）的双打包器架构：
-
-**核心变化**：
-- **统一打包管线**：开发和生产共享同一个 Rust 打包器，消除了长期存在的行为差异
-- **极快的构建速度**：比 Rollup 快 10-30 倍，与 esbuild 性能持平
-- **插件兼容**：Rolldown 支持 Rollup/Vite 插件 API，大多数现有插件无需修改即可使用
-- **兼容层**：Vite 8 内置兼容层，自动转换 `esbuild` 和 `rollupOptions` 配置
-- Node.js 20.19+ / 22.12+ 为最低要求
-
-```typescript
-// 检测是否运行在 Rolldown 模式（Vite 8+）
-function versionCheckPlugin(): Plugin {
-  return {
-    name: 'version-check',
-    buildStart() {
-      if (this.meta.rolldownVersion) {
-        // Rolldown 模式下的特定逻辑
-      } else {
-        // Rollup 模式下的逻辑
-      }
-    },
-  }
-}
-```
-
-**迁移建议**：
-- 大多数项目可直接升级，Vite 8 内置兼容层自动处理配置转换
-- 大型/复杂项目建议先在 Vite 7 上使用 `rolldown-vite` 包测试，再升级到 Vite 8
-- 这样可以更容易区分问题是来自 Vite 本身还是 Rolldown
+> 压缩工具对比、`vite-plugin-imagemin` 停维护、Vite 7/8 演进详见 [index.md「最新知识补充」](./index.md#最新知识补充2024-2026)。

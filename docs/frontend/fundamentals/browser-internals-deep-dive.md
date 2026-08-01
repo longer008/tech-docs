@@ -345,20 +345,17 @@ const lcpObserver = new PerformanceObserver((list) => {
 
 lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
 
-// 5. 监控首次输入延迟（FID）
-const fidObserver = new PerformanceObserver((list) => {
+// 5. 监控交互到下次绘制（INP，2024 年起取代 FID）
+const inpObserver = new PerformanceObserver((list) => {
+  let worstInp = 0
   for (const entry of list.getEntries()) {
-    const fid = entry.processingStart - entry.startTime
-    
-    console.log('首次输入延迟（FID）:', {
-      delay: fid,
-      name: entry.name,
-      startTime: entry.startTime
-    })
+    const delay = entry.processingStart - entry.startTime
+    if (delay > worstInp) worstInp = delay
   }
+  console.log('交互到下次绘制（INP）最差值:', worstInp)
 })
 
-fidObserver.observe({ entryTypes: ['first-input'] })
+inpObserver.observe({ type: 'event', buffered: true })
 ```
 
 

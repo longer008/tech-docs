@@ -374,21 +374,21 @@ class PerformanceMonitor {
   observePageLoad() {
     window.addEventListener('load', () => {
       setTimeout(() => {
-        const timing = performance.timing;
-        const navigation = performance.getEntriesByType('navigation')[0];
+        // Navigation Timing Level 2，performance.timing 已废弃
+        const [navEntry] = performance.getEntriesByType('navigation');
 
         const metrics = {
-          dns: timing.domainLookupEnd - timing.domainLookupStart,
-          tcp: timing.connectEnd - timing.connectStart,
-          ssl: timing.secureConnectionStart > 0
-            ? timing.connectEnd - timing.secureConnectionStart
+          dns: navEntry.domainLookupEnd - navEntry.domainLookupStart,
+          tcp: navEntry.connectEnd - navEntry.connectStart,
+          ssl: navEntry.secureConnectionStart > 0
+            ? navEntry.connectEnd - navEntry.secureConnectionStart
             : 0,
-          ttfb: timing.responseStart - timing.requestStart,
-          download: timing.responseEnd - timing.responseStart,
-          domParse: timing.domInteractive - timing.responseEnd,
-          resourceLoad: timing.loadEventStart - timing.domContentLoadedEventEnd,
-          domReady: timing.domContentLoadedEventEnd - timing.navigationStart,
-          load: timing.loadEventEnd - timing.navigationStart,
+          ttfb: navEntry.responseStart - navEntry.requestStart,
+          download: navEntry.responseEnd - navEntry.responseStart,
+          domParse: navEntry.domInteractive - navEntry.responseEnd,
+          resourceLoad: navEntry.loadEventStart - navEntry.domContentLoadedEventEnd,
+          domReady: navEntry.domContentLoadedEventEnd - navEntry.startTime,
+          load: navEntry.loadEventEnd - navEntry.startTime,
           fp: this.getFirstPaint(),
           fcp: this.getFirstContentfulPaint()
         };
@@ -591,9 +591,9 @@ const monitor = new PerformanceMonitor({
 │      - 预加载关键资源                                       │
 │      - 压缩图片                                             │
 │                                                              │
-│  FID (First Input Delay) - 首次输入延迟                     │
-│  ├── 衡量：交互性能                                         │
-│  ├── 目标：< 100ms                                          │
+│  INP (Interaction to Next Paint) - 交互到下次绘制           │
+│  ├── 衡量：交互性能（2024 年起取代 FID）                    │
+│  ├── 目标：< 200ms                                          │
 │  └── 优化：                                                 │
 │      - 减少 JavaScript 执行时间                             │
 │      - 代码分割                                             │

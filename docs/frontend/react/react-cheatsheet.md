@@ -2,7 +2,7 @@
 
 > React 18/19 常用语法与 API 快速参考
 
-**更新时间**: 2026-05
+**更新时间**: 2026-08
 
 ## 📋 目录
 
@@ -2130,4 +2130,87 @@ imrs   // import React, { useState } from 'react'
 
 ---
 
-**内容来源**: 基于 [React 官方文档](https://react.dev/) 和实战经验整理（2026-05）
+## 最新知识补充（2025-2026）
+
+> React 19.2.x（2026-05 发布，最新补丁 19.2.6）新增 API 速查。
+
+### useEffectEvent - 稳定 Effect 事件
+
+```jsx
+import { useEffect, useEffectEvent } from 'react'
+
+const onVisit = useEffectEvent((id) => {
+  console.log('visit', id) // 读取最新 props/state
+})
+
+useEffect(() => {
+  const conn = connect(roomId)
+  onVisit(conn.id) // 不参与依赖
+  return () => conn.disconnect()
+}, [roomId]) // 闭包函数变化不会导致 effect 反复执行
+```
+
+> 只能从 effect 内部调用；用于读取最新 props/state，且无需加入依赖数组。
+
+### React Cache / cacheSignal - 数据缓存与失效
+
+```jsx
+import { cache } from 'react'
+import { use } from 'react'
+
+// 基于请求作用域的缓存，避免重复请求
+const getPost = cache((id) => fetchPost(id))
+
+function Post({ id }) {
+  const post = use(getPost(id))
+  return <h1>{post.title}</h1>
+}
+```
+
+> 缓存失效信号（cacheSignal）等能力仍在演进，具体形态以官方文档为准。
+
+### Activity - 后台渲染组件
+
+```jsx
+import { Activity } from 'react'
+
+// 让异步 UI 在后台保持渲染与状态，即使未被展示
+<Activity>
+  <SlowTab />
+</Activity>
+```
+
+> 离屏渲染，配合并发特性使用，可减少部分 Suspense fallback 场景的重复挂载。
+
+### React Compiler - 自动 memo 化
+
+```jsx
+// 编译期自动缓存组件渲染与计算结果，无需手动 useMemo/useCallback
+// 构建配置示例（Babel）：
+// plugins: [['babel-plugin-react-compiler', {}]]
+function Profile({ user }) {
+  return <h1>{user.name}</h1>
+}
+```
+
+> 通过构建工具启用；组件纯函数规则与 Hooks 规则仍需遵守。
+
+### Actions 相关 Hooks（稳定）
+
+```jsx
+const [state, formAction, isPending] = useActionState(async (prev, fd) => {
+  // 提交逻辑
+}, { ok: false })
+
+// useOptimistic: 乐观更新，Action 完成后校正
+const [optimistic, addOptimistic] = useOptimistic(items)
+
+// useFormStatus: 子组件读取父 <form> 的提交状态
+const { pending } = useFormStatus()
+```
+
+> Server Components 逐步默认化，客户端交互组件需显式 `'use client'`。
+
+---
+
+**内容来源**: 基于 [React 官方文档](https://react.dev/) 和实战经验整理（2026-08）

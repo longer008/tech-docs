@@ -724,27 +724,27 @@ class Monitor {
 
   // 性能监控
   initPerformanceMonitor() {
-    // 页面加载性能
+    // 页面加载性能（Navigation Timing Level 2，performance.timing 已废弃）
     window.addEventListener('load', () => {
       setTimeout(() => {
-        const timing = performance.timing;
+        const [navEntry] = performance.getEntriesByType('navigation');
         const paintTiming = performance.getEntriesByType('paint');
 
         this.report({
           type: 'performance',
           data: {
             // DNS 解析
-            dns: timing.domainLookupEnd - timing.domainLookupStart,
+            dns: navEntry.domainLookupEnd - navEntry.domainLookupStart,
             // TCP 连接
-            tcp: timing.connectEnd - timing.connectStart,
+            tcp: navEntry.connectEnd - navEntry.connectStart,
             // 首字节时间
-            ttfb: timing.responseStart - timing.requestStart,
+            ttfb: navEntry.responseStart - navEntry.requestStart,
             // DOM 解析
-            domParse: timing.domInteractive - timing.responseEnd,
+            domParse: navEntry.domInteractive - navEntry.responseEnd,
             // DOM Ready
-            domReady: timing.domContentLoadedEventEnd - timing.navigationStart,
+            domReady: navEntry.domContentLoadedEventEnd - navEntry.startTime,
             // 页面完全加载
-            load: timing.loadEventEnd - timing.navigationStart,
+            load: navEntry.loadEventEnd - navEntry.startTime,
             // FP
             fp: paintTiming.find(e => e.name === 'first-paint')?.startTime,
             // FCP

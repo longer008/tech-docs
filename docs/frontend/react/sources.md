@@ -1,6 +1,6 @@
 ﻿# React 参考资料来源
 
-**更新时间**: 2026-05
+**更新时间**: 2026-08
 
 ## 📚 官方资源
 
@@ -229,7 +229,64 @@
 3. **社区资源**: GitHub、Stack Overflow、Reddit 等社区讨论
 4. **实战经验**: 真实项目开发和面试经验总结
 
+## 🆕 React 19.2 学习链接（2025-2026）
+
+### 官方文档与发布说明
+- **React 19 发布说明**: https://react.dev/blog/2024/12/05/react-19
+  - React 19 正式发布，ref 作为 prop、Actions、use() 等特性
+- **React 版本信息**: https://react.dev/versions
+  - 最新稳定版本号与变更日志（19.2.x，最新补丁 19.2.6）
+
+### 新特性文档
+- **Activity**: https://react.dev/reference/react/Activity
+  - 后台渲染组件，让异步 UI 在后台保持渲染与状态（离屏渲染）
+- **useEffectEvent**: https://react.dev/reference/react/useEffectEvent
+  - 稳定的 Effect 事件，effect 内部调用且不参与依赖数组
+- **use**: https://react.dev/reference/react/use
+  - 渲染期读取 Promise 与 Context，配合 Suspense 使用
+- **cache**: https://react.dev/reference/react/cache
+  - React Cache，基于请求作用域的缓存，配合 use() 使用
+- **React Compiler**: https://react.dev/learn/react-compiler
+  - 编译期自动 memo 化，减少手动 useMemo/useCallback
+- **Actions 相关 Hooks**: https://react.dev/reference/react/useActionState
+  - 表单与服务端动作，含 useActionState / useOptimistic / useFormStatus
+
+### 社区资源
+- **React 官方博客**: https://react.dev/blog
+  - 最新版本发布与特性介绍
+- **React Conf 2024 回顾**: https://react.dev/blog/2024/05/22/react-conf-2024-recap
+  - React Compiler 开源等重大消息
+
+## Next.js 16 学习链接（2025-2026）
+
+### 官方文档与发布说明
+- **Next.js 16 发布公告**: https://nextjs.org/blog/next-16
+  - Turbopack 默认打包器、React Compiler 稳定支持、Cache Components、proxy.ts 等新特性说明
+- **Next.js 15 升级到 16 指南**: https://nextjs.org/docs/app/guides/upgrading/version-16
+  - 官方升级指南，覆盖 Turbopack 默认、middleware 更名 proxy、Node.js 20.9+ 等破坏性变更
+- **Next.js 16 (beta) 发布公告**: https://nextjs.org/blog/next-16-beta
+  - beta 版本特性预览（Turbopack 稳定、React Compiler 集成）
+- **Next.js 版本信息**: https://github.com/vercel/next.js/releases
+  - 各小版本发布说明与变更日志（16.2.x）
+
+### 新特性文档
+- **proxy 文档**: https://nextjs.org/docs/app/getting-started/proxy
+  - proxy.ts 取代 middleware.ts 的用法与迁移说明
+- **Cache Components 迁移指南**: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+  - 从 PPR / 旧缓存模型迁移到 use cache 指令
+
+### 社区资源
+- **Next.js 16 迁移指南（Code With Seb）**: https://www.codewithseb.com/blog/nextjs-16-migration-guide-breaking-changes
+  - 覆盖所有破坏性变更的社区迁移指南
+- **Next.js 16 迁移详解（DEV Community）**: https://dev.to/pockit_tools/nextjs-16-migration-guide-turbopack-proxy-cache-components-and-every-breaking-change-explained-35ci
+  - Turbopack、proxy、Cache Components 逐项解读
+
 ## 🔄 更新记录
+
+- **2026-08-01**: 
+  - 补充 React 19.2 新特性学习链接（Activity、useEffectEvent、React Cache、React Compiler 等）
+  - 补充 Next.js 16 学习链接（Turbopack 默认、Cache Components、proxy.ts）
+  - 同步更新时间戳
 
 - **2026-05-25**: 
   - 使用 MCP Context7 验证 React 19 最新特性

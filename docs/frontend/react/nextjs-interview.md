@@ -2,7 +2,7 @@
 
 > Next.js 框架核心知识点与高频面试题
 > 
-> 更新时间：2026-05
+> 更新时间：2026-08
 
 ## 目录
 
@@ -1667,3 +1667,119 @@ node --version # 确保版本 >= 18.18.0
 
 **Q3: 为什么 params 变成了 Promise？**
 - A: 为了支持部分预渲染（PPR）和更好的流式渲染，params 的解析变为异步，使 React 可以在渲染过程中按需获取路由参数。
+
+---
+
+## Next.js 16 稳定版新特性
+
+> Next.js 16 于 2025 年 10 月发布正式版（当前稳定版为 16.2.x），是继 App Router 之后架构变化最大的一次大版本升级，围绕构建工具统一、编译优化与缓存体系重构展开。
+
+### 1. Turbopack 成为默认打包器
+
+```bash
+# Next.js 16 起开发与生产构建默认使用 Turbopack
+next dev    # 开发模式默认 Turbopack
+next build  # 生产构建默认 Turbopack
+
+# 存在自定义 webpack 配置时，可临时回退
+next build --webpack
+```
+
+- Turbopack 基于 Rust 实现，官方数据称 Fast Refresh 最高可达 5-10 倍提速，生产构建 2-5 倍提速。
+- 移除 webpack 作为默认打包器：若 `next.config` 中存在自定义 webpack 配置，`next build` 会直接报错，避免配置静默失效。
+- webpack 已标记废弃，仅能通过 `--webpack` 参数临时回退，将在未来版本移除，建议将自定义配置迁移到 Turbopack 兼容选项。
+
+### 2. React Compiler 稳定支持
+
+```ts
+// next.config.ts
+const nextConfig: NextConfig = {
+  reactCompiler: true, // 启用 React Compiler
+}
+```
+
+- 随 React Compiler 1.0 发布，Next.js 16 提供稳定的内置支持，可自动完成组件、Hooks 和表达式的 memo 化，减少不必要的重新渲染。
+- 通过 `next.config` 中的 `reactCompiler` 选项开启，该选项已从 `experimental` 转为稳定配置（并非默认启用）。
+- 无需手动编写 `useMemo`、`useCallback`、`memo`，代码更简洁；启用后开发与构建期编译耗时会有所上升。
+
+### 3. Cache Components 稳定（use cache 指令）
+
+```tsx
+// 使用 use cache 指令缓存页面、组件或函数
+'use cache'
+
+export default async function ProductList() {
+  const products = await getProducts()
+  return <ul>{/* ... */}</ul>
+}
+```
+
+- Cache Components 成为稳定 API，核心是新的 `"use cache"` 指令，由编译器自动生成缓存键，按组件粒度缓存渲染结果。
+- 替代了此前隐式的 fetch 缓存机制，用显式、组件级的缓存解决 Next.js 15 中"fetch 默认不缓存后缺少简单缓存手段"的缓存困境。
+- 配合 `cacheLife()`、`cacheTag()` 提供细粒度的缓存生命周期与失效控制。
+- 旧的 PPR 实验配置迁移为 `cacheComponents` 配置项。
+
+### 4. proxy.ts 取代 middleware.ts
+
+```typescript
+// proxy.ts（Next.js 16 起）
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function proxy(request: NextRequest) {
+  // 认证、重定向、重写等逻辑与原来一致
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}
+```
+
+- `middleware.ts` 更名为 `proxy.ts`，导出函数 `middleware` 相应更名为 `proxy`，业务逻辑保持不变。
+- proxy 默认运行在 Node.js Runtime（与 middleware 不同，不再支持 Edge runtime）。
+- 旧的 `middleware.ts` 仍可用于 Edge runtime 场景，但已标记废弃，将在未来版本移除。
+- 相关配置项同步更名，如 `skipMiddlewareUrlNormalize` 改为 `skipProxyUrlNormalize`。
+
+### 5. 同步请求 API 全部移除
+
+```tsx
+// Next.js 16 中 cookies、headers、params、searchParams 只能异步访问
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { id } = await params
+  const { q } = await searchParams
+  return <div>Post {id}, Query: {q}</div>
+}
+```
+
+- `cookies()`、`headers()`、`draftMode()`、`params`、`searchParams` 的同步访问被完全移除（Next.js 15 中的警告兼容层已被删除），必须 `await` 后使用。
+- 该约定延续自 Next.js 15，为流式渲染与部分预渲染（PPR）提供支持。
+
+### 6. Node.js 版本要求提升
+
+```bash
+# Next.js 16 最低要求 Node.js 20.9.0（LTS），Node.js 18 不再支持
+node --version # 建议使用 Node.js 20.9+ 或更新 LTS 版本
+```
+
+- 同时要求 TypeScript 5.1+，浏览器支持 Chrome/Edge/Firefox 111+、Safari 16.4+。
+
+### Next.js 16 面试高频追问
+
+**Q1: Next.js 16 最大的变化是什么？**
+- A: Turbopack 成为开发与生产构建的默认打包器（webpack 废弃），React Compiler 提供稳定的内置支持，缓存模型重构为 Cache Components（`use cache` 指令），middleware 更名为 proxy。
+
+**Q2: 缓存组件（Cache Components）解决了什么缓存困境？**
+- A: Next.js 15 中 fetch 默认不缓存，数据获取需要显式配置缓存策略，容易混乱。Cache Components 提供显式、组件级的缓存，通过 `use cache` 指令即可缓存页面、组件和函数，并配合 `cacheLife()`、`cacheTag()` 做细粒度控制，替代了旧的隐式缓存机制。
+
+**Q3: middleware 为什么更名为 proxy？**
+- A: 更清晰地表达"网络边界"的职责定位，避免与通用的中间件概念混淆；同时 proxy 默认运行在 Node.js Runtime。迁移时需要将 `middleware.ts` 重命名为 `proxy.ts`，并将导出函数更名为 `proxy`。
+
+**Q4: 项目从 Next.js 15 升级到 16 需要注意什么？**
+- A: 主要注意四点：迁移自定义 webpack 配置到 Turbopack（或用 `--webpack` 临时回退）；将 `middleware.ts` 迁移为 `proxy.ts`；同步请求 API 全部移除，`cookies()`、`params` 等必须 `await`；Node.js 最低版本提升到 20.9+。

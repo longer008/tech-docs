@@ -1,6 +1,6 @@
 # Electron 面试题集
 
-> 更新时间：2026-05
+> 更新时间：2026-08
 
 ## 目录导航
 
@@ -1125,6 +1125,46 @@ canvas.addEventListener('mouseup', async (e) => {
    - 集成测试（Spectron）
    - E2E 测试（Playwright）
    - 性能测试
+
+## 最新知识补充（2025-2026）
+
+> 本节补充 Electron 42（2026.5 发布，最新稳定版 42.2.0）相关的面试考点，适用于考察候选人是否关注 Electron 版本演进和技术趋势。
+
+### Q1：Electron 42 相比之前的版本有哪些关键变化？
+
+**核心答案**：
+- 内核升级：Chromium 148、Node.js 24、V8 15
+- 跟随 Chromium 每 8 周发布一个大版本的节奏
+- Node.js 24 带来性能提升，ESM 支持持续增强
+- macOS 上支持 WebAuthn / Touch ID 生物认证集成
+
+**追问点**：
+- Chromium 升级给应用带来哪些新能力？
+- Node 大版本升级对现有应用有什么影响？
+
+### Q2：如何制定 Electron 的升级策略？
+
+**核心答案**：
+- Electron 每 8 周跟随 Chromium 发布一个大版本，版本演进较快
+- 官方同时支持最新 3 个大版本，建议保持在新版本上
+- 升级前阅读官方 Breaking Changes 文档，排查受影响 API
+- 通过自动更新（electron-updater）配合灰度发布，分批验证新版本
+
+**追问点**：
+- 如何评估 Electron 升级带来的风险？
+- 升级后需要重点回归哪些模块？
+
+### Q3：Electron 42 中 IPC 与安全模型有哪些关注点？
+
+**核心答案**：
+- 继续强调 `ipcMain.handle` + `contextBridge` + `webContents` 的安全通信模型
+- `utilityProcess` 可用于在独立的 Node.js 进程中运行不受信任的代码
+- MessagePort / Stream 等传输方式仍在持续演进
+- 部分旧 API 逐步弃用，需要关注官方 Breaking Changes 文档
+
+**追问点**：
+- utilityProcess 适合哪些场景？
+- 如何保证 IPC 通信的安全性？
 
 ## 参考资料
 

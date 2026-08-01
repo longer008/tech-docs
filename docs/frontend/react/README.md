@@ -2,7 +2,7 @@
 
 > 用于构建用户界面的 JavaScript 库，专注于组件化开发和声明式编程
 
-**更新时间**: 2026-05
+**更新时间**: 2026-08
 
 ## 📋 目录
 
@@ -887,4 +887,59 @@ function UserProfile({ userId }) {
 
 ---
 
-**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试题库整理，使用 Context7 MCP 验证最新特性（2026-05）
+## 🆕 最新知识补充（2025-2026）
+
+> 覆盖 React 19.2.x（2026-05 发布，最新补丁 19.2.6）与 React Compiler 等新特性，向下兼容 React 18/19。
+
+### 1. Activity API（后台渲染）
+
+官方 `<Activity>` 组件让异步 UI 在后台保持渲染与状态，即使当前未被展示（离屏渲染）。常用于 Tab 切换、预渲染等场景，可减少部分 Suspense fallback 带来的重复挂载开销，与 React 并发渲染深度配合。
+
+```jsx
+import { Activity } from 'react'
+
+function Dashboard() {
+  return (
+    <Activity>
+      <SlowPanel /> {/* 后台保持渲染，切回时无需重新加载 */}
+    </Activity>
+  )
+}
+```
+
+### 2. useEffectEvent（稳定 Effect 事件）
+
+用于 effect 内部调用的函数，可以读取最新的 props/state，且**不参与依赖数组**，避免因闭包函数变化导致 effect 反复执行。
+
+```jsx
+import { useEffect, useEffectEvent } from 'react'
+
+function ChatRoom({ roomId }) {
+  const onConnected = useEffectEvent((id) => {
+    logVisit(roomId, id) // 读取最新值，但不作为依赖
+  })
+
+  useEffect(() => {
+    const connection = connect(roomId)
+    onConnected(connection.id)
+    return () => connection.disconnect()
+  }, [roomId])
+}
+```
+
+### 3. React Cache / cacheSignal（数据缓存）
+
+React Cache 提供基于请求作用域的缓存能力，配合 `use()` 使用；缓存信号（cacheSignal）用于缓存失效与刷新。典型场景是 Server Components 中避免重复的数据请求。
+
+### 4. React Compiler（自动 memo 化）
+
+编译期自动记忆化，自动缓存组件渲染与计算结果，不再需要手动编写 `useMemo` / `useCallback`。通过 Babel / Vite / Next.js 等构建工具启用对应插件。
+
+### 5. Actions 与服务端组件
+
+- `useActionState`、`useOptimistic`、`useFormStatus` 等表单与服务端动作相关 Hooks 已稳定
+- Server Components 逐步成为默认方案，客户端交互组件需显式 `'use client'` 标记
+
+---
+
+**内容来源**: 基于 [React 官方文档](https://react.dev/) 和最新面试题库整理，使用 Context7 MCP 验证最新特性（2026-08）

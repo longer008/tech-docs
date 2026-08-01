@@ -24,7 +24,7 @@
 ├── 加载性能
 │   ├── FCP (First Contentful Paint)
 │   ├── LCP (Largest Contentful Paint)
-│   ├── FID (First Input Delay)
+│   ├── INP (Interaction to Next Paint，2024 年起取代 FID)
 │   ├── CLS (Cumulative Layout Shift)
 │   └── TTFB (Time to First Byte)
 ├── 运行时性能
@@ -51,40 +51,40 @@
 ```javascript
 // 页面加载性能监控
 class NavigationMonitor {
-  // 获取页面加载时间
+  // 获取页面加载时间（Navigation Timing Level 2，performance.timing 已废弃）
   getPageLoadTime() {
-    const timing = performance.timing
-    
+    const [navEntry] = performance.getEntriesByType('navigation')
+
     return {
       // DNS 查询时间
-      dns: timing.domainLookupEnd - timing.domainLookupStart,
-      
+      dns: navEntry.domainLookupEnd - navEntry.domainLookupStart,
+
       // TCP 连接时间
-      tcp: timing.connectEnd - timing.connectStart,
-      
+      tcp: navEntry.connectEnd - navEntry.connectStart,
+
       // SSL 握手时间
-      ssl: timing.secureConnectionStart 
-        ? timing.connectEnd - timing.secureConnectionStart 
+      ssl: navEntry.secureConnectionStart
+        ? navEntry.connectEnd - navEntry.secureConnectionStart
         : 0,
-      
+
       // TTFB (Time to First Byte)
-      ttfb: timing.responseStart - timing.requestStart,
-      
+      ttfb: navEntry.responseStart - navEntry.requestStart,
+
       // 响应下载时间
-      response: timing.responseEnd - timing.responseStart,
-      
+      response: navEntry.responseEnd - navEntry.responseStart,
+
       // DOM 解析时间
-      domParse: timing.domInteractive - timing.domLoading,
-      
+      domParse: navEntry.domInteractive - navEntry.responseEnd,
+
       // DOM 内容加载完成时间
-      domContentLoaded: timing.domContentLoadedEventEnd - timing.navigationStart,
-      
+      domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.startTime,
+
       // 页面完全加载时间
-      load: timing.loadEventEnd - timing.navigationStart,
-      
+      load: navEntry.loadEventEnd - navEntry.startTime,
+
       // 首次渲染时间
       firstPaint: this.getFirstPaint(),
-      
+
       // 首次内容渲染时间
       firstContentfulPaint: this.getFirstContentfulPaint()
     }
@@ -466,13 +466,13 @@ lcpMonitor.observe()
 lcpMonitor.report()
 ```
 
-### 2. FID (First Input Delay)
+### 2. INP (Interaction to Next Paint)
 
 ```javascript
-// 监控 FID
-class FIDMonitor {
+// 监控 INP（2024 年 3 月起取代 FID 成为 Core Web Vitals 指标）
+class INPMonitor {
   constructor() {
-    this.fid = 0
+    this.inp = 0
     this.observer = null
   }
   
@@ -481,38 +481,37 @@ class FIDMonitor {
       const entries = list.getEntries()
       
       entries.forEach(entry => {
-        // FID 是第一次交互的延迟
-        if (entry.processingStart && entry.startTime) {
-          this.fid = entry.processingStart - entry.startTime
+        // INP 是交互到下次绘制的延迟，取所有交互的最差值
+        const delay = entry.processingStart - entry.startTime
+        if (delay > this.inp) {
+          this.inp = delay
           
-          console.log('FID:', this.fid)
+          console.log('INP:', this.inp)
           
-          // 判断 FID 是否良好
-          if (this.fid <= 100) {
-            console.log('✅ FID 良好')
-          } else if (this.fid <= 300) {
-            console.log('⚠️ FID 需要改进')
+          // 判断 INP 是否良好
+          if (this.inp <= 200) {
+            console.log('✅ INP 良好')
+          } else if (this.inp <= 500) {
+            console.log('⚠️ INP 需要改进')
           } else {
-            console.log('❌ FID 较差')
+            console.log('❌ INP 较差')
           }
           
-          // 上报 FID
+          // 上报 INP（持续监听后续交互，取更差的值）
           this.report()
         }
       })
     })
     
-    this.observer.observe({ entryTypes: ['first-input'] })
+    this.observer.observe({ type: 'event', buffered: true })
   }
   
   report() {
-    navigator.sendBeacon('/api/performance/fid', JSON.stringify({
-      fid: this.fid,
+    navigator.sendBeacon('/api/performance/inp', JSON.stringify({
+      inp: this.inp,
       url: location.href,
       timestamp: Date.now()
     }))
-    
-    this.disconnect()
   }
   
   disconnect() {
@@ -523,8 +522,8 @@ class FIDMonitor {
 }
 
 // 使用示例
-const fidMonitor = new FIDMonitor()
-fidMonitor.observe()
+const inpMonitor = new INPMonitor()
+inpMonitor.observe()
 ```
 
 ### 3. CLS (Cumulative Layout Shift)
@@ -598,7 +597,7 @@ clsMonitor.report()
 ```javascript
 // 安装: npm install web-vitals
 
-import { onCLS, onFID, onLCP, onFCP, onTTFB } from 'web-vitals'
+import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals'
 
 // 监控所有 Web Vitals 指标
 function reportWebVitals() {
@@ -608,9 +607,9 @@ function reportWebVitals() {
     sendToAnalytics(metric)
   })
   
-  // FID
-  onFID((metric) => {
-    console.log('FID:', metric.value)
+  // INP
+  onINP((metric) => {
+    console.log('INP:', metric.value)
     sendToAnalytics(metric)
   })
   
@@ -1007,17 +1006,17 @@ class RUMMonitor {
   
   // 监控性能
   monitorPerformance() {
-    // Navigation Timing
+    // Navigation Timing（Navigation Timing Level 2，performance.timing 已废弃）
     window.addEventListener('load', () => {
       setTimeout(() => {
-        const timing = performance.timing
-        
+        const [navEntry] = performance.getEntriesByType('navigation')
+
         this.data.performance.navigation = {
-          dns: timing.domainLookupEnd - timing.domainLookupStart,
-          tcp: timing.connectEnd - timing.connectStart,
-          ttfb: timing.responseStart - timing.requestStart,
-          domContentLoaded: timing.domContentLoadedEventEnd - timing.navigationStart,
-          load: timing.loadEventEnd - timing.navigationStart
+          dns: navEntry.domainLookupEnd - navEntry.domainLookupStart,
+          tcp: navEntry.connectEnd - navEntry.connectStart,
+          ttfb: navEntry.responseStart - navEntry.requestStart,
+          domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.startTime,
+          load: navEntry.loadEventEnd - navEntry.startTime
         }
       }, 0)
     })
@@ -1031,13 +1030,16 @@ class RUMMonitor {
         this.data.performance.lcp = lastEntry.renderTime || lastEntry.loadTime
       }).observe({ entryTypes: ['largest-contentful-paint'] })
       
-      // FID
+      // INP（Interaction to Next Paint，2024 年 3 月起取代 FID 成为 Core Web Vitals 指标）
+      let inp = 0
       new PerformanceObserver((list) => {
         const entries = list.getEntries()
         entries.forEach(entry => {
-          this.data.performance.fid = entry.processingStart - entry.startTime
+          const delay = entry.processingStart - entry.startTime
+          if (delay > inp) inp = delay
         })
-      }).observe({ entryTypes: ['first-input'] })
+        this.data.performance.inp = inp
+      }).observe({ type: 'event', buffered: true })
       
       // CLS
       let cls = 0
@@ -1169,7 +1171,7 @@ class RUMAnalyzer {
     const data = await this.db.query(`
       SELECT 
         AVG(performance.lcp) as avg_lcp,
-        AVG(performance.fid) as avg_fid,
+        AVG(performance.inp) as avg_inp,
         AVG(performance.cls) as avg_cls,
         AVG(performance.navigation.ttfb) as avg_ttfb,
         AVG(performance.navigation.load) as avg_load
@@ -1182,9 +1184,9 @@ class RUMAnalyzer {
         value: data.avg_lcp,
         rating: this.rateLCP(data.avg_lcp)
       },
-      fid: {
-        value: data.avg_fid,
-        rating: this.rateFID(data.avg_fid)
+      inp: {
+        value: data.avg_inp,
+        rating: this.rateINP(data.avg_inp)
       },
       cls: {
         value: data.avg_cls,
@@ -1202,10 +1204,10 @@ class RUMAnalyzer {
     return 'poor'
   }
   
-  // FID 评级
-  rateFID(value) {
-    if (value <= 100) return 'good'
-    if (value <= 300) return 'needs-improvement'
+  // INP 评级
+  rateINP(value) {
+    if (value <= 200) return 'good'
+    if (value <= 500) return 'needs-improvement'
     return 'poor'
   }
   
@@ -1297,8 +1299,8 @@ class RUMAnalyzer {
           "budget": 0.1
         },
         {
-          "metric": "first-input-delay",
-          "budget": 100
+          "metric": "interaction-to-next-paint",
+          "budget": 200
         }
       ]
     }
@@ -1684,7 +1686,7 @@ const data = {
 
 **核心指标（必须监控）**：
 - LCP：衡量加载性能
-- FID：衡量交互性能
+- INP：衡量交互性能（2024 年起取代 FID）
 - CLS：衡量视觉稳定性
 - TTFB：衡量服务器响应速度
 
@@ -1763,7 +1765,7 @@ Timing-Allow-Origin: *
 
 2. **Web Vitals 核心指标**
    - LCP：最大内容渲染时间（< 2.5s）
-   - FID：首次输入延迟（< 100ms）
+   - INP：交互到下次绘制延迟（< 200ms）
    - CLS：累积布局偏移（< 0.1）
 
 3. **真实用户监控（RUM）vs 合成监控（Synthetic）**
@@ -1786,7 +1788,7 @@ Timing-Allow-Origin: *
 
 3. **如何设置性能预算？**
    - 资源体积：JS < 300KB、CSS < 100KB
-   - 性能指标：LCP < 2.5s、FID < 100ms
+   - 性能指标：LCP < 2.5s、INP < 200ms
    - 监控告警：超标时通知
    - 持续优化：定期review
 

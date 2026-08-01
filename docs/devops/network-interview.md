@@ -852,7 +852,7 @@ TLS 握手时间：< 200ms
 优化目标：
 - FCP（First Contentful Paint）：< 1.8s
 - LCP（Largest Contentful Paint）：< 2.5s
-- FID（First Input Delay）：< 100ms
+- INP（Interaction to Next Paint）：< 200ms
 - CLS（Cumulative Layout Shift）：< 0.1
 ```
 

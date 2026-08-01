@@ -1,6 +1,6 @@
 # Electron IPC 通信详解
 
-> 更新时间：2026-05
+> 更新时间：2026-08
 
 ## 目录导航
 
@@ -1106,6 +1106,35 @@ try {
   alert('操作失败，请重试')
 }
 ```
+
+## 最新知识补充（2025-2026）
+
+> 本节补充 Electron 42（2026.5 发布，最新稳定版 42.2.0）中 IPC 相关的变化与安全模型演进。
+
+### IPC 安全模型持续强化
+
+新版本继续以 `ipcMain.handle` + `contextBridge` + `webContents` 作为推荐的 IPC 安全模型：
+
+- `ipcMain.handle` / `ipcRenderer.invoke` 是异步双向通信的推荐方式
+- 通过 `contextBridge` 在预加载脚本中只暴露最小化的 API
+- 结合 `webContents` 校验消息来源，避免未授权窗口发起调用
+
+### utilityProcess：运行不受信任的代码
+
+- `utilityProcess` 允许在主进程之外启动独立的 Node.js 子进程
+- 适合运行不受信任的、计算密集或需要隔离的代码
+- 与渲染进程和主进程隔离，降低安全风险
+
+### MessagePort 与流式传输
+
+- 基于 `MessageChannelMain` 的 MessagePort 通信持续演进，适合窗口间点对点通信
+- 大数据量的流式传输能力仍在演进，大批量数据传输建议采用分块或分批策略
+
+### 弃用与注意事项
+
+- 部分旧 IPC API 逐步弃用，具体以官方 Breaking Changes 文档为准
+- `sendSync` 同步调用会阻塞渲染进程，应避免使用
+- 升级 Electron 大版本后，建议回归测试 IPC 通道名称、参数序列化和错误处理逻辑
 
 ## 总结
 

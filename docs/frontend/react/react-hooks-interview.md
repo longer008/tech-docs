@@ -790,3 +790,101 @@ async function createPost(formData: FormData) {
 
 **Q4: Server Components 的限制？**
 - A: 不能使用 state（useState/useReducer）、副作用（useEffect）、浏览器 API、事件监听器。仅限服务端运行。
+
+---
+
+## 最新知识补充（2025-2026）
+
+> 覆盖 React 19.2.x（2026-05 发布，最新补丁 19.2.6）新增/稳定 Hooks 与相关特性。
+
+### 1. useEffectEvent -- 稳定的 Effect 事件
+
+**是什么**：
+- 用于在 effect 内部调用的函数，可以读取最新的 props/state，且**不需要**加入 effect 依赖数组
+- 解决"effect 中调用的函数每次渲染都变化，导致 effect 反复执行"的问题
+
+**使用限制**：
+- 只能从 effect 内部调用，不能传给子组件或用于事件处理
+
+**代码示例**：
+```jsx
+import { useEffect, useEffectEvent } from 'react';
+
+function ChatRoom({ roomId, theme }) {
+  // 读取最新 props/state，但不作为依赖
+  const onConnected = useEffectEvent((id) => {
+    showNotification(`已连接房间 ${id}，主题 ${theme}`);
+  });
+
+  useEffect(() => {
+    const connection = createConnection(roomId);
+    connection.connect();
+    onConnected(connection.id); // 不参与依赖
+    return () => connection.disconnect();
+  }, [roomId]); // theme 变化不会导致 effect 反复执行
+}
+```
+
+### 2. React Cache / cacheSignal -- 数据缓存与失效
+
+**是什么**：
+- React Cache 提供基于请求作用域的缓存能力，适合 Server Components 中缓存数据获取结果，避免重复请求
+- `cacheSignal` 提供缓存失效信号，用于主动让缓存失效，配合 `use()` 读取
+
+**代码示例**（概括性）：
+```jsx
+import { cache } from 'react';
+import { use } from 'react';
+
+const getUser = cache((id) => fetchUser(id));
+
+function UserProfile({ id }) {
+  const user = use(getUser(id)); // 缓存命中则不再重复请求
+  return <h1>{user.name}</h1>;
+}
+```
+
+> 注意：`cacheSignal` 等缓存失效 API 属于较新且仍在演进的能力，具体形态以官方文档为准。
+
+### 3. Activity API -- 后台渲染
+
+**是什么**：
+- 官方 `<Activity>` 组件，让异步 UI 在后台保持渲染与状态，即使当前未被展示（离屏渲染）
+- 常用于 Tab 切换、预渲染等场景，可减少部分 Suspense fallback 的重复挂载开销
+
+**代码示例**：
+```jsx
+import { Activity } from 'react';
+
+function Dashboard() {
+  return (
+    <Activity>
+      <SlowPanel /> {/* 后台保持渲染，切回时无需重新加载 */}
+    </Activity>
+  );
+}
+```
+
+### 4. React Compiler -- 自动 memo 化
+
+**是什么**：
+- 编译期自动记忆化，自动缓存组件渲染与计算结果
+- 不再需要手动编写 `useMemo` / `useCallback`
+- 通过 Babel / Vite / Next.js 等构建工具启用对应插件
+
+**面试要点**：
+- 依然遵循"组件是纯函数"的规则，Hooks 规则仍需遵守
+- 是"自动的"性能优化，而不是删除手动优化的借口
+
+### 5. Actions 与服务端能力稳定化
+
+- `useActionState`、`useOptimistic`、`useFormStatus` 等表单与服务端动作相关 Hooks 已稳定
+- Server Components 逐步成为默认方案，客户端交互部分需显式 `'use client'`
+
+**面试高频追问**：
+
+**Q1: useEffectEvent 和 useCallback 的区别？**
+- A: `useCallback` 缓存函数引用并需要加入依赖；`useEffectEvent` 定义的函数不参与依赖数组，只用于 effect 内部，且总能读取最新的 props/state。
+
+**Q2: React Compiler 之后还需要 useMemo/useCallback 吗？**
+- A: 启用了 React Compiler 的项目可大幅减少手动 memo；但在未启用或边界场景下，手动优化仍可能有必要。

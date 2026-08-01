@@ -437,15 +437,15 @@ module.exports = {
 ```javascript
 // index.js
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import App from './App'
 
 function render(props) {
   const { container } = props
-  ReactDOM.render(
-    <App />,
+  const root = createRoot(
     container ? container.querySelector('#root') : document.querySelector('#root')
   )
+  root.render(<App />)
 }
 
 // 独立运行
