@@ -17,7 +17,7 @@
 │  ──────────────────────────────────────────────────────────│
 │  语法           CSS 超集        CSS 超集      灵活语法       │
 │  变量           $variable       @variable     variable      │
-│  编译           Ruby/Dart       JavaScript    JavaScript    │
+│  编译           Dart Sass 为主     JavaScript    JavaScript    │
 │  嵌套           ✓               ✓             ✓             │
 │  Mixin          ✓               ✓             ✓             │
 │  函数           丰富            较少          丰富          │

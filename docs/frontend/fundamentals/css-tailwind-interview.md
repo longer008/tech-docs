@@ -190,8 +190,22 @@
 
 #### 5. Tailwind 配置
 
+> **版本说明**：Tailwind v4 改为 CSS-first 配置（`@import "tailwindcss"` + `@theme`），不再推荐 `tailwind.config.js`（v3 写法仍兼容但不升级）。以下两种都列出。
+
+```css
+/* Tailwind v4：CSS-first 配置（推荐） */
+@import "tailwindcss";
+
+/* 自定义主题变量（替代 v3 的 theme.extend） */
+@theme {
+  --color-primary-500: #3b82f6;
+  --font-sans: "Inter", sans-serif;
+  --spacing-128: 32rem;
+}
+```
+
 ```javascript
-// tailwind.config.js
+// Tailwind v3：tailwind.config.js（旧写法，v4 不再需要）
 module.exports = {
   content: [
     './src/**/*.{js,jsx,ts,tsx,vue}',
@@ -222,6 +236,8 @@ module.exports = {
 }
 ```
 
+> v4 中部分 v3 类名已调整：`bg-opacity-50` 改为透明度语法 `bg-blue-500/50`、`shadow-sm` 改为 `shadow-xs`、`shadow` 改为 `shadow-sm` 等；若旧项目迁移，可在 CSS 中用 `@config "../tailwind.config.js"` 继续加载 v3 配置。
+
 ---
 
 ## B. 实战文档
@@ -239,7 +255,7 @@ module.exports = {
 | Flex | `flex flex-col items-center justify-between gap-4` |
 | Grid | `grid grid-cols-3 gap-4` |
 | 文字 | `text-lg text-center text-gray-500 font-bold` |
-| 背景 | `bg-blue-500 bg-opacity-50 bg-gradient-to-r` |
+| 背景 | `bg-blue-500 bg-blue-500/50 bg-gradient-to-r` |
 | 边框 | `border border-2 border-gray-300 rounded-lg` |
 | 阴影 | `shadow shadow-lg shadow-none` |
 | 响应式 | `sm: md: lg: xl: 2xl:` |

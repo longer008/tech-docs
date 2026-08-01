@@ -439,9 +439,10 @@ if (process.env.NODE_ENV === 'production') {
 </script>
 
 <!-- 2. 沙箱化 iframe -->
+<!-- 注意：不要同时设置 allow-scripts 和 allow-same-origin，否则 iframe 可移除自身沙箱 -->
 <iframe
   src="https://third-party.com"
-  sandbox="allow-scripts allow-same-origin"
+  sandbox="allow-scripts"
   loading="lazy">
 </iframe>
 

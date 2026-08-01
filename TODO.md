@@ -96,3 +96,54 @@
 - 三模块并行 agent（后端/数据库/DevOps）已分别核验，链接目标全部存在
 - `pnpm docs:build` 构建通过（167 页索引，build complete in 112.78s，无错误）
 - **阶段二（后端/数据库/DevOps/根文档）全部完成**
+
+## 前端内容精读与修复（2026-08-01 第二轮）
+
+> 上一轮主要做结构与导航整理，本轮逐篇精读前端 44 篇文档正文（约 1.3 万行），
+> 修正技术性过时、错误与内部矛盾，共修复 11 处。
+
+### 已修复内容
+
+| 文档 | 问题 | 修复 |
+|------|------|------|
+| `fundamentals/browser-interview.md` | `performance.timing` 已废弃 | 改 Navigation Timing v2：`performance.getEntriesByType('navigation')[0]`，含 DNS/TCP/TTFB/页面加载时间计算 |
+| `fundamentals/performance-interview.md` | 同上 | 同上（含导航/下载/DOMParse/DOMReady/Load 完整指标映射）；首屏优化框内 HTTP/2 Server Push 标注已被 Chrome 移除，改用 103 Early Hints / preload |
+| `fundamentals/css-tailwind-interview.md` | Tailwind v3 配置过时 | 新增 v4 CSS-first 配置块（`@import "tailwindcss"` + `@theme`），v3 `tailwind.config.js` 标注为旧写法；`bg-opacity-*` → `/50` 语法；迁移用 `@config`；加版本说明 |
+| `fundamentals/scss-less-interview.md` | Ruby Sass 已废弃 | 编译方式改为 "Dart Sass 为主" |
+| `fundamentals/html5-interview.md` | inline 元素分类错误 | `img`、`input` 移出行内元素列表，改为替换元素说明（默认为行内但可设宽高） |
+| `fundamentals/security-interview.md` | iframe sandbox 危险组合 | `allow-scripts allow-same-origin` 改为仅 `allow-scripts`，加注释警告二者不可同设 |
+| `vue/vue3-interview.md` | 章节编号错误 | `#### 14. Vue 3.4 / 3.5 新增特性` → `#### 3.` |
+| `react/nextjs-interview.md` | Next.js 15 内部矛盾 | SSG 示例补 `cache: 'force-cache'`（15 起 fetch 默认不缓存）；params 改为 Promise 类型并 `await` |
+| `cross-platform/miniprogram-interview.md` | getUserProfile 已变化 | 登录流程补注：2022 年底起不再弹窗、返回灰色头像/默认昵称，改用「头像昵称填写能力」 |
+| `前端100道问答.md` | Q54 错别字 | "仓库只在背景" → "仓库只在北京" |
+| `前端100道问答.md` | Q56 过时 | HTTP/2 服务端推送标注已被 Chrome 移除，改用 103 Early Hints / preload |
+
+### 核验无问题的文档
+
+`javascript-core`（含 ES2023/2024、手写 Promise/deepClone）、`typescript`、`css-core`、`webpack-vite`、
+`vue2-interview`、`vue3-vs-vue2`、`vue-cheatsheet`、`react-hooks`、`react-cheatsheet`、`uniapp-interview`、
+`前端100道问答.md` 其余 88 题：内容与技术细节均准确，无需改动。
+
+### 验证
+
+- `pnpm docs:build` 构建通过（167 页索引，build complete in 66.30s，无错误）
+
+**阶段一（前端模块）内容精读全部完成**
+
+## 前端100道问答补足（2026-08-01）
+
+- `前端100道问答.md` 由 90 题补足至 100 题（新增第七部分 91-100）
+- 新增 10 题均为高频且与既有内容不重复的考点：
+  - 91 输入 URL 到页面显示全过程（串联 DNS/TCP/HTTP/渲染）
+  - 92 HTTP 状态码
+  - 93 GET vs POST
+  - 94 前端路由原理（hash / history）
+  - 95 WebSocket 与长连接
+  - 96 浏览器多标签页通信
+  - 97 Fetch vs Axios
+  - 98 Vue Router 路由守卫
+  - 99 长列表性能优化（虚拟滚动）
+  - 100 前端错误监控与上报
+- 同步更新文件头说明（"90 题待补充" → "100 题已收录"）与结尾复习建议
+- 题号 1-100 连续性已校验，无跳号；`pnpm docs:build` 构建通过（167 页，无错误）
+

@@ -177,7 +177,7 @@
 │  - 垂直方向的 margin/padding 不生效                          │
 │                                                              │
 │  常见标签：                                                  │
-│  span, a, img, input, label, strong, em, i, b              │
+│  span, a, label, strong, em, i, b, small, code            │
 └─────────────────────────────────────────────────────────────┘
 
 行内块元素（Inline-Block）：
@@ -188,6 +188,7 @@
 │                                                              │
 │  常见标签：                                                  │
 │  img, input, button, select, textarea                      │
+│  （替换元素默认为行内，但可设置宽高）                        │
 └─────────────────────────────────────────────────────────────┘
 ```
 

@@ -414,6 +414,9 @@ async function login() {
 
     // 4. 获取用户信息（需要用户授权）
     // 注意：getUserProfile 需要点击触发
+    // 注意：2022 年底起 getUserProfile 不再弹出授权窗，返回灰色头像与"微信用户"昵称，
+    //       头像昵称需改用「头像昵称填写能力」：
+    //       <button open-type="chooseAvatar"> + <input type="nickname">
     return { token, userInfo }
   } catch (err) {
     console.error('登录失败', err)

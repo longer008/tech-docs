@@ -599,6 +599,7 @@ if (navEntry) {
     TCP: navEntry.connectEnd - navEntry.connectStart,
     TTFB: navEntry.responseStart - navEntry.requestStart,
     Download: navEntry.responseEnd - navEntry.responseStart,
+    DOMParse: navEntry.domInteractive - navEntry.responseEnd,
     DOMReady: navEntry.domContentLoadedEventEnd - navEntry.startTime,
     Load: navEntry.loadEventEnd - navEntry.startTime
   });
