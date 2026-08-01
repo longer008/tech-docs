@@ -1,6 +1,7 @@
 # Spring Boot 面试题集
 
 > Spring Boot 核心知识点与高频面试题 (2024-2025)
+> 版本说明：以 Spring Boot 3.x（基于 Java 17+）为主，兼容 2.x 迁移场景。
 
 ## A. 面试宝典
 

@@ -18,7 +18,7 @@ title: 前端开发
 | Vue.js | Vue2/Vue3/Nuxt.js | [查看](/frontend/vue/vue3-interview) |
 | React | Hooks/Next.js | [查看](/frontend/react/react-hooks-interview) |
 | SSR 框架 | Next.js, Nuxt.js | [查看](/frontend/react/nextjs-interview) |
-| 跨端技术 | Uniapp, 小程序 | [查看](/frontend/cross-platform/uniapp-interview) |
+| 跨端技术 | Uniapp, 小程序 | [Uniapp](/frontend/cross-platform/uniapp-interview)、[小程序](/frontend/cross-platform/miniprogram-interview) |
 | 构建工具 | Webpack, Vite | [查看](/frontend/webpack-vite/) |
 
 ## 学习路线

@@ -95,6 +95,8 @@ ZREVRANK key member   # 排名（降序）
 | Set | intset / hashtable |
 | ZSet | ziplist / skiplist + hashtable |
 
+> 版本说明：Redis 7.x 中 Hash/ZSet 的小数据量紧凑编码已由 ziplist 改为 listpack（对应配置项为 `hash-max-listpack-entries`、`zset-max-listpack-entries`），List 的 quicklist 节点自 7.2 起也使用 listpack。
+
 **SDS 优势：**
 - O(1) 获取长度
 - 二进制安全

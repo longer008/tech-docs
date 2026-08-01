@@ -11,32 +11,11 @@
 - 查询 3："Kafka partitions offset"
 - 来源摘要：以官方文档为主要参考，补充面试关注点。
 
-## A. 面试宝典（Interview Guide）
+## A. 面试题库（Interview Bank）
 
-> 题库详见：`interview-bank.md`
-
-### 基础题
-- Q1：Topic/Partition/Offset 的作用？
-  - A：Topic 是逻辑分类，Partition 提供并行与扩展，Offset 标识消费位置。
-- Q2：Producer/Consumer 的职责？
-  - A：Producer 发送消息，Consumer 订阅消费。
-- Q3：消费者组与再均衡机制？
-  - A：组内分摊分区，成员变化触发再均衡。
-- Q4：ISR 与副本机制的意义？
-  - A：保证可靠性与容灾。
-- Q5：消息投递语义有哪些？
-  - A：At most once / At least once / Exactly once。
-
-### 进阶/场景题
-- Q1：如何保证分区内消息顺序？
-  - A：同一 key 路由到同一分区。
-- Q2：如何处理高延迟与消费积压？
-  - A：扩分区、扩消费者、优化处理逻辑。
-
-### 避坑指南
-- 分区数不足导致吞吐受限。
-- 不合理的 key 导致热点分区。
-- 频繁再均衡导致抖动。
+> 详细题库与解析请查看：
+> - [Kafka 面试题速查](interview-bank.md) —— 高频问答速查
+> - [Kafka 面试题集](../mq/kafka-interview.md)
 
 ## B. 实战文档（Usage Manual）
 ### 速查链接

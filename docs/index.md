@@ -98,8 +98,8 @@ features:
 
 - **文档总数**: 150+
 - **技术覆盖**: 前端、后端、数据库、DevOps
-- **更新时间**: 2025-01
+- **更新时间**: 2026-08-01
 
 ---
 
-> 基于 VitePress 构建 | Copyright 2025
+> 基于 VitePress 构建 | Copyright 2026

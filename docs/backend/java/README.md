@@ -11,33 +11,15 @@
 - 查询 3："Java architecture diagram"
 - 来源摘要：已建立示例结构，内容需按来源更新为最新版本。
 
-## A. 面试宝典（Interview Guide）
+## A. 面试题库（Interview Bank）
 
-> 题库详见：`interview-bank.md`
-
-### 基础题
-- Q1：JDK、JRE、JVM 的区别？
-  - A：JDK 含开发工具与运行环境；JRE 是运行环境；JVM 是执行字节码的虚拟机。
-- Q2：`HashMap` 的底层结构与扩容机制？
-  - A：数组 + 链表/红黑树，负载因子触发扩容。
-- Q3：`equals` 与 `hashCode` 必须满足什么约定？
-  - A：相等对象必须有相同 hashCode，否则集合类行为异常。
-- Q4：线程与进程的区别？常见线程创建方式？
-  - A：线程是进程内执行单元；常见方式为继承 `Thread`、实现 `Runnable/Callable`。
-- Q5：常见 GC 算法与分代思想？
-  - A：标记-清除、复制、标记-整理；年轻代/老年代分代回收。
-
-### 进阶/场景题
-- Q1：线上服务 CPU 飙高与 GC 频繁的排查思路？
-  - A：结合 `jstack`/`jmap`/GC 日志定位热点线程与内存分配热点。
-- Q2：线程池参数如何确定？
-  - A：根据 CPU/IO 密集度、任务时长与目标吞吐设置核心线程、队列与拒绝策略。
-
-### 避坑指南
-- 误用 `==` 比较字符串，忽略 `equals`。
-- 未重写 `hashCode` 导致集合行为异常。
-- 并发场景使用非线程安全集合。
-- 忽视资源关闭与异常处理，造成泄漏。
+> 详细题库与解析请查看：
+> - [Java 面试题速查](interview-bank.md) —— 高频问答速查
+> - [Java 核心面试题集](java-core-interview.md)
+> - [JUC 并发面试题集](juc-interview.md)
+> - [MyBatis 面试题集](mybatis-interview.md)
+> - [Spring Boot 面试题集](spring-boot-interview.md)
+> - [Spring Cloud 面试题集](spring-cloud-interview.md)
 
 ## B. 实战文档（Usage Manual）
 ### 速查链接

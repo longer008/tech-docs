@@ -142,166 +142,13 @@
 
 ---
 
-#### 4. 居中方案
-
-```css
-/* 1. Flexbox 居中 */
-.flex-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* 2. Grid 居中 */
-.grid-center {
-  display: grid;
-  place-items: center;
-}
-
-/* 3. 绝对定位 + transform */
-.absolute-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* 4. 绝对定位 + margin auto */
-.absolute-margin {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  margin: auto;
-  width: 100px;
-  height: 100px;
-}
-
-/* 5. 行内元素水平居中 */
-.text-center {
-  text-align: center;
-}
-
-/* 6. 块元素水平居中 */
-.block-center {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* 7. 单行文本垂直居中 */
-.line-height-center {
-  height: 50px;
-  line-height: 50px;
-}
-```
-
----
-
-#### 5. BFC (块级格式化上下文)
-
-**触发条件：**
-- `float` 不为 `none`
-- `position` 为 `absolute` 或 `fixed`
-- `display` 为 `inline-block`、`flex`、`grid`、`table-cell` 等
-- `overflow` 不为 `visible`
-
-**特性与应用：**
-```css
-/* 1. 清除浮动 */
-.clearfix {
-  overflow: hidden; /* 或 auto */
-}
-
-/* 2. 阻止外边距折叠 */
-.prevent-margin-collapse {
-  overflow: hidden;
-}
-
-/* 3. 阻止元素被浮动元素覆盖 */
-.sidebar {
-  float: left;
-  width: 200px;
-}
-.main {
-  overflow: hidden; /* 创建 BFC，不会环绕浮动元素 */
-}
-```
-
----
-
-### CSS3 进阶
-
-#### 6. 响应式设计
-
-```css
-/* 媒体查询 */
-@media screen and (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-}
-
-@media screen and (min-width: 769px) and (max-width: 1024px) {
-  .container {
-    padding: 20px;
-  }
-}
-
-/* 常用断点 */
-/* 手机: max-width: 767px */
-/* 平板: 768px - 1023px */
-/* 桌面: 1024px+ */
-
-/* 响应式单位 */
-.responsive {
-  font-size: 16px;           /* 固定 */
-  font-size: 1rem;           /* 相对于根元素 */
-  font-size: 1em;            /* 相对于父元素 */
-  width: 50vw;               /* 视口宽度 */
-  height: 50vh;              /* 视口高度 */
-  font-size: clamp(14px, 2vw, 20px); /* 响应式范围 */
-}
-
-/* 响应式图片 */
-img {
-  max-width: 100%;
-  height: auto;
-}
-```
-
----
-
-#### 7. CSS 变量
-
-```css
-:root {
-  --primary-color: #007bff;
-  --secondary-color: #6c757d;
-  --spacing-unit: 8px;
-  --font-size-base: 16px;
-}
-
-.button {
-  background-color: var(--primary-color);
-  padding: calc(var(--spacing-unit) * 2);
-  font-size: var(--font-size-base);
-}
-
-/* 局部覆盖 */
-.dark-theme {
-  --primary-color: #0056b3;
-}
-
-/* JavaScript 操作 */
-/* document.documentElement.style.setProperty('--primary-color', '#ff0000') */
-```
+> 更多 CSS 基础（居中方案、BFC、响应式设计、CSS 变量、动画等）与 [CSS 核心面试题集](css-core-interview.md) 重复，已收敛至该文档。
 
 ---
 
 ### Tailwind CSS
 
-#### 8. Tailwind 核心概念
+#### 4. Tailwind 核心概念
 
 ```html
 <!-- 基础用法 -->
@@ -341,7 +188,7 @@ img {
 
 ---
 
-#### 9. Tailwind 配置
+#### 5. Tailwind 配置
 
 ```javascript
 // tailwind.config.js
@@ -379,69 +226,7 @@ module.exports = {
 
 ## B. 实战文档
 
-### CSS 常用代码片段
-
-```css
-/* 文本截断 */
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 多行截断 */
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 平滑滚动 */
-html {
-  scroll-behavior: smooth;
-}
-
-/* 自定义滚动条 */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-/* 渐变背景 */
-.gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* 毛玻璃效果 */
-.glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* 阴影 */
-.shadow {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-              0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* 动画 */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-```
+> CSS 常用代码片段（截断、渐变、毛玻璃、动画等）与 [CSS 核心面试题集](css-core-interview.md) 的「常用样式片段」重复，已收敛至该文档。
 
 ### Tailwind 常用类名速查
 

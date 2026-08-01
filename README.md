@@ -42,8 +42,8 @@
 
 ### 环境要求
 
-- Node.js >= 16
-- pnpm >= 8
+- Node.js >= 20.0.0
+- pnpm >= 9.0.0 (推荐)
 - Windows / macOS / Linux 均可
 
 ### 安装依赖
@@ -190,6 +190,19 @@ pnpm deploy:only       # 仅部署已构建产物
 - 想建立长期知识库与复习体系的工程师
 - 正在维护 VitePress 技术文档站点的开发者
 - 希望沉淀前后端与基础设施文档的团队
+
+## 更新日志
+
+### v1.1.0 (2026-08)
+- 前端模块内容大更新：FID→INP 指标、React 19、Vue 3.4/3.5、TypeScript 5.x、Tailwind v4、Next.js 15
+- 收敛模块 README/index 与 interview-bank 的重复面试题摘要
+- 消除跨端模块、CSS 模块等多处重复内容
+
+### v1.0.0 (2025-01)
+- 项目初始发布
+- 完整的面试知识体系
+- VitePress 技术栈搭建
+- 150+ 技术文档上线
 
 ## 贡献与维护建议
 

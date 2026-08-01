@@ -8,6 +8,12 @@
 
 [[toc]]
 
+> **版本说明**：Next.js 15（2024-10 发布）的关键变化：
+> - 缓存默认值调整：`fetch` 与 GET 路由处理不再默认强缓存。
+> - 请求 API 异步化：`cookies()`、`headers()`、`params`、`searchParams` 需 `await` 使用。
+> - 完整支持 React 19；开发模式默认启用 Turbopack。
+> - 缓存指令集中在 `next/cache`（如 `unstable_cache`、`revalidateTag`）。
+
 ## A. 面试宝典
 
 ### 基础题

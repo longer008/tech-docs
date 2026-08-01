@@ -297,6 +297,7 @@ mongoose.connect('mongodb://localhost:27017/mydb', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
+// 版本说明：Mongoose 6+ 已默认启用上述行为，无需再显式传入 useNewUrlParser / useUnifiedTopology（Mongoose 7 起传入会报错）
 
 // 定义 Schema
 const userSchema = new mongoose.Schema({

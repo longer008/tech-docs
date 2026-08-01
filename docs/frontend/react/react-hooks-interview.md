@@ -424,6 +424,46 @@ function GoodComponent({ condition }) {
 }
 ```
 
+**React 19 新增特性（2024-12 发布）**
+
+**1. `use()` Hook —— 渲染期读取异步资源**
+- 可直接读取 Promise 或 Context，配合 `<Suspense>` 使用；与其它 Hook 不同，`use` 可在 `if` 条件中调用。
+
+```jsx
+function User({ id }) {
+  const user = use(fetchUser(id)); // 渲染期等待，Suspense 兜底
+  return <h1>{user.name}</h1>;
+}
+```
+
+**2. Form Actions 与 `useActionState` / `useFormStatus` / `useOptimistic`**
+- `<form>` 的 `action` 可直接传函数（Action）处理提交；`useActionState` 管理表单状态与 pending。
+
+```jsx
+const [state, formAction, isPending] = useActionState(
+  async (prev, fd) => {
+    const res = await save(fd.get('name'));
+    return res.ok ? { ok: true } : { ok: false, err: res.msg };
+  },
+  { ok: false }
+);
+```
+
+- `useFormStatus`：让子组件读取父 `<form>` 的提交状态。
+- `useOptimistic`：提交时先展示预期结果，服务端返回后再校正。
+
+**3. `ref` 作为普通 prop**
+- 不再需要 `forwardRef`，函数组件可直接接收 `ref` prop。
+
+```jsx
+function Input({ ref, ...props }) {
+  return <input ref={ref} {...props} />;
+}
+```
+
+**4. 其他**
+- `<meta>`、`<link>` 等可内联渲染，React 自动提升到 `<head>`。
+
 ---
 
 ### 避坑指南
@@ -473,10 +513,10 @@ useSyncExternalStore(subscribe, getSnapshot)
 useInsertionEffect(effect, deps?)
 
 // React 19+ 新增
-use(promise)                    // 读取 Promise/Context
-useActionState(action, initialState)
-useFormStatus()
-useOptimistic(state, updateFn)
+use(promise)                    // 渲染期读取 Promise/Context，配合 Suspense
+useActionState(action, initialState) // 表单 Action，返回 [state, formAction, isPending]
+useFormStatus()                 // 子组件读取父 <form> 的 pending 状态
+useOptimistic(state, updateFn)  // 乐观更新，Action 完成后校正
 ```
 
 ### 完整组件示例

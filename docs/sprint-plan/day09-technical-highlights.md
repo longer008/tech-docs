@@ -754,7 +754,7 @@ class Monitor {
       }, 100);
     });
 
-    // LCP、FID、CLS（Web Vitals）
+    // LCP、INP、CLS（Web Vitals）
     this.observeWebVitals();
   }
 
@@ -772,17 +772,23 @@ class Monitor {
       });
     }).observe({ entryTypes: ['largest-contentful-paint'] });
 
-    // FID
+    // INP（2024 年 3 月起取代 FID 成为核心交互指标）
+    // INP 统计所有交互，取最差值（交互延迟 + 处理时长）
+    let inpValue = null;
     new PerformanceObserver((list) => {
-      const entry = list.getEntries()[0];
-      this.report({
-        type: 'web_vitals',
-        data: {
-          name: 'FID',
-          value: entry.processingStart - entry.startTime,
-        },
-      });
-    }).observe({ entryTypes: ['first-input'] });
+      for (const entry of list.getEntries()) {
+        const current = (entry.processingStart - entry.startTime) + entry.duration;
+        if (inpValue === null || current > inpValue) {
+          inpValue = current;
+        }
+      }
+      if (inpValue !== null) {
+        this.report({
+          type: 'web_vitals',
+          data: { name: 'INP', value: inpValue },
+        });
+      }
+    }).observe({ type: 'event', buffered: true });
 
     // CLS
     let clsValue = 0;

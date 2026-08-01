@@ -352,6 +352,53 @@ type ToArrayNonDist<T> = [T] extends [any] ? T[] : never
 type TB = ToArrayNonDist<string | number> // (string | number)[]
 ```
 
+**TypeScript 5.x 新特性**
+
+**1. `satisfies` 操作符**：既校验类型，又保留字面量推断。
+
+```ts
+const config = {
+  port: 8080,
+  env: 'dev'
+} satisfies Record<string, string | number>;
+// env 仍推断为字面量 'dev'，整体又通过校验
+```
+
+**2. `const` 类型参数（TS 5.0）**：让泛型推断为最窄的字面量类型。
+
+```ts
+function toTuple<const T extends readonly unknown[]>(arr: T) {
+  return arr as [...T];
+}
+const t = toTuple(['a', 1]); // 推断为 readonly ['a', 1]，而非 (string|number)[]
+```
+
+**3. 装饰器正式版（TS 5.0）**：对齐 ECMAScript 标准，支持类与方法装饰。
+
+```ts
+function log(target: unknown, context: ClassMethodDecoratorContext) {
+  const method = target as Function;
+  return function (...args: unknown[]) {
+    console.log('call', args);
+    return method.apply(this, args);
+  };
+}
+```
+
+**4. `using` 显式资源管理（TS 5.2）**：离开作用域时自动调用 dispose。
+
+```ts
+using file = openFile('a.txt'); // 离开作用域自动释放
+```
+
+**5. `NoInfer<T>`（TS 5.4）**：阻止从该位置推断类型。
+
+```ts
+function create<T>(v: T, opts: { list: NoInfer<T[]> }) {}
+```
+
+**6. 推断增强（TS 5.5）**：`arr.filter(Boolean)` 自动收窄为 `NonNullable<T>`。
+
 ---
 
 #### 3. TypeScript 5.x 新特性
