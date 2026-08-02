@@ -12,6 +12,11 @@ import { groupIconMdPlugin, groupIconVitePlugin } from 'vitepress-plugin-group-i
 
 const base = process.env.VITE_BASE_PATH || '/tech-docs/'
 
+// 播客/TTS 与 AI 总结功能开关：
+// Cloudflare 部署（VITE_BASE_PATH=/）保留功能；GitHub Pages 部署（默认 /tech-docs/）移除功能。
+// 通过 Vite define 注入编译期常量，GitHub 构建时 PodcastPlayer 相关代码会被 tree-shake 移除。
+const PODCAST_ENABLED = base === '/'
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
     title: '技术面试知识库',
@@ -47,6 +52,10 @@ export default defineConfig({
         NProgress(),
         groupIconVitePlugin(),
       ],
+      define: {
+        // 编译期常量：GitHub 构建时为 false，相关组件被 tree-shake
+        __PODCAST_ENABLED__: JSON.stringify(PODCAST_ENABLED),
+      },
       optimizeDeps: {
         exclude: [
           '@ai-sdk/provider-utils',

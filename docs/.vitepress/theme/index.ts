@@ -1,6 +1,6 @@
 import DefaultTheme from 'vitepress/theme'
 import type { Theme } from 'vitepress'
-import { h, onMounted, watch, nextTick } from 'vue'
+import { h, onMounted, watch, nextTick, defineAsyncComponent } from 'vue'
 import { useRoute, useData } from 'vitepress'
 import mediumZoom from 'medium-zoom'
 import vitepressBackToTop from 'vitepress-plugin-back-to-top'
@@ -30,7 +30,16 @@ import InterviewCard from '../components/InterviewCard.vue'
 import HighlightBox from '../components/HighlightBox.vue'
 import TechStack from '../components/TechStack.vue'
 import ReadingTime from '../components/ReadingTime.vue'
-import PodcastPlayer from '../components/PodcastPlayer.vue'
+
+// 运行时类型声明：__PODCAST_ENABLED__ 由 config.mts 的 vite.define 注入（编译期常量）
+declare const __PODCAST_ENABLED__: boolean
+
+// 播客/TTS 组件：仅在 Cloudflare 部署（__PODCAST_ENABLED__）时加载。
+// 通过编译期常量做条件导入，GitHub 构建时此分支为死代码，PodcastPlayer 不会进入产物。
+// 使用 defineAsyncComponent 而非静态 import，确保为 false 时组件代码被 tree-shake。
+const PodcastPlayer = __PODCAST_ENABLED__
+  ? defineAsyncComponent(() => import('../components/PodcastPlayer.vue'))
+  : () => null
 
 // 样式导入
 import 'vitepress-plugin-back-to-top/dist/style.css'
@@ -45,7 +54,7 @@ export default {
       'layout-top': () => h(NolebaseHighlightTargetedHeading),
       'nav-bar-content-after': () => h(NolebaseEnhancedReadabilitiesMenu),
       'nav-screen-content-after': () => h(NolebaseEnhancedReadabilitiesScreenMenu),
-      'doc-before': () => [h(ReadingTime), h(PodcastPlayer)],
+      'doc-before': () => [h(ReadingTime), __PODCAST_ENABLED__ ? h(PodcastPlayer) : null],
     })
   },
 
@@ -74,7 +83,9 @@ export default {
     app.component('HighlightBox', HighlightBox)
     app.component('TechStack', TechStack)
     app.component('ReadingTime', ReadingTime)
-    app.component('PodcastPlayer', PodcastPlayer)
+    if (__PODCAST_ENABLED__) {
+      app.component('PodcastPlayer', PodcastPlayer)
+    }
   },
 
   setup() {
@@ -95,8 +106,8 @@ export default {
     onMounted(() => {
       initZoom()
 
-      // 全局检查 admin token（确保任何页面都能保存）
-      if (typeof localStorage !== 'undefined' && typeof window !== 'undefined') {
+      // 播客功能专属：全局检查 admin token（确保任何页面都能保存）
+      if (__PODCAST_ENABLED__ && typeof localStorage !== 'undefined' && typeof window !== 'undefined') {
         const url = new URL(window.location.href)
         const token = url.searchParams.get('admin')
         if (token && token.length === 32) {
